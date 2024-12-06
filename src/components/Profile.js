@@ -7,7 +7,7 @@ import '../css/Styles.css';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css'
-const API_URL = 'https://192.168.64.2/kvgms/api/planning';
+const API_URL = 'https://www.wynstarcreations.com/seyal/api/planning';
 
 
 function Profile() {

@@ -6,7 +6,7 @@ import '../css/DataTable.css';
 import axios from 'axios';
 import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
-const API_URL = 'https://192.168.64.2/kvgms/api/plans';
+const API_URL = 'https://www.wynstarcreations.com/seyal/api/plans';
 
 DataTable.use(DT);
 function Planning() {
