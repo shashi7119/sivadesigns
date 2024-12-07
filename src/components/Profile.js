@@ -1,6 +1,7 @@
 import React, { useState} from 'react';
 import { Container, Row } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Form, Button } from 'react-bootstrap';
 import '../css/Profile.css';
 import '../css/Styles.css';
@@ -11,6 +12,8 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api/planning';
 
 
 function Profile() {
+
+  const navigate = useNavigate();
   // Step 1: Declare state for storing values of all text inputs
   const [formData, setFormData] = useState({
     date:null,machine: '', customer: '', fabric: '', 
@@ -23,7 +26,7 @@ function Profile() {
     machine: /^[0-9]*$/,          // Only numbers for input1
     customer: /^[a-zA-Z ]*$/,              // Only letters for input2
     fabric: /^[a-zA-Z0-9_ ]*$/,       // Alphanumeric and underscores for input3
-    shade: /^[a-zA-Z0-9_ ]*$/,construction: /^[a-zA-Z0-9_ ]*$/,
+    shade: /^[a-zA-Z0-9_ ]*$/,construction: /^[a-zA-Z0-9_x/ ]*$/,
     width: /^[0-9"]*$/,gmeter: /^[0-9]*$/,
     weight: /^[0-9]*$/,glm: /^[0-9]*$/,
     aglm: /^[a-zA-Z0-9_. ]*$/,process: /^[a-zA-Z0-9_ ]*$/,
@@ -38,6 +41,7 @@ function Profile() {
        
   const handleSubmit = async (event) => {
     event.preventDefault();
+
     console.log('Form Submitted with Data:', formData);
     //integrate data validate and backend
 
@@ -50,6 +54,7 @@ function Profile() {
 
         axios.post(`${API_URL}`, formData)
   .then(function (response) {
+    navigate('/planning');
     console.log(response);
   })
   .catch(function (error) {
