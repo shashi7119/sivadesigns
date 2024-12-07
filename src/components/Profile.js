@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, { useState,useEffect} from 'react';
 import { Container, Row } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -9,11 +9,38 @@ import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css'
 const API_URL = 'https://www.wynstarcreations.com/seyal/api/planning';
+const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/getAllMasters';
 
 
 function Profile() {
 
   const navigate = useNavigate();
+  const [machineData, setMachineData] = useState([ ]);
+  const [customerData, setCusotmerData] = useState([ ]);
+  const [widthData, setWidthData] = useState([ ]);
+  const [processData, setProcessData] = useState([ ]);
+  const [fabricData, setFabricData] = useState([ ]);
+  const [constructionData, setConstructionData] = useState([ ]);
+ 
+      // Fetch data from backend API
+      useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const response = await axios.get(`${API_URL1}`);
+            setMachineData(response.data['machine']);
+            setCusotmerData(response.data['customer']);
+            setWidthData(response.data['width']);
+            setProcessData(response.data['process']);
+            setFabricData(response.data['fabric']);
+            setConstructionData(response.data['construction']);
+            
+          } catch (error) {
+            console.log(error);
+          } 
+        };
+        fetchData();
+      }, []);
+
   // Step 1: Declare state for storing values of all text inputs
   const [formData, setFormData] = useState({
     date:null,machine: '', customer: '', fabric: '', 
@@ -129,49 +156,64 @@ function Profile() {
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicMachine">
             <Form.Label>Machine</Form.Label>
-            <Form.Control
-              type="text"
+            <Form.Select             
               name="machine"              
               value={formData.machine}
-              onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
               }))}    
              required
-            />
-       
+            >
+              <option  value="">Select Machine</option>
+         {machineData.map(machine => (
+          
+  <option  value={machine}>
+    {machine}
+  </option>
+))}
+           </Form.Select>
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicCustomer">
             <Form.Label>Customer </Form.Label>
-            <Form.Control
-              type="text"
-              name="customer"
-             
+            <Form.Select             
+              name="customer"              
               value={formData.customer}
-              onKeyUp={handleKeyUp}  
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}          
-              required   
-            />
+              }))}    
+             required
+            >
+              <option  value="">Select Customer</option>
+         {customerData.map(customer => (
+          
+  <option  value={customer}>
+    {customer}
+  </option>
+))}
+           </Form.Select>
        
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicFabric">
             <Form.Label>Fabric</Form.Label>
-            <Form.Control
-              type="text"
-              name="fabric"
-             
+            <Form.Select             
+              name="fabric"              
               value={formData.fabric}
-              onKeyUp={handleKeyUp}  
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}  
-              required   
-            />       
+              }))}    
+             required
+            >
+              <option  value="">Select Fabric</option>
+         {fabricData.map(fabric => (
+          
+  <option  value={fabric}>
+    {fabric}
+  </option>
+))}
+           </Form.Select>
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicShade">
             <Form.Label>Shade</Form.Label>
@@ -190,32 +232,43 @@ function Profile() {
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicConstruction">
             <Form.Label>Construction </Form.Label>
-            <Form.Control
-              type="text"
-              name="construction"
-             
+            <Form.Select             
+              name="construction"              
               value={formData.construction}
-              onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
-              required    
-            />       
+              }))}    
+             required
+            >
+              <option  value="">Select Construction</option>
+         {constructionData.map(construction => (
+          
+  <option  value={construction}>
+    {construction}
+  </option>
+))}
+           </Form.Select>      
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicWidth">
             <Form.Label>Width </Form.Label>
-            <Form.Control
-              type="text"
-              name="width"             
+            <Form.Select             
+              name="width"              
               value={formData.width}
-              onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}  
-              required   
-            />       
+              }))}    
+             required
+            >
+              <option  value="">Select Width</option>
+         {widthData.map(width => (
+          
+  <option  value={width}>
+    {width}
+  </option>
+))}
+           </Form.Select>       
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicWeight">
             <Form.Label>Weight </Form.Label>
@@ -280,18 +333,23 @@ function Profile() {
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicProcess">
             <Form.Label>Process</Form.Label>
-            <Form.Control
-              type="text"
-              name="process"
-            
+            <Form.Select             
+              name="process"              
               value={formData.process}
-              onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}  
-              required  
-            />       
+              }))}    
+             required
+            >
+              <option  value="">Select Process</option>
+         {processData.map(process => (
+          
+  <option  value={process}>
+    {process}
+  </option>
+))}
+           </Form.Select>      
           </Form.Group>
           <div className="d-flex">
           <div className="col-12 col-sm-6 mb-3"></div>

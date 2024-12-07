@@ -1,6 +1,7 @@
 import React, { useState, useEffect} from 'react';
-import { Container } from 'react-bootstrap';
+import { Container,Button, Row } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import '../css/Styles.css';
 import '../css/DataTable.css';
 import axios from 'axios';
@@ -10,9 +11,7 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api/plans';
 
 DataTable.use(DT);
 function Planning() {
-  
-   
-
+  const navigate = useNavigate();
     const [tableData, setTableData] = useState([ ]);
 
      // Fetch data from backend API
@@ -34,6 +33,10 @@ function Planning() {
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated
      }
 
+     const handleSubmit = async (event) => {
+      event.preventDefault();
+      navigate('/profile');
+    };
      
   
      
@@ -45,6 +48,14 @@ function Planning() {
         <h1>Planning</h1>
         <p>Welcome, {user.email}!</p>
         </Container>
+        <Row>
+          <div class="col-10 col-sm-10"></div>
+          <div class="col-2 col-sm-2">
+            <Button variant="primary" type="submit" className="login-button" onClick={handleSubmit}>
+              Add
+            </Button>
+            </div>
+       </Row>
     <DataTable data={tableData} options={{
                 responsive: true,
                 select: true,
