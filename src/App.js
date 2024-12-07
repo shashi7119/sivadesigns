@@ -1,5 +1,5 @@
 import './App.css';
-import React from 'react';
+import React,{ useEffect} from 'react';
 import { BrowserRouter as Router,Routes,Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navigation from './components/Navigation';
@@ -12,6 +12,11 @@ import Planning from './components/Planning';
 
 
 function App() {
+
+  useEffect(() => {
+    document.title = "Siva Designs"
+ }, []);
+
   return (
    
     <AuthProvider>

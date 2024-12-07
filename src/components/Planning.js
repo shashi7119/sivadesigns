@@ -45,7 +45,11 @@ function Planning() {
         <h1>Planning</h1>
         <p>Welcome, {user.email}!</p>
         </Container>
-    <DataTable data={tableData} className="display table sortable">
+    <DataTable data={tableData} options={{
+                responsive: true,
+                select: true,
+                iDisplayLength:25,
+            }} className="display table sortable">
             <thead>
                 <tr>
                     <th>S.No</th>
