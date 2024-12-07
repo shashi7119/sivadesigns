@@ -72,7 +72,7 @@ function Machine() {
         event.preventDefault();
     
         console.log('Form Submitted with Data:', formData);
-     
+        formData.type="machine";
             axios.post(`${API_URL1}`, formData)
       .then(function (response) {
 

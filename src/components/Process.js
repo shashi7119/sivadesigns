@@ -72,7 +72,7 @@ function Process() {
         event.preventDefault();
     
         console.log('Form Submitted with Data:', formData);
-     
+        formData.type="process";
             axios.post(`${API_URL1}`, formData)
       .then(function (response) {
 

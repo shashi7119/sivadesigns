@@ -72,7 +72,7 @@ function Construction() {
         event.preventDefault();
     
         console.log('Form Submitted with Data:', formData);
-     
+        formData.type="construction";
             axios.post(`${API_URL1}`, formData)
       .then(function (response) {
 

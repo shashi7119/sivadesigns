@@ -72,7 +72,7 @@ function Fabric() {
         event.preventDefault();
     
         console.log('Form Submitted with Data:', formData);
-     
+        formData.type="fabric";
             axios.post(`${API_URL1}`, formData)
       .then(function (response) {
 
