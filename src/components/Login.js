@@ -37,7 +37,7 @@ function Login() {
       try {
         
         await login(email, password);
-        navigate('/profile');
+        navigate('/planning');
         //console.log('Login successful:', userData);
         // Here you would typically store the user data and redirect
       } catch (error) {
