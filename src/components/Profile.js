@@ -122,7 +122,7 @@ function Profile() {
     const { name, value } = event.target;
     const date = formData.date;
     axios.post(`${API_URL}/checkMachineAvailability`, { date, value }).then(function (response) {
-     
+     console.log(name);
       setAvailData(response.data.cnt);
     })
   .catch(function (error) {
