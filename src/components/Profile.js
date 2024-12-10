@@ -8,31 +8,32 @@ import '../css/Styles.css';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css'
-const API_URL = 'https://www.wynstarcreations.com/seyal/api/planning';
-const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/getAllMasters';
+const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
 
 function Profile() {
 
   const navigate = useNavigate();
-  const [machineData, setMachineData] = useState([ ]);
+  const [machineData, setMachineData] = useState([]);
   const [customerData, setCusotmerData] = useState([ ]);
   const [widthData, setWidthData] = useState([ ]);
   const [processData, setProcessData] = useState([ ]);
   const [fabricData, setFabricData] = useState([ ]);
   const [constructionData, setConstructionData] = useState([ ]);
+  const [finishingData, setFinishingData] = useState([ ]);
  
       // Fetch data from backend API
       useEffect(() => {
         const fetchData = async () => {
           try {
-            const response = await axios.get(`${API_URL1}`);
+            const response = await axios.get(`${API_URL}/getAllMasters`);
             setMachineData(response.data['machine']);
             setCusotmerData(response.data['customer']);
             setWidthData(response.data['width']);
             setProcessData(response.data['process']);
             setFabricData(response.data['fabric']);
             setConstructionData(response.data['construction']);
+            setFinishingData(response.data['finishing']);
             
           } catch (error) {
             console.log(error);
@@ -45,8 +46,10 @@ function Profile() {
   const [formData, setFormData] = useState({
     date:null,machine: '', customer: '', fabric: '', 
     shade: '', construction: '', width: '',
-    weight: '',  gmeter: 0, glm: '',aglm: '',process: '',
+    weight: '0',  gmeter: 0, glm: '0',aglm: '0',process: '',finishing: '',
   });
+
+  const [availData, setAvailData] = useState("0");
 
   // Step 2: Declare regex patterns for each input
   const regexPatterns = {
@@ -54,9 +57,7 @@ function Profile() {
     customer: /^[a-zA-Z ]*$/,              // Only letters for input2
     fabric: /^[a-zA-Z0-9_ ]*$/,       // Alphanumeric and underscores for input3
     shade: /^[a-zA-Z0-9_ ]*$/,construction: /^[a-zA-Z0-9_x/ ]*$/,
-    width: /^[0-9"]*$/,gmeter: /^[0-9]*$/,
-    weight: /^[0-9]*$/,glm: /^[0-9]*$/,
-    aglm: /^[a-zA-Z0-9_. ]*$/,process: /^[a-zA-Z0-9_ ]*$/,
+    width: /^[0-9"]*$/,process: /^[a-zA-Z0-9_+ ]*$/,finishing: /^[a-zA-Z0-9_+ ]*$/,
   };
 
   const { user , isAuthenticated } = useAuth();
@@ -64,26 +65,17 @@ function Profile() {
     return null;
   // navigate('/login');  // Avoid rendering profile if the user is not authenticated
  }
-
+ 
        
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     console.log('Form Submitted with Data:', formData);
-    //integrate data validate and backend
-
-       /*const response = await axios.post(`${API_URL}`, formData,
-        {
-          headers: {
-    'Content-Type': 'multipart/form-data'
-  }
-        });*/
-
-        axios.post(`${API_URL}`, formData)
-  .then(function (response) {
-    navigate('/planning');
-    console.log(response);
-  })
+    axios.post(`${API_URL}/planning`, formData)
+    .then(function (response) {
+      navigate('/planning');
+      console.log(response);
+    })
   .catch(function (error) {
     console.log(error);
   });
@@ -103,7 +95,7 @@ function Profile() {
     // Step 5: If valid, update the state, otherwise you can show an error or just keep it unchanged
     if (isValid) {
 
-      if(name === "gmeter"){
+      if((name === "gmeter")&&(formData.weight !==0)){
         formData.aglm = parseFloat(formData.weight/value).toFixed(2);
      }
 
@@ -126,6 +118,17 @@ function Profile() {
     
    };
 
+   const checkMachineAvailability = (event) => {
+    const { name, value } = event.target;
+    const date = formData.date;
+    axios.post(`${API_URL}/checkMachineAvailability`, { date, value }).then(function (response) {
+     
+      setAvailData(response.data.cnt);
+    })
+  .catch(function (error) {
+    console.log(error);
+  });
+   }
   return (
     
     <div className="data-wrapper">
@@ -142,27 +145,36 @@ function Profile() {
             <DatePicker
         id="date-input"
         selected={formData.date}
-        onChange={(date) =>  setFormData((prevData) => ({
+        onChange={(date) => { setFormData((prevData) => ({
           ...prevData,
           date // Update the value of the specific input field
-        }))}
+        }))
+        
+      }
+      
+      }
       
         dateFormat="dd/MM/yyyy"
         placeholderText="Select a date"
         className="date-input"
       />
          
-       
+         
           </Form.Group>
+         
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicMachine">
-            <Form.Label>Machine</Form.Label>
+            <Form.Label>Machine <span>*</span></Form.Label>
+            {availData !==0 && <Form.Label style={{color:"red",marginLeft:"20px"}}>Occupied <span>{availData}</span></Form.Label> }
+            
             <Form.Select             
               name="machine"              
               value={formData.machine}
-              onChange={(e) =>  setFormData((prevData) => ({
+              onChange={(e) =>  {setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}    
+              }));
+              checkMachineAvailability(e);
+            }   } 
              required
             >
               <option  value="">Select Machine</option>
@@ -175,7 +187,7 @@ function Profile() {
            </Form.Select>
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicCustomer">
-            <Form.Label>Customer </Form.Label>
+            <Form.Label>Customer <span>*</span></Form.Label>
             <Form.Select             
               name="customer"              
               value={formData.customer}
@@ -196,7 +208,7 @@ function Profile() {
        
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicFabric">
-            <Form.Label>Fabric</Form.Label>
+            <Form.Label>Fabric <span>*</span></Form.Label>
             <Form.Select             
               name="fabric"              
               value={formData.fabric}
@@ -216,7 +228,7 @@ function Profile() {
            </Form.Select>
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicShade">
-            <Form.Label>Shade</Form.Label>
+            <Form.Label>Shade <span>*</span></Form.Label>
             <Form.Control
               type="text"
               name="shade"
@@ -231,7 +243,7 @@ function Profile() {
             />       
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicConstruction">
-            <Form.Label>Construction </Form.Label>
+            <Form.Label>Construction <span>*</span></Form.Label>
             <Form.Select             
               name="construction"              
               value={formData.construction}
@@ -251,7 +263,7 @@ function Profile() {
            </Form.Select>      
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicWidth">
-            <Form.Label>Width </Form.Label>
+            <Form.Label>Width <span>*</span></Form.Label>
             <Form.Select             
               name="width"              
               value={formData.width}
@@ -297,22 +309,21 @@ function Profile() {
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
               }))}  
-              required  
+                
             />       
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicFabric">
             <Form.Label>GLM </Form.Label>
             <Form.Control
               type="text"
-              name="glm"
-           
+              name="glm"           
               value={formData.glm}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
               }))}   
-              required  
+                
             />       
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicaglm">
@@ -328,11 +339,11 @@ function Profile() {
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
               }))}  
-              required
+              
             />       
           </Form.Group>
           <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicProcess">
-            <Form.Label>Process</Form.Label>
+            <Form.Label>Process <span>*</span></Form.Label>
             <Form.Select             
               name="process"              
               value={formData.process}
@@ -347,6 +358,26 @@ function Profile() {
           
   <option  value={process}>
     {process}
+  </option>
+))}
+           </Form.Select>      
+          </Form.Group>
+          <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicProcess">
+            <Form.Label>Finishing <span>*</span></Form.Label>
+            <Form.Select             
+              name="finishing"              
+              value={formData.finishing}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            >
+              <option  value="">Select Finishing</option>
+         {finishingData.map(finishing => (
+          
+  <option  value={finishing}>
+    {finishing}
   </option>
 ))}
            </Form.Select>      
