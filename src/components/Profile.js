@@ -147,9 +147,13 @@ function Profile() {
         selected={formData.date}
         onChange={(date) => { setFormData((prevData) => ({
           ...prevData,
-          date // Update the value of the specific input field
-        }))
-        
+          date
+        }));
+        setFormData((prevData) => ({
+          ...prevData,
+          "machine": ""
+        }));
+        setAvailData(0);
       }
       
       }
