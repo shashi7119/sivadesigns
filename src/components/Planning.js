@@ -1,7 +1,6 @@
 import React, { useState, useEffect} from 'react';
-import { Container,Button, Row } from 'react-bootstrap';
+import { Container,Dropdown, Row } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import '../css/Styles.css';
 import '../css/DataTable.css';
 import axios from 'axios';
@@ -11,8 +10,7 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api/plans';
 
 DataTable.use(DT);
 function Planning() {
-  const navigate = useNavigate();
-    const [tableData, setTableData] = useState([ ]);
+  const [tableData, setTableData] = useState([ ]);
 
      // Fetch data from backend API
   useEffect(() => {
@@ -32,13 +30,6 @@ function Planning() {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated
      }
-
-     const handleSubmit = async (event) => {
-      event.preventDefault();
-      navigate('/profile');
-    };
-     
-  
      
 
   return (
@@ -51,19 +42,29 @@ function Planning() {
         <Row>
           <div class="col-10 col-sm-10"></div>
           <div class="col-2 col-sm-2">
-            <Button variant="primary" type="submit" className="login-button" onClick={handleSubmit}>
-              Add
-            </Button>
+          <Dropdown>
+      <Dropdown.Toggle variant="success" id="dropdown-basic">
+        Actions
+      </Dropdown.Toggle>
+
+      <Dropdown.Menu>
+        <Dropdown.Item href="/profile">Add</Dropdown.Item>
+        <Dropdown.Item href="#">Print</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown>
+          
             </div>
        </Row>
     <DataTable data={tableData} options={{
                 responsive: true,
                 select: true,
                 iDisplayLength:25,
+                order:[1,"asc"]
             }} className="display table sortable">
             <thead>
                 <tr>
-                    <th>S.No</th>
+                    <th></th>
+                    <th>Plan.No</th>
                     <th>Date</th>
                     <th>Machine</th>
                     <th>Customer</th>

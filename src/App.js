@@ -15,7 +15,7 @@ import Construction from './components/Construction';
 import Process from './components/Process';
 import Width from './components/Width';
 import Finishing from './components/Finishing';
-
+import Edit from './components/Edit';
 
 
 function App() {
@@ -38,6 +38,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/planning" element={<Planning />} />
+            <Route path="/profile/:planid" element={<Edit />} />
             <Route path="/machine" element={<Machine />} />
             <Route path="/customer" element={<Customer />} />
             <Route path="/fabric" element={<Fabric />} />
