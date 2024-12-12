@@ -46,7 +46,7 @@ function Profile() {
   const [formData, setFormData] = useState({
     date:null,machine: '', customer: '', fabric: '', 
     shade: '', construction: '', width: '',
-    weight: '0',  gmeter: 0, glm: '0',aglm: '0',process: '',finishing: '',
+    weight: '',  gmeter: '', glm: '',aglm: '',process: '',finishing: '',
   });
 
   const [availData, setAvailData] = useState("0");
