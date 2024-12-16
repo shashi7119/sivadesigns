@@ -1,5 +1,5 @@
-import React, { useState, useEffect} from 'react';
-import { Container,Button, Row,Modal, Form } from 'react-bootstrap';
+import React, { useState, useEffect,useRef} from 'react';
+import { Container,Button, Row,Modal, Form,Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -13,7 +13,7 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api/';
 
 DataTable.use(DT);
 function Greyentry() {
-
+  const table = useRef();
     const [formData, setFormData] = useState({
         date:"",customer:"",fabric: '',construction:'',width:'',
         weight:'',gmeter:''
@@ -48,7 +48,11 @@ function Greyentry() {
     const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  const handleShow = (e) => { 
+    setShow(true);
+    
+  }
+  
 
      // Fetch data from backend API
   useEffect(() => {
@@ -111,24 +115,52 @@ function Greyentry() {
     
       };
      
+      const deleteHandle =  (event) => {
+
+        event.preventDefault();
+        if (window.confirm("Delete this item?")) {
+        let api = table.current.dt();
+        let rows = api.rows({ selected: true }).data().toArray();
+        let dataArr = [];
+        rows.map(value => (
+          dataArr.push(value)
+        ));    
+        axios.post(`${API_URL}/deleteInventory`, dataArr)
+        .then(function (response) {      
+          console.log(response);
+        })
+      .catch(function (error) {
+        console.log(error);
+      });
+        console.log(dataArr);
+        api.rows({ selected: true }).remove().draw();
+      }
+      };
 
   return (
     <div className="data-wrapper">
    
         <Container>
         <Row>
-        <h1>Grey Fabric Entry</h1>
-        <p>Welcome, {user.email}!</p>
-        
-        
-          <div class="col-10 col-sm-10"></div>
+          <div class="col-10 col-sm-10">
+          <h1>Grey Fabric Entry</h1>
+          <p>Welcome, {user.email}!</p>
+          </div>
           <div class="col-2 col-sm-2">
-            <Button variant="primary" type="submit" className="login-button" onClick={handleShow}>
-              Add
-            </Button>
+          <Dropdown>
+      <Dropdown.Toggle variant="success" id="dropdown-basic">
+        Actions
+      </Dropdown.Toggle>
+
+      <Dropdown.Menu>
+         <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>            
+        <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown>
+           
             </div>
        </Row>
-    <DataTable data={tableData} options={{
+    <DataTable ref={table} data={tableData} options={{
                  order: [[0, 'desc']],
                  fixedColumns: {
                    start: 2

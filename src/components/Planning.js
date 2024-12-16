@@ -11,7 +11,7 @@ import Responsive from 'datatables.net-responsive-dt';
 import DT from 'datatables.net-dt';
 //import PrintDataTable from '../components/PrintDataTable';
 
-const API_URL = 'https://www.wynstarcreations.com/seyal/api/plans';
+const API_URL = 'https://www.wynstarcreations.com/seyal/api/';
 
 DataTable.use(Responsive);DataTable.use(Select);
 DataTable.use(FixedHeader);DataTable.use(DT);
@@ -23,7 +23,7 @@ function Planning() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${API_URL}`);
+        const response = await axios.get(`${API_URL}/plans`);
         setTableData(response.data);
       } catch (error) {
         console.log(error);
@@ -61,10 +61,31 @@ function Planning() {
     rows.map(value => (
       dataArr.push(value)
     ));    
-    //setSelectedData(dataArr);
+    axios.post(`${API_URL}/deletePlan`, dataArr)
+    .then(function (response) {      
+      console.log(response);
+    })
+  .catch(function (error) {
+    console.log(error);
+  });
     console.log(dataArr);
     api.rows({ selected: true }).remove().draw();
   }
+  };
+
+  const batchHandle =  (event) => {
+
+    event.preventDefault();
+    
+    let api = table.current.dt();
+    let rows = api.rows({ selected: true }).data().toArray();
+    let dataArr = [];
+    rows.map(value => (
+      dataArr.push(value)
+    ));    
+    //setSelectedData(dataArr);
+    console.log(dataArr);
+    
   };
 
   return (
@@ -84,7 +105,8 @@ function Planning() {
 
       <Dropdown.Menu>
         <Dropdown.Item href="/profile">Add</Dropdown.Item>
-         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>       
+         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>   
+         <Dropdown.Item href="#" onClick={batchHandle}>Create batch</Dropdown.Item>    
         <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
