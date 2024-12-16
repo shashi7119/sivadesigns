@@ -46,7 +46,7 @@ function Profile() {
   const [formData, setFormData] = useState({
     date:null,machine: '', customer: '', fabric: '', 
     shade: '', construction: '', width: '',
-    weight: '',  gmeter: '', glm: '',aglm: '',process: '',finishing: '',
+    weight: '',  gmeter: '', glm: '',aglm: '',process: '',finishing: '',duplicate: '0',
   });
 
   const [availData, setAvailData] = useState("0");
@@ -55,9 +55,9 @@ function Profile() {
   const regexPatterns = {
     machine: /^[0-9]*$/,          // Only numbers for input1
     customer: /^[a-zA-Z ]*$/,              // Only letters for input2
-    fabric: /^[a-zA-Z0-9_ ]*$/,       // Alphanumeric and underscores for input3
+    fabric: /^[a-zA-Z0-9_ ]*$/, duplicate: /^[0-9 ]*$/,      // Alphanumeric and underscores for input3
     shade: /^[a-zA-Z0-9_ ]*$/,construction: /^[a-zA-Z0-9_x/ ]*$/,
-    width: /^[0-9"]*$/,process: /^[a-zA-Z0-9_+ ]*$/,finishing: /^[a-zA-Z0-9_+ ]*$/,
+    width: /^[0-9"]*$/, weight: /^[0-9 ]*$/, gmeter: /^[0-9 ]*$/,glm: /^[0-9 ]*$/,process: /^[a-zA-Z0-9_+ ]*$/,finishing: /^[a-zA-Z0-9_+ ]*$/,
   };
 
   const { user , isAuthenticated } = useAuth();
@@ -95,11 +95,11 @@ function Profile() {
     // Step 5: If valid, update the state, otherwise you can show an error or just keep it unchanged
     if (isValid) {
 
-      if((name === "gmeter")&&(formData.weight !==0)){
+      if((name === "gmeter")&&(formData.weight !==0)&&(formData.weight !=="")){
         formData.aglm = parseFloat(formData.weight/value).toFixed(2);
      }
 
-     if(name === "weight" && formData.gmeter !==0 ){
+     if(name === "weight" && formData.gmeter !==0 && formData.gmeter !==""){
       formData.aglm = parseFloat(value/formData.gmeter).toFixed(2);
     }
 
@@ -386,8 +386,24 @@ function Profile() {
 ))}
            </Form.Select>      
           </Form.Group>
+          <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicDuplicate">
+            <Form.Label>Duplicate </Form.Label>
+            <Form.Control
+              type="text"
+              name="duplicate"           
+              value={formData.duplicate}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}   
+                
+            />       
+          </Form.Group>
           <div className="d-flex">
-          <div className="col-12 col-sm-6 mb-3"></div>
+          <div className="col-12 col-sm-6 mb-3">
+          
+          </div>
           <div className="col-12 col-sm-4 mb-3">
             <Button variant="primary" type="submit" className="login-button">
             Save

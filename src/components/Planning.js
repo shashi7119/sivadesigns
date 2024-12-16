@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect,useRef} from 'react';
 import { Container,Dropdown, Row } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
@@ -9,14 +9,16 @@ import Select from 'datatables.net-select-dt';
 import FixedHeader from 'datatables.net-fixedcolumns-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import DT from 'datatables.net-dt';
+//import PrintDataTable from '../components/PrintDataTable';
+
 const API_URL = 'https://www.wynstarcreations.com/seyal/api/plans';
 
-DataTable.use(DT);DataTable.use(Responsive);DataTable.use(Select);
-DataTable.use(FixedHeader);
+DataTable.use(Responsive);DataTable.use(Select);
+DataTable.use(FixedHeader);DataTable.use(DT);
 function Planning() {
-  
+  const table = useRef();
   const [tableData, setTableData] = useState([ ]);
-
+ 
      // Fetch data from backend API
   useEffect(() => {
     const fetchData = async () => {
@@ -35,13 +37,35 @@ function Planning() {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated
      }
+   
+  const PrintHandle =  (event) => {
+    event.preventDefault();
+    let api = table.current.dt();
+    let rows = api.rows({ selected: true }).data().toArray();
+    let dataArr = [];
+    rows.map(value => (
+      dataArr.push(value)
+    ));    
+    //setSelectedData(dataArr);
+    console.log(dataArr);  
+       
+  };
 
-     let selectEvent = (e) => {
+  const deleteHandle =  (event) => {
 
-         e.preventDefault();
-         
-    };
-     
+    event.preventDefault();
+    if (window.confirm("Delete this item?")) {
+    let api = table.current.dt();
+    let rows = api.rows({ selected: true }).data().toArray();
+    let dataArr = [];
+    rows.map(value => (
+      dataArr.push(value)
+    ));    
+    //setSelectedData(dataArr);
+    console.log(dataArr);
+    api.rows({ selected: true }).remove().draw();
+  }
+  };
 
   return (
     <div className="data-wrapper">
@@ -60,16 +84,17 @@ function Planning() {
 
       <Dropdown.Menu>
         <Dropdown.Item href="/profile">Add</Dropdown.Item>
-        <Dropdown.Item href="#" >Print</Dropdown.Item>
-        <Dropdown.Item href="#">Delete</Dropdown.Item>
+         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>       
+        <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
           
             </div>
        </Row>
                 
-    <DataTable data={tableData} onSelect={selectEvent} options={{
-            order: [[1, 'asc']],
+    <DataTable ref={table} data={tableData} 
+    options={{
+            order: [[0, 'desc']],
             fixedColumns: {
               start: 2
           },
@@ -100,12 +125,13 @@ function Planning() {
                     <th>Finishing</th>
                 </tr>
             </thead>
-        </DataTable>
-        </Container>
-       
+        </DataTable>   
+        </Container> 
+           
         </div>
+        
+       
   );
 }
-
 
 export default Planning;

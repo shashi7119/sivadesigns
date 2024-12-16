@@ -16,7 +16,7 @@ import Process from './components/Process';
 import Width from './components/Width';
 import Finishing from './components/Finishing';
 import Edit from './components/Edit';
-
+import Greyentry from './components/Greyentry';
 
 function App() {
 
@@ -46,6 +46,8 @@ function App() {
             <Route path="/process" element={<Process />} />
             <Route path="/width" element={<Width />} />
             <Route path="/finishing" element={<Finishing />} />
+            <Route path="/greyentry" element={<Greyentry />} />
+  
           </Routes>
     </Router>
   </AuthProvider>
