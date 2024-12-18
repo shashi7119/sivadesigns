@@ -17,6 +17,7 @@ import Width from './components/Width';
 import Finishing from './components/Finishing';
 import Edit from './components/Edit';
 import Greyentry from './components/Greyentry';
+import Batch from './components/Batch';
 
 function App() {
 
@@ -47,6 +48,7 @@ function App() {
             <Route path="/width" element={<Width />} />
             <Route path="/finishing" element={<Finishing />} />
             <Route path="/greyentry" element={<Greyentry />} />
+            <Route path="/batch" element={<Batch />} />
   
           </Routes>
     </Router>
