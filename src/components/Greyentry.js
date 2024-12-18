@@ -24,7 +24,7 @@ function Greyentry() {
       const [constructionData, setConstructionData] = useState([ ]);
 
       const regexPatterns = {
-        weight: /^[0-9"]*$/,gmeter: /^[0-9"]*$/         // Only numbers for input1
+        weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/         // Only numbers for input1
       };
 
        // Fetch data from backend API
