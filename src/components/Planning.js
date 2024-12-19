@@ -149,12 +149,12 @@ function Planning() {
     event.preventDefault();
 
     console.log('Form Submitted with Data:', formData);
-    if((formData.stock_weight === "0") || (formData.stock_weight === "")){
+    if((formData.stock_weight === 0) || (formData.stock_weight === "")){
       alert("Grey Stock weight needed to create the batch");
       return;
     }
 
-    if((formData.stock_gmeter === "0") || (formData.stock_gmeter === "")){
+    if((formData.stock_gmeter === 0) || (formData.stock_gmeter === "")){
       alert("Grey Stock gmeter needed to create the batch");
       return;
     }

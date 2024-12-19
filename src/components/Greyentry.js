@@ -16,7 +16,7 @@ function Greyentry() {
   const table = useRef();
     const [formData, setFormData] = useState({
         date:"",customer:"",fabric: '',construction:'',width:'',
-        weight:'',gmeter:''
+        weight:'',gmeter:'',customerdc:'',remarks:''
       });
       const [customerData, setCusotmerData] = useState([ ]);
       const [widthData, setWidthData] = useState([ ]);
@@ -24,8 +24,9 @@ function Greyentry() {
       const [constructionData, setConstructionData] = useState([ ]);
 
       const regexPatterns = {
-        weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/         // Only numbers for input1
-      };
+        weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/  
+        ,customerdc: /^[a-zA-Z0-9. "]*$/ ,remarks: /^[a-zA-Z0-9. "]*$/,
+         };
 
        // Fetch data from backend API
        useEffect(() => {
@@ -177,12 +178,14 @@ function Greyentry() {
                 <tr>
                 <th>Entry.No</th>
                     <th>Date</th>
+                    <th>Party Dc No</th>
                     <th>Customer</th>
                     <th>Fabric</th>
                     <th>Construction</th>
                     <th>Width</th>
                     <th>Weight</th>
-                    <th>GMeter</th>                  
+                    <th>GMeter</th>   
+                    <th>Remarks</th>                
                                   
                 </tr>
             </thead>
@@ -322,6 +325,39 @@ function Greyentry() {
               name="gmeter"
              
               value={formData.gmeter}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}  
+                
+            />       
+          </Form.Group>
+          </Row>
+          <Row>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicDC">
+            <Form.Label>Customer DC No </Form.Label>
+            <Form.Control
+              type="text"
+              name="customerdc"
+             
+              value={formData.customerdc}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))} 
+              required 
+            />       
+          </Form.Group>
+         
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicRemarks">
+            <Form.Label>Reamarks </Form.Label>
+            <Form.Control
+              type="text"
+              name="remarks"
+             
+              value={formData.remarks}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
