@@ -54,10 +54,10 @@ function Profile() {
   // Step 2: Declare regex patterns for each input
   const regexPatterns = {
     machine: /^[0-9]*$/,          // Only numbers for input1
-    customer: /^[a-zA-Z ]*$/,              // Only letters for input2
-    fabric: /^[a-zA-Z0-9_ ]*$/, duplicate: /^[0-9 ]*$/,      // Alphanumeric and underscores for input3
-    shade: /^[a-zA-Z0-9_ ]*$/,construction: /^[a-zA-Z0-9_x/ ]*$/,
-    width: /^[0-9"]*$/, weight: /^[0-9. ]*$/, gmeter: /^[0-9. ]*$/,glm: /^[0-9. ]*$/,process: /^[a-zA-Z0-9_+ ]*$/,finishing: /^[a-zA-Z0-9_+ ]*$/,
+    customer: /^[A-Za-z0-9_@./#&+\-, ]*$/,              // Only letters for input2
+    fabric: /^[A-Za-z0-9_@./#&+\-, ]*$/,       // Alphanumeric and underscores for input3
+    shade: /^[A-Za-z0-9_@./#&+\-, ]*$/,construction: /^[A-Za-z0-9_@./#&+\-, ]*$/,
+    width: /^[0-9"]*$/,weight: /^[0-9. ]*$/, gmeter: /^[0-9. ]*$/,glm: /^[0-9. ]*$/,process: /^[a-zA-Z0-9_+ ]*$/,finishing: /^[a-zA-Z0-9_+ ]*$/,
   };
 
   const { user , isAuthenticated } = useAuth();

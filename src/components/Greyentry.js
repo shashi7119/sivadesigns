@@ -25,7 +25,7 @@ function Greyentry() {
 
       const regexPatterns = {
         weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/  
-        ,customerdc: /^[a-zA-Z0-9. "]*$/ ,remarks: /^[a-zA-Z0-9. "]*$/,
+        ,customerdc: /^[A-Za-z0-9_@./#&+\-, "]*$/ ,remarks: /^[A-Za-z0-9_@./#&+\-, "]*$/,
          };
 
        // Fetch data from backend API
@@ -350,9 +350,8 @@ function Greyentry() {
               required 
             />       
           </Form.Group>
-         
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicRemarks">
-            <Form.Label>Reamarks </Form.Label>
+         <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicRemarks">
+            <Form.Label>Remarks </Form.Label>
             <Form.Control
               type="text"
               name="remarks"

@@ -24,11 +24,11 @@ function Edit() {
   const [constructionData, setConstructionData] = useState([ ]);
   const [finishingData, setFinishingData] = useState([ ]);
   const [formData, setFormData] = useState({
-    date:null,machine: '', customer: '', fabric: '', 
+    ide:'',date:null,machine: '', customer: '', fabric: '', 
     shade: '', construction: '', width: '',
     weight: '0',  gmeter: 0, glm: '0',aglm: '0',process: '',finishing: '',
   });
- 
+ formData.ide=planid;
       // Fetch data from backend API
       useEffect(() => {
        
@@ -64,9 +64,9 @@ function Edit() {
   // Step 2: Declare regex patterns for each input
   const regexPatterns = {
     machine: /^[0-9]*$/,          // Only numbers for input1
-    customer: /^[a-zA-Z ]*$/,              // Only letters for input2
-    fabric: /^[a-zA-Z0-9_ ]*$/,       // Alphanumeric and underscores for input3
-    shade: /^[a-zA-Z0-9_ ]*$/,construction: /^[a-zA-Z0-9_x/ ]*$/,
+    customer: /^[A-Za-z0-9_@./#&+\-, ]*$/,              // Only letters for input2
+    fabric: /^[A-Za-z0-9_@./#&+\-, ]*$/,       // Alphanumeric and underscores for input3
+    shade: /^[A-Za-z0-9_@./#&+\-, ]*$/,construction: /^[A-Za-z0-9_@./#&+\-, ]*$/,
     width: /^[0-9"]*$/,weight: /^[0-9. ]*$/, gmeter: /^[0-9. ]*$/,glm: /^[0-9. ]*$/,process: /^[a-zA-Z0-9_+ ]*$/,finishing: /^[a-zA-Z0-9_+ ]*$/,
   };
 
@@ -81,7 +81,7 @@ function Edit() {
     event.preventDefault();
 
     console.log('Form Submitted with Data:', formData);
-    axios.post(`${API_URL}/planning`, formData)
+    axios.post(`${API_URL}/updateplanning`, formData)
     .then(function (response) {
       navigate('/planning');
       console.log(response);
