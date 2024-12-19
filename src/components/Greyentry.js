@@ -15,9 +15,12 @@ DataTable.use(DT);
 function Greyentry() {
   const table = useRef();
     const [formData, setFormData] = useState({
-        date:"",customer:"",fabric: '',construction:'',width:'',
+        ide:"",date:"",customer:"",fabric: '',construction:'',width:'',
         weight:'',gmeter:'',customerdc:'',remarks:''
       });
+
+      const [isEdit, setIsEdit] = useState(false);
+
       const [customerData, setCusotmerData] = useState([ ]);
       const [widthData, setWidthData] = useState([ ]);
       const [fabricData, setFabricData] = useState([ ]);
@@ -42,31 +45,35 @@ function Greyentry() {
             console.log(error);
           } 
         };
+        
         fetchData();
       }, []);
 
     const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
 
-  const handleClose = () => setShow(false);
+  const handleClose = (e) =>  {
+    setFormData("");
+    setShow(false);}
   const handleShow = (e) => { 
-    setShow(true);
-    
+    setIsEdit(false);
+    setShow(true);    
   }
   
 
      // Fetch data from backend API
   useEffect(() => {
     const fetchData = async () => {
-      try {
+      try {        
         const response = await axios.get(`${API_URL}/inventry`);
-        setTableData(response.data);
+        setTableData(response.data);      
       } catch (error) {
         console.log(error);
       } 
     };
-    fetchData();
-  }, [formData]);
+    
+     fetchData();
+  }, []);
 
       const { user , isAuthenticated } = useAuth();
       if (!isAuthenticated) {
@@ -94,50 +101,93 @@ function Greyentry() {
           }));
         }
     
-        
        };
 
      const handleSubmit = async (event) => {
         event.preventDefault();
-    
-        console.log('Form Submitted with Data:', formData);
+        if(!isEdit) {               
         axios.post(`${API_URL}/addInventry`, formData)
-      .then(function (response) {
-
-        setShow(false);
-        setFormData('');
+      .then(function (response) {        
         console.log(response);
       })
       .catch(function (error) {
         console.log(error);
       });
-        //const userData = response.data;
-       // console.log('Data From Backend:', userData);
+    } else {
+        console.log(formData);    
+        axios.post(`${API_URL}/updateInventry`, formData)
+        .then(function (response) {        
+          console.log(response);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });    
+    }
     
+    setShow(false);
+    setFormData('');
+    window.location.reload(false);
       };
-     
-      const deleteHandle =  (event) => {
 
-        event.preventDefault();
-        if (window.confirm("Delete this item?")) {
+      function formatDate(dateStr) {
+        const [day, month, year] = dateStr.split("-"); // Split the string
+        return `${year}/${month}/${day}`; // Reformat to yyyy/mm/dd
+      }
+
+      const edithandle =  (event) => {
+        setIsEdit(true);
+        event.preventDefault();       
         let api = table.current.dt();
         let rows = api.rows({ selected: true }).data().toArray();
         let dataArr = [];
         rows.map(value => (
           dataArr.push(value)
         ));    
-        axios.post(`${API_URL}/deleteInventory`, dataArr)
-        .then(function (response) {      
-          console.log(response);
-        })
-      .catch(function (error) {
-        console.log(error);
-      });
-        console.log(dataArr);
-        api.rows({ selected: true }).remove().draw();
-      }
-      };
 
+        if(dataArr.length === 0) {
+          alert('Select entry for edit');
+        }else if(dataArr.length > 1) {
+          alert('Not allowed multiple entries for edit');
+        } else {
+          console.log(dataArr); 
+          const [eweight] = dataArr[0][7].split("/");
+          const [egmeter] = dataArr[0][8].split("/");
+          const formattedDate = formatDate( dataArr[0][1]);
+           setFormData({ ide:dataArr[0][0],customer:dataArr[0][3],date:formattedDate,
+            fabric:dataArr[0][4],construction:dataArr[0][5],
+            weight: eweight,width:dataArr[0][6],
+            gmeter: egmeter, customerdc: dataArr[0][2], remarks: dataArr[0][9] });   
+             
+          setShow(true);
+        }
+      };
+     
+      const deleteHandle =  (event) => {
+
+        event.preventDefault();
+        if (window.confirm("Delete this item?")) {
+          let api = table.current.dt();
+          let rows = api.rows({ selected: true }).data().toArray();
+          let dataArr = [];
+          rows.map(value => (
+            dataArr.push(value)
+          ));    
+          if(dataArr.length === 0) {
+            alert('Select entry for delete');
+          } else {
+            
+          axios.post(`${API_URL}/deleteInventory`, dataArr)
+          .then(function (response) {      
+            console.log(response);
+          })
+        .catch(function (error) {
+          console.log(error);
+        });
+          console.log(dataArr);
+          api.rows({ selected: true }).remove().draw();
+        }
+      };
+    }
   return (
     <div className="data-wrapper">
    
@@ -154,7 +204,8 @@ function Greyentry() {
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-         <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>            
+         <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>   
+         <Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item>             
         <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
@@ -192,7 +243,7 @@ function Greyentry() {
         </DataTable>
         <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Add Grey Fabric</Modal.Title>
+          <Modal.Title>{isEdit ? "Edit Grey Fabric" : "Add Grey Fabric"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -205,21 +256,14 @@ function Greyentry() {
           ...prevData,
           date
         }));
-        setFormData((prevData) => ({
-          ...prevData,
-          "machine": ""
-        }));
-      
       }
       
       }
-      
         dateFormat="dd/MM/yyyy"
         placeholderText="Select a date"
         className="date-input"
-      />
-         
-         
+        
+      /> 
           </Form.Group>
           <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicCustomer">
             
