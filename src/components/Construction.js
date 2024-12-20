@@ -17,11 +17,12 @@ function Construction() {
       });
 
       const regexPatterns = {
-        mname: /^[a-zA-Z0-9_x/ ]*$/,          // Only numbers for input1
+        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,          // Only numbers for input1
       };
 
     const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
+    const [fetch, setFetch] = useState(false);
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -37,7 +38,7 @@ function Construction() {
       } 
     };
     fetchData();
-  }, [formData]);
+  }, [fetch]);
 
       const { user , isAuthenticated } = useAuth();
       if (!isAuthenticated) {
@@ -69,6 +70,7 @@ function Construction() {
        };
 
      const handleSubmit = async (event) => {
+      
         event.preventDefault();
     
         console.log('Form Submitted with Data:', formData);
@@ -79,6 +81,7 @@ function Construction() {
         setShow(false);
         setFormData('');
         console.log(response);
+        setFetch(true);
       })
       .catch(function (error) {
         console.log(error);

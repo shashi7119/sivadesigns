@@ -6,7 +6,6 @@ import '../css/DataTable.css';
 import axios from 'axios';
 import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
-import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css'
 const API_URL = 'https://www.wynstarcreations.com/seyal/api/';
 
@@ -15,11 +14,13 @@ DataTable.use(DT);
 function Greyentry() {
   const table = useRef();
     const [formData, setFormData] = useState({
-        ide:"",date:"",customer:"",fabric: '',construction:'',width:'',
+        ide:"",customer:"",fabric: '',construction:'',width:'',
         weight:'',gmeter:'',customerdc:'',remarks:''
       });
 
       const [isEdit, setIsEdit] = useState(false);
+      const [fetch, setFetch] = useState(false);
+      
 
       const [customerData, setCusotmerData] = useState([ ]);
       const [widthData, setWidthData] = useState([ ]);
@@ -73,7 +74,7 @@ function Greyentry() {
     };
     
      fetchData();
-  }, []);
+  }, [fetch]);
 
       const { user , isAuthenticated } = useAuth();
       if (!isAuthenticated) {
@@ -126,14 +127,11 @@ function Greyentry() {
     
     setShow(false);
     setFormData('');
-    window.location.reload(false);
+    if(fetch){setFetch(false);} else {setFetch(true);}
+    
       };
 
-      function formatDate(dateStr) {
-        const [day, month, year] = dateStr.split("-"); // Split the string
-        return `${year}/${month}/${day}`; // Reformat to yyyy/mm/dd
-      }
-
+     
       const edithandle =  (event) => {
         setIsEdit(true);
         event.preventDefault();       
@@ -151,9 +149,9 @@ function Greyentry() {
         } else {
           console.log(dataArr); 
           const [eweight] = dataArr[0][7].split("/");
-          const [egmeter] = dataArr[0][8].split("/");
-          const formattedDate = formatDate( dataArr[0][1]);
-           setFormData({ ide:dataArr[0][0],customer:dataArr[0][3],date:formattedDate,
+          const [egmeter] = dataArr[0][6].split("/");
+          
+           setFormData({ customer:dataArr[0][3],
             fabric:dataArr[0][4],construction:dataArr[0][5],
             weight: eweight,width:dataArr[0][6],
             gmeter: egmeter, customerdc: dataArr[0][2], remarks: dataArr[0][9] });   
@@ -226,8 +224,8 @@ function Greyentry() {
                  }
             }} className="display table sortable">
             <thead>
-                <tr>
-                <th>Entry.No</th>
+                <tr>    
+                    <th>Entry No</th>           
                     <th>Date</th>
                     <th>Party Dc No</th>
                     <th>Customer</th>
@@ -246,25 +244,7 @@ function Greyentry() {
           <Modal.Title>{isEdit ? "Edit Grey Fabric" : "Add Grey Fabric"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
-          <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicMachine">
-            <Form.Label>Date</Form.Label>
-            <DatePicker
-        id="date-input"
-        selected={formData.date}
-        onChange={(date) => { setFormData((prevData) => ({
-          ...prevData,
-          date
-        }));
-      }
-      
-      }
-        dateFormat="dd/MM/yyyy"
-        placeholderText="Select a date"
-        className="date-input"
-        
-      /> 
-          </Form.Group>
+          <Form>          
           <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicCustomer">
             
             <Form.Select             

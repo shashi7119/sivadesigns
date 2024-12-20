@@ -22,6 +22,7 @@ function Finishing() {
 
     const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
+    const [fetch, setFetch] = useState(false);
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -37,7 +38,7 @@ function Finishing() {
       } 
     };
     fetchData();
-  }, [formData]);
+  }, [fetch]);
 
       const { user , isAuthenticated } = useAuth();
       if (!isAuthenticated) {
@@ -78,6 +79,7 @@ function Finishing() {
 
         setShow(false);
         setFormData('');
+        setFetch(true);
         console.log(response);
       })
       .catch(function (error) {
