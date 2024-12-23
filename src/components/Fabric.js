@@ -17,7 +17,7 @@ function Fabric() {
       });
 
       const regexPatterns = {
-        mname: /^[a-zA-Z ]*$/,          // Only numbers for input1
+        mname: /^[A-Za-z0-9_@./#&+\-, ]*$/,          // Only numbers for input1
       };
 
     const [tableData, setTableData] = useState([ ]);
