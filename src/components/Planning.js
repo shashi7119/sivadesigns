@@ -16,14 +16,16 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 DataTable.use(Responsive);DataTable.use(Select);
 DataTable.use(FixedHeader);DataTable.use(DT);
 function Planning() {
+  
   const table = useRef();
   const [show, setShow] = useState(false);
   const [tableData, setTableData] = useState([ ]);
   const [formData, setFormData] = useState({
     planid: '', stock_weight: '0',  stock_gmeter: '0', 
     planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',
-  });
- 
+  });  
+  let [selData, setselData] = useState([ ]);
+  
   const regexPatterns = {
     stock_weight: /^[0-9.]*$/,          // Only numbers for input1
     stock_gmeter: /^[0-9.]*$/,              // Only letters for input2
@@ -45,6 +47,7 @@ function Planning() {
     fetchData();
   }, []);
 
+  
       const { user , isAuthenticated } = useAuth();
       if (!isAuthenticated) {
         return null;
@@ -52,10 +55,9 @@ function Planning() {
      }
    
   const PrintHandle =  (event) => {
-    event.preventDefault();
+    event.preventDefault();  
     let api = table.current.dt();
-    let selectedRows = api.rows({ selected: true }).data();
-console.log(selectedRows);
+    api.rows().deselect();
     const printableContent = `
     <html>
       <head>
@@ -106,7 +108,7 @@ console.log(selectedRows);
             </tr>
           </thead>
           <tbody>
-            ${selectedRows
+            ${selData
               .map(
                 (row) => `
                   <tr>
@@ -133,13 +135,11 @@ console.log(selectedRows);
       </body>
     </html>
   `;
-
+    
     const newWindow = window.open("", "_blank");
     newWindow.document.write(`<pre>${printableContent}</pre>`);
     newWindow.print();
-    //setSelectedData(dataArr);
-    //console.log(dataArr);  
-       
+    selData.length=0;       
   };
 
   const deleteHandle =  (event) => {
@@ -274,6 +274,18 @@ console.log(selectedRows);
     }
   }
 
+  const rowClick = (e) => {
+    
+    e.preventDefault();
+    let api = table.current.dt();
+    let rows = api.rows({ selected: true }).data().toArray();
+    rows.map(value => (
+      selData.push(value)         
+    ));  
+    selData = [...new Set(selData)];  
+    setselData(selData);  
+  }
+
   return (
     <div className="data-wrapper">
    
@@ -300,7 +312,7 @@ console.log(selectedRows);
             </div>
        </Row>
                 
-    <DataTable ref={table} data={tableData} 
+    <DataTable onSelect={rowClick} ref={table} data={tableData} 
     options={{
             order: [[0, 'desc']],
             fixedColumns: {
