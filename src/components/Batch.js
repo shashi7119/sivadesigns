@@ -41,18 +41,98 @@ function Batch() {
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated
      }
    
-  const PrintHandle =  (event) => {
-    event.preventDefault();
-    let api = table.current.dt();
-    let rows = api.rows({ selected: true }).data().toArray();
-    let dataArr = [];
-    rows.map(value => (
-      dataArr.push(value)
-    ));    
-    //setSelectedData(dataArr);
-    console.log(dataArr);  
-       
-  };
+     const PrintHandle =  (event) => {
+      event.preventDefault();
+      let api = table.current.dt();
+      let selectedRows = api.rows({ selected: true }).data();
+  console.log(selectedRows);
+      const printableContent = `
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              line-height: 1.6;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            table, th, td {
+              border: 1px solid black;
+            }
+            th, td {
+              padding: 10px;
+              text-align: left;
+            }
+            th {
+              background-color: #f2f2f2;
+            }
+            h1 {
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Plans</h1>
+          <table>
+            <thead>
+              <tr>
+                <th>Batch.No</th>
+                      <th>Date</th>
+                      <th>Planned Date</th>
+                      <th>Machine</th>
+                      <th>Customer</th>
+                      <th>Fabric</th>
+                      <th>Shade</th>
+                      <th>Construction</th>
+                      <th>Width</th>
+                      <th>Weight</th>
+                      <th>GMeter</th>                   
+                      <th>GLM</th>
+                      <th>AGLM</th>
+                      <th>Process</th>
+                      <th>Finishing</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${selectedRows
+                .map(
+                  (row) => `
+                    <tr>
+                      <td>${row[0]}</td>
+                      <td>${row[1]}</td>
+                      <td>${row[2]}</td>
+                      <td>${row[3]}</td>
+                      <td>${row[4]}</td>
+                      <td>${row[5]}</td>
+                      <td>${row[6]}</td>
+                      <td>${row[7]}</td>
+                      <td>${row[8]}</td>
+                      <td>${row[9]}</td>
+                      <td>${row[10]}</td>
+                      <td>${row[11]}</td>
+                      <td>${row[12]}</td>
+                      <td>${row[13]}</td>
+                      <td>${row[14]}</td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+  
+      const newWindow = window.open("", "_blank");
+      newWindow.document.write(`<pre>${printableContent}</pre>`);
+      newWindow.print();
+      //setSelectedData(dataArr);
+      //console.log(dataArr);  
+         
+    };
 
   const deleteHandle =  (event) => {
 
