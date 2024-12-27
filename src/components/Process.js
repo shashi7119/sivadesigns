@@ -6,7 +6,7 @@ import '../css/DataTable.css';
 import axios from 'axios';
 import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
-const API_URL = 'https://www.wynstarcreations.com/seyal/api/getMasters?type=process';
+const API_URL = 'https://www.wynstarcreations.com/seyal/api/getMasters?type=processroute';
 const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/addProcessRoute';
 
 DataTable.use(DT);
@@ -206,12 +206,22 @@ function Process() {
                 responsive: true,
                 select: true,
                 iDisplayLength:25,
+                fixedHeader: true,   
+    rowGroup: {
+        dataSrc: 1
+    }
             }} className="display table sortable">
             <thead>
                 <tr>
                     <th>S.No</th>
-                    <th>Process</th> 
-                    <th>Created_at</th>                   
+                    <th>Process Route</th> 
+                    <th>Call No</th>
+                    <th>Process</th>
+                    <th>Material</th>
+                    <th>Dosage</th>
+                    <th>Unit</th>
+                    <th>Temperature</th>
+                    <th>Time</th>                                   
                 </tr>
             </thead>
         </DataTable>

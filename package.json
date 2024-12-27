@@ -12,6 +12,7 @@
     "datatables.net-fixedcolumns-dt": "^5.0.4",
     "datatables.net-react": "^1.0.0",
     "datatables.net-responsive-dt": "^3.0.3",
+    "datatables.net-rowgroup-dt": "^1.5.1",
     "datatables.net-select-dt": "^2.1.0",
     "date-fns": "^4.1.0",
     "react": "^18.3.1",
@@ -19,7 +20,7 @@
     "react-datepicker": "^7.5.0",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",
-    "react-scripts": "5.0.1", 
+    "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
