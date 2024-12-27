@@ -17,7 +17,7 @@ function Customer() {
       });
 
       const regexPatterns = {
-        mname: /^[a-zA-Z ]*$/,          // Only numbers for input1
+        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,          // Only numbers for input1
       };
 
     const [tableData, setTableData] = useState([ ]);

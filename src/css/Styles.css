@@ -11,3 +11,5 @@ table.dataTable{margin-top: 1rem !important;width: 99% !important;margin: auto}
 	.table thead tr th:last-child{border-top-right-radius: 10px}
 	.table td, .table th{border-top: 1px solid #D7DFF0;padding: 0.9rem 0.75rem;color: #364159;font-weight: normal;}
 	.table td{background: #ffffff;}
+
+	.form-control { padding:5px !important}
