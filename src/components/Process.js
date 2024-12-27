@@ -5,11 +5,14 @@ import '../css/Styles.css';
 import '../css/DataTable.css';
 import axios from 'axios';
 import DataTable from 'datatables.net-react';
+import FixedHeader from 'datatables.net-fixedcolumns-dt';
+import RowGroup from 'datatables.net-rowgroup-dt';
+
 import DT from 'datatables.net-dt';
 const API_URL = 'https://www.wynstarcreations.com/seyal/api/getMasters?type=processroute';
 const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/addProcessRoute';
 
-DataTable.use(DT);
+DataTable.use(DT);DataTable.use(FixedHeader);DataTable.use(RowGroup);
 function Process() {
 
     const [formData, setFormData] = useState({
@@ -206,7 +209,8 @@ function Process() {
                 responsive: true,
                 select: true,
                 iDisplayLength:25,
-                fixedHeader: true,   
+                fixedHeader: true,  
+                            
     rowGroup: {
         dataSrc: 1
     }
@@ -216,8 +220,8 @@ function Process() {
                     <th>S.No</th>
                     <th>Process Route</th> 
                     <th>Call No</th>
-                    <th>Process</th>
-                    <th>Material</th>
+                    <th>Chemical</th>
+                    <th>Product</th>
                     <th>Dosage</th>
                     <th>Unit</th>
                     <th>Temperature</th>
@@ -270,7 +274,7 @@ function Process() {
         className="form-control"
         value={row.value}
         onChange={(e) => handleInputChange(row.id, e.target.value)}
-        placeholder="Search Process..."
+        placeholder="Search Chemical..."
       />
       {loading && (
         <div className="position-absolute w-100 text-center">
@@ -297,7 +301,7 @@ function Process() {
         className="form-control"
         value={row.material}
         onChange={(e) => handleMaterialInputChange(row.id, e.target.value)}
-        placeholder="Search Material..."
+        placeholder="Search Product..."
       />
       {loading && (
         <div className="position-absolute w-100 text-center">
