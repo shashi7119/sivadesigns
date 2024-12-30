@@ -18,6 +18,7 @@ import Finishing from './components/Finishing';
 import Edit from './components/Edit';
 import Greyentry from './components/Greyentry';
 import Batch from './components/Batch';
+import Batchdetails from './components/Batchdetails';
 
 function App() {
 
@@ -49,6 +50,7 @@ function App() {
             <Route path="/finishing" element={<Finishing />} />
             <Route path="/greyentry" element={<Greyentry />} />
             <Route path="/batch" element={<Batch />} />
+            <Route path="/batch/:batchid" element={<Batchdetails />} />
   
           </Routes>
     </Router>

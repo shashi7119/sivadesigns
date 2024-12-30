@@ -1,5 +1,5 @@
 import React, { useState, useEffect,useRef} from 'react';
-import { Container,Button, Row,Modal, Form,Dropdown } from 'react-bootstrap';
+import { Container, Row, Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -17,10 +17,7 @@ DataTable.use(Responsive);DataTable.use(Select);
 DataTable.use(FixedHeader);DataTable.use(DT);
 function Batch() {
   const table = useRef();
-  const [show, setShow] = useState(false);
   const [tableData, setTableData] = useState([ ]);
-  
- 
  
      // Fetch data from backend API
   useEffect(() => {
@@ -156,71 +153,6 @@ function Batch() {
   }
   };
 
- 
-  const handleClose = () => setShow(false);
-  const handleShow = (e) => { 
-    setShow(true);    
-  }
-
-  const mrsHandle =  (event) => {
-    event.preventDefault();    
-    let api = table.current.dt();
-    let rows = api.rows({ selected: true }).data().toArray();
-    let dataArr = [];
-    rows.map(value => (
-      dataArr.push(value)
-    ));    
-    if(dataArr.length === 0) {
-      alert('Select batch for MRS');
-    } else {
-      //const planid = dataArr[0][0];
-      handleShow();  
-       /*  axios.get(`${API_URL}/getStock`,{
-          params: {
-              planid: planid
-            }
-        }).then(function (response) {      
-          setFormData(response.data);
-          handleShow();       
-        })
-      .catch(function (error) {
-        console.log(error);
-      });;*/
-      console.log(dataArr);              
-  }    
-  };
-
-
-   const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    /*console.log('Form Submitted with Data:', formData);
-    if((formData.stock_weight === "0") || (formData.stock_weight === "")){
-      alert("Grey Stock weight needed to create the batch");
-      return;
-    }
-
-    if((formData.stock_gmeter === "0") || (formData.stock_gmeter === "")){
-      alert("Grey Stock gmeter needed to create the batch");
-      return;
-    }
-    axios.post(`${API_URL}/addBatch`, formData)
-  .then(function (response) {
-
-    setShow(false);
-    setFormData('');
-    alert("Batch Created!!");
-    let api = table.current.dt();
-    api.rows({ selected: true }).remove().draw();
-  })
-  .catch(function (error) {
-    console.log(error);
-  });*/
-    //const userData = response.data;
-   // console.log('Data From Backend:', userData);
-
-  };
-
   return (
     <div className="data-wrapper">
    
@@ -237,8 +169,7 @@ function Batch() {
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>   
-         <Dropdown.Item href="#" onClick={mrsHandle}>Create MRS</Dropdown.Item>    
+         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>         
         <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
@@ -280,25 +211,7 @@ function Batch() {
                     <th>Finishing</th>
                 </tr>
             </thead>
-        </DataTable>  
-        <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Create MRS</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>          
-          
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Save 
-          </Button>
-        </Modal.Footer>
-      </Modal> 
+        </DataTable>    
         </Container> 
            
         </div>
