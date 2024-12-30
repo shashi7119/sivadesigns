@@ -49,19 +49,14 @@ function Batchdetails() {
 
  const PrintHandle =  (event) => {
     event.preventDefault();  
-    var printContents = document.getElementById("content-wrapper").outerHTML;
-    var originalContents = document.body.innerHTML;
-    document.body.innerHTML = printContents;
-    window.print();
-    document.body.innerHTML = originalContents; 
-       
+    window.print();       
   };
  
     return (
     
     <div className="data-wrapper">
         <Container>
-        <Row className="header-top">
+        <Row className="header-top d-print-none">
           <div className="col-10 col-sm-10">
           <h1>Batch Details - {batchid}</h1>
           <p>Welcome, {user.email}!</p>

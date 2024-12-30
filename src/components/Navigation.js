@@ -8,7 +8,7 @@ function Navigation() {
 
 
   return (
-    <Navbar bg="light" expand="lg">
+    <Navbar bg="light" expand="lg" className='d-print-none'>
       <Container>
         <Navbar.Brand as={Link} to="/">SSD</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
