@@ -19,6 +19,7 @@ import Edit from './components/Edit';
 import Greyentry from './components/Greyentry';
 import Batch from './components/Batch';
 import Batchdetails from './components/Batchdetails';
+import Labentry from './components/Labentry';
 
 function App() {
 
@@ -51,6 +52,7 @@ function App() {
             <Route path="/greyentry" element={<Greyentry />} />
             <Route path="/batch" element={<Batch />} />
             <Route path="/batch/:batchid" element={<Batchdetails />} />
+            <Route path="/labentry" element={<Labentry />} />
   
           </Routes>
     </Router>

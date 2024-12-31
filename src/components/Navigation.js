@@ -18,6 +18,7 @@ function Navigation() {
             {user && <Nav.Link as={Link} to="/planning">Planning</Nav.Link>}
             {user && <Nav.Link as={Link} to="/batch">Batch</Nav.Link>}
             {user && <Nav.Link as={Link} to="/greyentry">Grey Entry</Nav.Link>}
+            {user && <Nav.Link as={Link} to="/labentry">Lab Entry</Nav.Link>}
             {user &&<NavDropdown title="Settings" id="basic-nav-dropdown">
               <NavDropdown.Item href="#">
               <Nav.Link as={Link} to="/machine">Machine</Nav.Link>
