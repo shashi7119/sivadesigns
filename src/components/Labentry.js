@@ -20,7 +20,7 @@ function Labentry() {
       });
 
       const regexPatterns = {
-        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,callno: /^[0-9]*$/,quantity: /^[0-9.]*$/, unit: /^[a-zA-Z/.]*$/, time: /^[0-9.]*$/,temp: /^[0-9.]*$/,
+        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,callno: /^[0-9]*$/,quantity: /^[0-9.]*$/, unit: /^[a-zA-Z/%.]*$/, time: /^[0-9.]*$/,temp: /^[0-9.]*$/,
       };
 
     const [tableData, setTableData] = useState([ ]);
@@ -191,8 +191,7 @@ function Labentry() {
             <thead>
                 <tr>
                     <th>S.No</th>
-                    <th>Colour Code</th> 
-                    <th>Call No</th>
+                    <th>Colour Code</th>                    
                     <th>Chemical</th>
                     <th>Dosage</th>
                     <th>Unit</th>
@@ -221,26 +220,11 @@ function Labentry() {
              required
             />
             </Form.Group> <Form.Group className="col-4 col-sm-4" >
-            <Button onClick={addRow}>Add Call No</Button>
+            <Button onClick={addRow}>Add Chemical</Button>
             </Form.Group></Row>
             {rows.map((row) => (
             <Row className="mt-2">
-              <Form.Group className="col-2 col-sm-2" >  
-              <Form.Control
-              type="text"
-              name="callno"   
-              placeholder='Enter Callno'           
-              value={row.callno}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  setRows((prevRows) =>
-                prevRows.map((row1) =>
-                  row1.id === row.id ? { ...row1, callno:e.target.value} : row1
-                )
-              )
-            }    
-            required
-            />
-            </Form.Group>       
+                    
     <Form.Group className="col-4 col-sm-4 px-1" >
       <input
         type="text"
@@ -301,8 +285,8 @@ function Labentry() {
                          required
                         >
                           <option  value="">Unit</option>
-                          <option  value="per/kg">PER/KG</option>
-                          <option  value="per/gpl">PER/GPL</option>
+                          <option  value="%">%</option>
+                          <option  value="GPL">GPL</option>
                           
                        </Form.Select>       
                       </Form.Group>

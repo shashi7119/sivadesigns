@@ -17,9 +17,10 @@ function Batchdetails() {
       shade: '', construction: '', width: '',
       weight: '0',  gmeter: 0, glm: '0',aglm: '0',process: '',finishing: '',
     });
+    const [colorCode, setColorCode] = useState(0);
     const [rows, setMrs] = useState([{ ide:'',name: "", 
         subprocess: "",callno:'',chemical: "", dosage: "",
-        unit:"",temp:"",time:"" }]);
+        unit:"",temp:"",time:"",totalWeight:"",ratio:"" }]);
 
         const regexPatterns = {
           dosage: /^[0-9.]*$/
@@ -44,7 +45,7 @@ function Batchdetails() {
         });
 
         setFormData(response.data['batch']); 
-        setMrs(response.data['mrs']);     
+        setMrs(response.data['mrs']); 
         
       } catch (error) {
         console.log(error);
@@ -98,8 +99,7 @@ function Batchdetails() {
       setLoading(true);
       const response = await axios.get(`https://www.wynstarcreations.com/seyal/api/search?type=colourcode&q=${query}`);
       const data = response.data;          
-      updateMaterialSuggestions(id, data.results || []);
-      
+      updateMaterialSuggestions(id, data.results || []);      
      
     } catch (error) {
       console.error("Error fetching suggestions:", error);          
@@ -143,18 +143,19 @@ function Batchdetails() {
     };
 
     const handleSubmit = async (event) => {
+      
       event.preventDefault();      
       console.log('Form Submitted with Data:', colourrow);
       
           axios.post(`${API_URL}/addColourCode`, colourrow)
     .then(function (response) {
 
-      setShow(false);
+      setShow(false);setColorCode(1);
       response.data.map((dataObj) => (
-        setMrs((prevItems) => [...prevItems, { subprocess:dataObj.name,
+        setMrs((prevItems) => [...prevItems, { ide:(Math.floor(Math.random() * (1000 - 10 + 1)) + 10),subprocess:dataObj.name,
           callno:dataObj.callno, chemical:dataObj.chemical,
           dosage: dataObj.dosage,temp: dataObj.temp,unit: dataObj.unit,
-          time: dataObj.time}])       
+          time: dataObj.time,totalWeight:""}])       
       ))
       console.log('Form Total length:', rows.length);
     // const sortedItems = [...rows].sort((a, b) => a.callno.localeCompare(b.callno));
@@ -169,6 +170,33 @@ function Batchdetails() {
       //const userData = response.data;
     // console.log('Data From Backend:', userData);
 
+    };
+
+    const mrsPrint =  (event) => {
+      event.preventDefault();  
+      setColorCode(2);
+      alert("Work in progress...");      
+    };
+
+    const handleSave =  (event) => {
+      
+      event.preventDefault(); 
+      console.log('Form Total length:', rows);
+      alert("Work in progress...");
+        
+    };
+
+    const calculateGPL =  (ratio,selROw) => {
+     
+      let totalLtr = parseFloat(ratio * formData.weight).toFixed(5)
+      let gpl = parseFloat(selROw.dosage/1000).toFixed(5)
+      let totalWeight = parseFloat(totalLtr*gpl).toFixed(5)
+      setMrs((prevRows) =>
+        prevRows.map((row1) =>
+          row1.ide === selROw.ide ? { ...row1, totalWeight:totalWeight} : row1
+        )
+      )
+              
     };
     
     return (
@@ -336,14 +364,16 @@ function Batchdetails() {
         </Row>
         </Card>
        <Row className='mrs d-print-none'>
-       <Col xs={10}><h3>Material Request Details</h3></Col>
+       <Col xs={10}><h3>Material Request Slip</h3></Col>
        <Col xs={2}>
           <Dropdown>
             <Dropdown.Toggle variant="success" id="dropdown-basic">
               Actions
             </Dropdown.Toggle>
             <Dropdown.Menu>
-              <Dropdown.Item href="#" onClick={handleShow}>Add Colour Code</Dropdown.Item>                
+            {colorCode===0 && <Dropdown.Item href="#" onClick={handleShow}>Add Colour Code</Dropdown.Item> }              
+            {colorCode===1 && <Dropdown.Item href="#" onClick={handleSave}>Save</Dropdown.Item> } 
+            {colorCode===2 && <Dropdown.Item href="#" onClick={mrsPrint}>Print</Dropdown.Item> }
             </Dropdown.Menu>
         </Dropdown>
        </Col>
@@ -362,11 +392,27 @@ function Batchdetails() {
         <Col xs={1}>TEMP</Col>
         <Col xs={1}>TIME</Col>
         </Row>
-       { 
+       {        
           rows.map(row => (   
         <Row className='mt-3'>         
         <Col xs={1}>{count++}</Col>
-        <Col xs={1}>{row.callno}</Col>
+        <Col xs={1}>{(row.callno === "0") ? <Form.Control
+         type="text"
+         name="callno"  
+         placeholder='Callno'            
+         value={row.callno}
+         onKeyUp={handleKeyUp}
+         onChange={(e) =>  setMrs((prevRows) =>
+           prevRows.map((row1) =>
+             row1.ide === row.ide ? { ...row1, callno:e.target.value} : row1
+           )
+         )
+       }    
+        required
+       />
+       : row.callno
+      }
+      </Col>
         <Col xs={2}>{row.subprocess}</Col>    
         <Col xs={2}>{row.chemical}</Col>    
         <Col xs={1}>
@@ -385,8 +431,23 @@ function Batchdetails() {
              required
             />
         </Col>
-        <Col xs={1}>{row.unit.toUpperCase()}</Col>
-        <Col xs={2}>{parseFloat((row.dosage/100) * formData.weight).toFixed(5)}</Col>
+        <Col xs={1}>{row.unit === 'GPL' ? 
+        <Form.Select             
+                      name="gplunit"              
+                      onChange={(e) =>  {
+                        calculateGPL(e.target.value,row);
+                       }
+                      }      
+                     required
+                    >
+         <option >Ratio</option>
+         <option value="3">1:3</option>
+         <option value="4">1:4</option>
+         </Form.Select>
+        :
+        row.unit
+        }</Col>
+        <Col xs={2}>{(row.totalWeight === undefined || row.unit !== "GPL")?(parseFloat((row.dosage/100) * formData.weight).toFixed(5)):row.totalWeight}</Col>
         <Col xs={1}>{row.temp}</Col>
         <Col xs={1}>{row.time}</Col>
         </Row>
