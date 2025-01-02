@@ -20,7 +20,7 @@ function Process() {
       });
 
       const regexPatterns = {
-        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,callno: /^[0-9]*$/,quantity: /^[0-9.]*$/, unit: /^[a-zA-Z/.]*$/, time: /^[0-9.]*$/,temp: /^[0-9.]*$/,
+        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,callno: /^[0-9]*$/,quantity: /^[0-9.]*$/, unit: /^[a-zA-Z/%.]*$/, time: /^[0-9.]*$/,temp: /^[0-9.]*$/,
       };
 
     const [tableData, setTableData] = useState([ ]);
@@ -355,8 +355,8 @@ function Process() {
                          required
                         >
                           <option  value="">Unit</option>
-                          <option  value="per/kg">PER/KG</option>
-                          <option  value="per/gpl">PER/GPL</option>
+                          <option  value="%">%</option>
+                          <option  value="GPL">GPL</option>
                           
                        </Form.Select>       
                       </Form.Group>

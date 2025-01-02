@@ -151,7 +151,7 @@ function Greyentry() {
           const [eweight] = dataArr[0][7].split("/");
           const [egmeter] = dataArr[0][6].split("/");
           
-           setFormData({ customer:dataArr[0][3],
+           setFormData({ customer:dataArr[0][3],ide:dataArr[0][0],
             fabric:dataArr[0][4],construction:dataArr[0][5],
             weight: eweight,width:dataArr[0][6],
             gmeter: egmeter, customerdc: dataArr[0][2], remarks: dataArr[0][9] });   
