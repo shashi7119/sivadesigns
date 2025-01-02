@@ -20,7 +20,7 @@ function Batchdetails() {
     const [colorCode, setColorCode] = useState(0);
     const [rows, setMrs] = useState([{ ide:'',name: "", 
         subprocess: "",callno:'',chemical: "", dosage: "",
-        unit:"",temp:"",time:"",totalWeight:"",ratio:"" }]);
+        unit:"",temp:"",time:"",totalWeight:"0",ratio:"" }]);
 
         const regexPatterns = {
           dosage: /^[0-9.]*$/
@@ -42,11 +42,11 @@ function Batchdetails() {
             params: {
                 batchid: batchid
               }
-        });
-
+        });        
         setFormData(response.data['batch']); 
-        setMrs(response.data['mrs']); 
-        
+        setMrs(response.data['mrs']);  
+        setColorCode(response.data['there']);
+                    
       } catch (error) {
         console.log(error);
       } 
@@ -155,14 +155,9 @@ function Batchdetails() {
         setMrs((prevItems) => [...prevItems, { ide:(Math.floor(Math.random() * (1000 - 10 + 1)) + 10),subprocess:dataObj.name,
           callno:dataObj.callno, chemical:dataObj.chemical,
           dosage: dataObj.dosage,temp: dataObj.temp,unit: dataObj.unit,
-          time: dataObj.time,totalWeight:""}])       
+          time: dataObj.time,totalWeight:"",ratio:""}])       
       ))
-      console.log('Form Total length:', rows.length);
-    // const sortedItems = [...rows].sort((a, b) => a.callno.localeCompare(b.callno));
-    // setMrs(sortedItems);
-     
-      //setMrs(response.data);  
-      //console.log(response);
+      
     })
     .catch(function (error) {
       console.log(error);
@@ -181,11 +176,22 @@ function Batchdetails() {
     const handleSave =  (event) => {
       
       event.preventDefault(); 
-      console.log('Form Total length:', rows);
-      alert("Work in progress...");
+      const dataToSend = {
+        ...rows,
+        bid: batchid,
+        weight: formData.weight,
+      };     
+      console.log(dataToSend)
+      axios.post(`${API_URL}/updateMRS`, dataToSend)
+      .then(function (response) {
+        setColorCode(2);
+       console.log(response.data)
+        
+      })
         
     };
 
+  
     const calculateGPL =  (ratio,selROw) => {
      
       let totalLtr = parseFloat(ratio * formData.weight).toFixed(5)
@@ -193,7 +199,7 @@ function Batchdetails() {
       let totalWeight = parseFloat(totalLtr*gpl).toFixed(5)
       setMrs((prevRows) =>
         prevRows.map((row1) =>
-          row1.ide === selROw.ide ? { ...row1, totalWeight:totalWeight} : row1
+          row1.ide === selROw.ide ? { ...row1, totalWeight:totalWeight,ratio:ratio} : row1
         )
       )
               
@@ -393,8 +399,9 @@ function Batchdetails() {
         <Col xs={1}>TIME</Col>
         </Row>
        {        
-          rows.map(row => (   
-        <Row className='mt-3'>         
+          rows.map(row => (  
+           
+        <Row className='mt-3' >         
         <Col xs={1}>{count++}</Col>
         <Col xs={1}>{(row.callno === "0") ? <Form.Control
          type="text"
@@ -422,18 +429,22 @@ function Batchdetails() {
               placeholder='Qty'            
               value={row.dosage}
               onKeyUp={handleKeyUp}
-              onChange={(e) =>  setMrs((prevRows) =>
+              onChange={(e) => { 
+                calculateGPL(e.target.value,row);
+                setMrs((prevRows) =>
                 prevRows.map((row1) =>
                   row1.ide === row.ide ? { ...row1, dosage:e.target.value} : row1
                 )
               )
+            }
             }    
              required
             />
         </Col>
         <Col xs={1}>{row.unit === 'GPL' ? 
         <Form.Select             
-                      name="gplunit"              
+                      name="gplunit"   
+                      value={row.ratio}        
                       onChange={(e) =>  {
                         calculateGPL(e.target.value,row);
                        }
@@ -441,13 +452,15 @@ function Batchdetails() {
                      required
                     >
          <option >Ratio</option>
-         <option value="3">1:3</option>
+         <option value="3" >1:3</option>
          <option value="4">1:4</option>
          </Form.Select>
         :
         row.unit
         }</Col>
-        <Col xs={2}>{(row.totalWeight === undefined || row.unit !== "GPL")?(parseFloat((row.dosage/100) * formData.weight).toFixed(5)):row.totalWeight}</Col>
+        <Col xs={2}>{
+          
+        row.unit !== "GPL"?(parseFloat((row.dosage/100) * formData.weight).toFixed(5)):row.totalWeight}</Col>
         <Col xs={1}>{row.temp}</Col>
         <Col xs={1}>{row.time}</Col>
         </Row>
