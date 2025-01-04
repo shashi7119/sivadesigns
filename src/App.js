@@ -21,6 +21,7 @@ import Batch from './components/Batch';
 import Batchdetails from './components/Batchdetails';
 import Labentry from './components/Labentry';
 import Mrs from './components/Mrs';
+import Processroute from './components/Processroute';
 
 function App() {
 
@@ -55,6 +56,7 @@ function App() {
             <Route path="/batch/:batchid" element={<Batchdetails />} />
             <Route path="/labentry" element={<Labentry />} />
             <Route path="/mrs/:batchid" element={<Mrs />} />
+            <Route path="/process/:pid" element={<Processroute />} />
   
           </Routes>
     </Router>
