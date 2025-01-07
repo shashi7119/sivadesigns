@@ -18,7 +18,7 @@ DataTable.use(FixedHeader);DataTable.use(DT);
 function Batch() {
   const table = useRef();
   const [tableData, setTableData] = useState([ ]);
- 
+  const { user , isAuthenticated } = useAuth();
      // Fetch data from backend API
   useEffect(() => {
     const fetchData = async () => {
@@ -29,10 +29,10 @@ function Batch() {
         console.log(error);
       } 
     };
-    fetchData();
-  }, []);
+    user && fetchData();
+  }, [user]);
 
-      const { user , isAuthenticated } = useAuth();
+      
       if (!isAuthenticated) {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated

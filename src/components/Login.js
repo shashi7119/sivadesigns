@@ -3,8 +3,6 @@ import React, { useState} from 'react';
 import { Form, Button } from 'react-bootstrap';
 import './Login.css';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -12,15 +10,13 @@ function Login() {
   const [errors, setErrors] = useState('');
   
   const { login } = useAuth();
-  const navigate = useNavigate();
- 
 
   const validateForm = () => {
     const newErrors = {};
     if (!email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email is invalid';
     if (!password) newErrors.password = 'Password is required';
-    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    else if (password.length < 4) newErrors.password = 'Password must be at least 6 characters';
     return newErrors;
   };
 
@@ -29,19 +25,17 @@ function Login() {
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
-    } else {
-      setErrors({});
-     
-     
+    } else {      
       // Here you would typically send a request to your server
       try {
-        
-        await login(email, password);
-        navigate('/planning');
+        setErrors({});     
+        const userData = await login(email, password);
+        console.log('Login successful:', userData);        
+        window.location.replace('/home');                      
         //console.log('Login successful:', userData);
         // Here you would typically store the user data and redirect
-      } catch (error) {
-        setErrors({ form: 'Login failed. Please try again.' });
+      } catch (error) {   
+        alert('Login failed. Please try again.')    
       }
     }
   };

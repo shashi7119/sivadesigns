@@ -26,6 +26,7 @@ function Fabric() {
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
+  const { user , isAuthenticated } = useAuth();
 
      // Fetch data from backend API
   useEffect(() => {
@@ -37,10 +38,10 @@ function Fabric() {
         console.log(error);
       } 
     };
-    fetchData();
-  }, [fetch]);
+    user && fetchData();
+  }, [fetch,user]);
 
-      const { user , isAuthenticated } = useAuth();
+      
       if (!isAuthenticated) {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated

@@ -21,7 +21,7 @@ function Profile() {
   const [fabricData, setFabricData] = useState([ ]);
   const [constructionData, setConstructionData] = useState([ ]);
   const [finishingData, setFinishingData] = useState([ ]);
- 
+  const { user , isAuthenticated } = useAuth();
       // Fetch data from backend API
       useEffect(() => {
         const fetchData = async () => {
@@ -39,8 +39,8 @@ function Profile() {
             console.log(error);
           } 
         };
-        fetchData();
-      }, []);
+        user && fetchData();
+      }, [user]);
 
   // Step 1: Declare state for storing values of all text inputs
   const [formData, setFormData] = useState({
@@ -60,7 +60,7 @@ function Profile() {
     width: /^[0-9"]*$/,weight: /^[0-9. ]*$/, gmeter: /^[0-9. ]*$/,glm: /^[0-9. ]*$/,process: /^[a-zA-Z0-9_+ ]*$/,finishing: /^[a-zA-Z0-9_+ ]*$/,
   };
 
-  const { user , isAuthenticated } = useAuth();
+  
   if (!isAuthenticated) {
     return null;
   // navigate('/login');  // Avoid rendering profile if the user is not authenticated

@@ -16,7 +16,7 @@ function Batchdetails() {
       shade: '', construction: '', width: '',
       weight: '0',  gmeter: 0, glm: '0',aglm: '0',process: '',finishing: '',
     });
-   
+    const { user , isAuthenticated } = useAuth();
 
  useEffect(() => {       
     const fetchData = async () => {
@@ -33,10 +33,9 @@ function Batchdetails() {
         console.log(error);
       } 
     };
-    fetchData();
-  }, [batchid]);
-
-  const { user , isAuthenticated } = useAuth();
+    user && fetchData();
+  }, [batchid,user]);
+  
   if (!isAuthenticated) {
     return null;
   // navigate('/login');  // Avoid rendering profile if the user is not authenticated

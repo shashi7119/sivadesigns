@@ -1,5 +1,5 @@
 import './App.css';
-import React,{ useEffect} from 'react';
+import React,{ useEffect,useState} from 'react';
 import { BrowserRouter as Router,Routes,Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navigation from './components/Navigation';
@@ -22,11 +22,17 @@ import Batchdetails from './components/Batchdetails';
 import Labentry from './components/Labentry';
 import Mrs from './components/Mrs';
 import Processroute from './components/Processroute';
+import Unauthorized from './components/Unauthorized';
+import Role from './components/Role';
 
 function App() {
 
+  const [userRole, setUserRole] = useState("");
   useEffect(() => {
-    document.title = "Siva Designs"
+    document.title = "Sri Shiva Designs"
+    const user = localStorage.getItem("user");   
+    console.log(user); 
+        user && setUserRole(JSON.parse(user).role || "guest");
  }, []);
 
   return (
@@ -41,22 +47,88 @@ function App() {
     <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/planning" element={<Planning />} />
-            <Route path="/profile/:planid" element={<Edit />} />
-            <Route path="/machine" element={<Machine />} />
-            <Route path="/customer" element={<Customer />} />
-            <Route path="/fabric" element={<Fabric />} />
-            <Route path="/construction" element={<Construction />} />
-            <Route path="/process" element={<Process />} />
-            <Route path="/width" element={<Width />} />
-            <Route path="/finishing" element={<Finishing />} />
-            <Route path="/greyentry" element={<Greyentry />} />
-            <Route path="/batch" element={<Batch />} />
-            <Route path="/batch/:batchid" element={<Batchdetails />} />
-            <Route path="/labentry" element={<Labentry />} />
-            <Route path="/mrs/:batchid" element={<Mrs />} />
-            <Route path="/process/:pid" element={<Processroute />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/profile" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+<Profile />
+              </Role>
+              
+              } />
+            <Route path="/planning" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Planning />
+               </Role>              
+              } />
+            <Route path="/profile/:planid" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Edit />
+              </Role>  
+              } />
+            <Route path="/machine" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Machine />
+              </Role>
+              } />
+            <Route path="/customer" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Customer />
+              </Role>
+              } />
+            <Route path="/fabric" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Fabric />
+              </Role>
+              } />
+            <Route path="/construction" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Construction />
+              </Role>
+              } />
+            <Route path="/process" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Process />
+              </Role>
+              } />
+            <Route path="/width" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Width />
+              </Role>
+              } />
+            <Route path="/finishing" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Finishing />
+              </Role>
+              } />
+            <Route path="/greyentry" element={
+              <Role allowedRoles={["admin","store"]} userRole={userRole}>
+              <Greyentry />
+              </Role>
+              } />
+            <Route path="/batch" element={
+              <Role allowedRoles={["admin","store"]} userRole={userRole}>
+              <Batch />
+              </Role>
+              } />
+            <Route path="/batch/:batchid" element={
+              <Role allowedRoles={["admin","production"]} userRole={userRole}>
+              <Batchdetails />
+              </Role>
+              } />
+            <Route path="/labentry" element={
+              <Role allowedRoles={["admin","production"]} userRole={userRole}>
+              <Labentry />
+              </Role>
+              } />
+            <Route path="/mrs/:batchid" element={
+              <Role allowedRoles={["admin","production"]} userRole={userRole}>
+              <Mrs />
+              </Role>
+              } />
+            <Route path="/process/:pid" element={
+              <Role allowedRoles={["admin","production"]} userRole={userRole}>
+              <Processroute />
+              </Role>
+              } />
   
           </Routes>
     </Router>

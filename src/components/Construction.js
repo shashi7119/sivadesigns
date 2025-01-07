@@ -23,9 +23,11 @@ function Construction() {
     const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
     const [fetch, setFetch] = useState(false);
+    const { user , isAuthenticated } = useAuth();
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
+
 
      // Fetch data from backend API
   useEffect(() => {
@@ -37,10 +39,10 @@ function Construction() {
         console.log(error);
       } 
     };
-    fetchData();
-  }, [fetch]);
+    user && fetchData();
+  }, [fetch,user]);
 
-      const { user , isAuthenticated } = useAuth();
+     
       if (!isAuthenticated) {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated

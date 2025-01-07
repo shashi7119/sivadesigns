@@ -19,6 +19,7 @@ function Mrs() {
     });
     const [colorCode, setColorCode] = useState(0);
     const [fetch, setFetch] = useState(false);
+    const { user , isAuthenticated } = useAuth();
     const [rows, setMrs] = useState([{ ide:'',name: "", 
         subprocess: "",callno:'',chemical: "", dosage: "",
         unit:"",temp:"",time:"",totalWeight:"0",ratio:"" }]);
@@ -58,10 +59,10 @@ function Mrs() {
         console.log(error);
       } 
     };
-    fetchData();
-  }, [batchid,fetch]);
+    user && fetchData();
+  }, [batchid,fetch,user]);
 
-  const { user , isAuthenticated } = useAuth();
+  
   if (!isAuthenticated) {
     return null;
   // navigate('/login');  // Avoid rendering profile if the user is not authenticated
@@ -93,7 +94,6 @@ function Mrs() {
       }));
     }
 
-    
    };
 
 

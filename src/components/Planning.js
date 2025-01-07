@@ -1,4 +1,5 @@
 import React, { useState, useEffect,useRef} from 'react';
+//import { useNavigate } from 'react-router-dom';
 import { Container,Button, Row,Modal, Form,Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
@@ -25,6 +26,7 @@ function Planning() {
     planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',
   });  
   let [selData, setselData] = useState([ ]);
+  //const navigate = useNavigate();
   
   const regexPatterns = {
     stock_weight: /^[0-9.]*$/,          // Only numbers for input1
@@ -34,7 +36,9 @@ function Planning() {
     actual_weight: /^[0-9.]*$/,       // Alphanumeric and underscores for input3
     actual_gmeter: /^[0-9.]*$/
   };
-     // Fetch data from backend API
+
+  const { user , isAuthenticated } = useAuth();
+  // Fetch data from backend API
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -43,17 +47,17 @@ function Planning() {
       } catch (error) {
         console.log(error);
       } 
-    };
-    fetchData();
-  }, []);
-
-  
-      const { user , isAuthenticated } = useAuth();
-      if (!isAuthenticated) {
-        return null;
-      // navigate('/login');  // Avoid rendering profile if the user is not authenticated
-     }
+    };    
+    user && fetchData();
+  }, [user]);
    
+ 
+  if (!isAuthenticated) {
+    //  return null;
+     console.log("not logged in")
+     return null;  // Avoid rendering profile if the user is not authenticated
+   }
+
   const PrintHandle =  (event) => {
     event.preventDefault();  
     let api = table.current.dt();
@@ -293,7 +297,7 @@ function Planning() {
         <Row>
           <div className="col-10 col-sm-10">
           <h1>Planning</h1>
-          <p>Welcome, {user.email}!</p>
+          <p>Welcome, {user.user}!</p>
           </div>
           <div className="col-2 col-sm-2">
           <Dropdown>

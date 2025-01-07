@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 function Navigation() {
   const { user, logout } = useAuth();
 
-
   return (
     <Navbar bg="light" expand="lg" className='d-print-none'>
       <Container>
@@ -15,11 +14,11 @@ function Navigation() {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/">Home</Nav.Link>
-            {user && <Nav.Link as={Link} to="/planning">Planning</Nav.Link>}
-            {user && <Nav.Link as={Link} to="/batch">Batch</Nav.Link>}
-            {user && <Nav.Link as={Link} to="/greyentry">Grey Entry</Nav.Link>}
-            {user && <Nav.Link as={Link} to="/labentry">Lab Entry</Nav.Link>}
-            {user &&<NavDropdown title="Settings" id="basic-nav-dropdown">
+            {user && user.role==="admin" && <Nav.Link as={Link} to="/planning">Planning</Nav.Link>}
+            {user && user.role==="admin" && <Nav.Link as={Link} to="/batch">Batch</Nav.Link>}
+            {user && (user.role==="admin" || user.role==="store") && <Nav.Link as={Link} to="/greyentry">Grey Entry</Nav.Link>}
+            {user && user.role==="admin" && <Nav.Link as={Link} to="/labentry">Lab Entry</Nav.Link>}
+            {user && user.role==="admin" && <NavDropdown title="Settings" id="basic-nav-dropdown">
               <NavDropdown.Item href="#">
               <Nav.Link as={Link} to="/machine">Machine</Nav.Link>
               </NavDropdown.Item>

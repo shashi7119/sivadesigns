@@ -1,7 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
-const API_URL = 'https://jsonplaceholder.typicode.com'; // Mock API
+const API_URL = 'https://www.wynstarcreations.com/seyal/api'; // Mock API
 const AuthContext = createContext(null);
+
 
 
 export const AuthProvider = ({ children }) => {
@@ -12,13 +13,11 @@ export const AuthProvider = ({ children }) => {
  useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('user');
+        const token = JSON.parse(localStorage.getItem('user'));
       
-        if (token) {
-        
-          setIsAuthenticated(true);
-          setUser(token);
-          
+        if (token) {        
+          setIsAuthenticated(true);          
+          setUser(token);                      
         } else {
           setIsAuthenticated(false);
           setUser(null);
@@ -32,15 +31,18 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkAuth();
+    
   }, []);
-
   const login = async (email, password) => {
+    try {
     const response = await axios.post(`${API_URL}/users`, { email, password });
-    const userData = response.data;
+    const userData = response.data;    
     setUser(userData);
     setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(userData));
-
+    localStorage.setItem('user', JSON.stringify(userData));     
+    } catch (err) {      
+      throw err;
+    }
    
   };
 

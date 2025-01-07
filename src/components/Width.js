@@ -22,6 +22,7 @@ function Width() {
 
     const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
+    const { user , isAuthenticated } = useAuth();
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -36,10 +37,9 @@ function Width() {
         console.log(error);
       } 
     };
-    fetchData();
-  }, [formData]);
-
-      const { user , isAuthenticated } = useAuth();
+    user && fetchData();
+  }, [formData,user]);
+     
       if (!isAuthenticated) {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated

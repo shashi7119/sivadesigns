@@ -1,11 +1,10 @@
 import React from 'react';
 import { Container } from 'react-bootstrap';
 
-
-function Home() {
+function Home() { 
   return (
     <Container>
-      <h1>Welcome to Sri Siva Designs</h1>
+      <h1>Welcome to Sri Shiva Designs</h1>
     </Container>
   );
 }

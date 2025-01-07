@@ -25,6 +25,7 @@ function Process() {
     const [show, setShow] = useState(false);
    const [fetch, setFetch] = useState(false);
    const [isEdit, setIsEdit] = useState(false);
+   const { user , isAuthenticated } = useAuth();
  
   const handleClose = () => {
     setShow(false);
@@ -45,10 +46,10 @@ function Process() {
         console.log(error);
       } 
     };
-    fetchData();
-  }, [fetch]);
+    user && fetchData();
+  }, [user,fetch]);
 
-      const { user , isAuthenticated } = useAuth();
+      
       if (!isAuthenticated) {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated

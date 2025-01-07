@@ -28,7 +28,7 @@ function Labentry() {
     const [fetch, setFetch] = useState(false);
     const [loading, setLoading] = useState(false);
     const [rows, setRows] = useState([{ process:'',id: 1,callno: "", material:'',quantity: "", materials: [],unit:"",temp:"",time:"" }]);
-
+    const { user , isAuthenticated } = useAuth();
   const handleClose = () => {
     setShow(false);
     setFormData('');
@@ -46,10 +46,9 @@ function Labentry() {
         console.log(error);
       } 
     };
-    fetchData();
-  }, [fetch]);
-
-      const { user , isAuthenticated } = useAuth();
+    user && fetchData();
+  }, [fetch,user]);
+     
       if (!isAuthenticated) {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated

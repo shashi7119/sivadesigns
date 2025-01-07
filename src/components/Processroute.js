@@ -30,7 +30,7 @@ function Processroute() {
    const [fetch, setFetch] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([{ process:'',id: 1,callno: 1, value: "",material:'',quantity: "", suggestions: [],materials: [],unit:"",temp:"",time:"",pid:"" }]);
-
+  const { user , isAuthenticated } = useAuth();
   const handleClose = () => {
     setShow(false);
    // setFormData('');
@@ -52,10 +52,10 @@ function Processroute() {
         console.log(error);
       } 
     };
-    fetchData();
-  }, [fetch,pid]);
+    user && fetchData();
+  }, [fetch,pid,user]);
 
-      const { user , isAuthenticated } = useAuth();
+     
       if (!isAuthenticated) {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated
