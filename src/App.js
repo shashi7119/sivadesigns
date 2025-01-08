@@ -58,9 +58,9 @@ function App() {
                </Role>              
               } />
             <Route path="/profile/:planid" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+             
               <Edit />
-              </Role>  
+              
               } />
             <Route path="/machine" element={
               <Role allowedRoles={["admin"]} userRole={userRole}>
@@ -108,9 +108,9 @@ function App() {
               </Role>
               } />
             <Route path="/batch/:batchid" element={
-              <Role allowedRoles={["admin","production"]} userRole={userRole}>
+             
               <Batchdetails />
-              </Role>
+             
               } />
             <Route path="/labentry" element={
               <Role allowedRoles={["admin","production"]} userRole={userRole}>
@@ -118,9 +118,9 @@ function App() {
               </Role>
               } />
             <Route path="/mrs/:batchid" element={
-              <Role allowedRoles={["admin","production"]} userRole={userRole}>
+              
               <Mrs />
-              </Role>
+              
               } />
             <Route path="/process/:pid" element={
               <Role allowedRoles={["admin","production"]} userRole={userRole}>
