@@ -48,10 +48,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
-            <Route path="/profile" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
-<Profile />
-              </Role>
+            <Route path="/profile" element={              
+<Profile />             
               
               } />
             <Route path="/planning" element={
