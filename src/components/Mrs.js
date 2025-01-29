@@ -11,7 +11,7 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 function Mrs() {
   
   let { batchid } = useParams();
-  let count = 1;
+  let count = 1;let acount = 1;
    const [formData, setFormData] = useState({
       machine: '', customer: '', fabric: '', 
       shade: '', construction: '', width: '',
@@ -23,11 +23,20 @@ function Mrs() {
     const [rows, setMrs] = useState([{ ide:'',name: "", 
         subprocess: "",callno:'',chemical: "", dosage: "",
         unit:"",temp:"",time:"",totalWeight:"0",ratio:"" }]);
+        const [addrows, setAddMrs] = useState([{ ide:'1',addid:'1',name: "", 
+          subprocess: "",callno:'',chemical: "", dosage: "",
+          unit:"",temp:"",time:"",totalWeight:"0",ratio:"" }]);
+
+          const [additionalrows, setAdditionalRows] = useState([{ addid:'' }]);
+
+          const [rows1, setRows1] = useState([{ process:'',id: 1,callno: 1, value: "",material:'',quantity: "", suggestions: [],materials: [],unit:"",temp:"",time:"",pid:"" }]);
+        
 
         const regexPatterns = {
           dosage: /^[0-9.]*$/,callno: /^[0-9]*$/
         };
-          const [show, setShow] = useState(false);            
+          const [show, setShow] = useState(false);  
+          const [show1, setShow1] = useState(false);          
             const [loading, setLoading] = useState(false);
             const [colourrow, setRows] = useState([{ id: 1,material:'',materials: [],bid:batchid}]);
         
@@ -36,6 +45,14 @@ function Mrs() {
           }
           const handleShow = () => {
             setShow(true);            
+          }
+
+          const handleClose1 = () => {
+            setShow1(false);    
+            setRows1([]);              
+          }
+          const handleShow1 = () => {
+            setShow1(true);            
           }
 
           const [errors, setErrors] = useState([]);
@@ -54,7 +71,8 @@ function Mrs() {
         setFormData(response.data['batch']); 
         setMrs(response.data['mrs']);  
         setColorCode(response.data['there']);
-                    
+        setAdditionalRows(response.data['addcount'])
+        setAddMrs(response.data['addmrs']);              
       } catch (error) {
         console.log(error);
       } 
@@ -263,9 +281,111 @@ function Mrs() {
           }
       };
 
-      const STRHandle= (event) => {
-        alert("Work In Progress");
-      }
+
+      const fetchSuggestions1 = async (query,id,type) => {
+        if (!query.trim()) {
+          updateRowSuggestions(id, []);
+          updateMaterialSuggestions1(id, []);
+          return;
+        }
+        try {
+          setLoading(true);
+          const response = await axios.get(`https://www.wynstarcreations.com/seyal/api/search?type=${type}&q=${query}`);
+          const data = response.data;
+          if(type ==="process"){
+            updateRowSuggestions(id, data.results || []);
+          } else {
+            updateMaterialSuggestions1(id, data.results || []);
+          }
+         
+        } catch (error) {
+          console.error("Error fetching suggestions:", error);
+          if(type ==="process"){
+            updateRowSuggestions(id, []);
+          } else {
+            updateMaterialSuggestions1(id, []);
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+    
+      const updateRowSuggestions = (id, suggestions) => {
+        setRows1((prevRows) =>
+          prevRows.map((row) =>
+            row.id === id ? { ...row, suggestions } : row
+          )
+        );
+      };
+
+      const updateMaterialSuggestions1 = (id, materials) => {
+        setRows1((prevRows) =>
+          prevRows.map((row) =>
+            row.id === id ? { ...row, materials } : row
+          )
+        );
+      };
+      
+  const handleInputChange = (id, inputValue) => {
+    setRows1((prevRows) =>
+      prevRows.map((row) =>
+        row.id === id ? { ...row, value: inputValue } : row
+      )
+    );
+
+    // Fetch suggestions from the backend
+    fetchSuggestions1(inputValue, id,'process');
+  };
+
+  const handleMaterialInputChange1 = (id, inputValue) => {
+    setRows1((prevRows) =>
+      prevRows.map((row) =>
+        row.id === id ? { ...row, material: inputValue } : row
+      )
+    );
+
+    // Fetch suggestions from the backend
+    fetchSuggestions1(inputValue, id,'chemical');
+  };
+
+  const handleSuggestionClick = (id, suggestion) => {
+    setRows1((prevRows) =>
+      prevRows.map((row) =>
+        row.id === id ? { ...row, value: suggestion, suggestions: []} : row
+      )
+    );
+  };
+
+  const  handleMaterialSuggestionClick1= (id, material) => {
+    setRows1((prevRows) =>
+      prevRows.map((row) =>
+        row.id === id ? { ...row, material: material, materials: []} : row
+      )
+    );
+  };
+
+  const addRow1 = () => {
+    const newRow = { id: rows1.length + 1,process:'',callno:1, value:'',suggestions: [] ,material:'',materials: [] ,quantity: "",temp: "",unit: "",time: "",pid:""};
+    setRows1([...rows1, newRow]);
+  };
+
+  const handleSubmit1 = async (event) => {
+      
+    event.preventDefault(); 
+    
+      const dataToSend = {
+        ...rows1,
+        bid: batchid,
+        weight: formData.weight,
+      };           
+      console.log(dataToSend)
+      axios.post(`${API_URL}/additionalMRS`, dataToSend)
+      .then(function (response) {       
+      console.log(response.data);
+      setShow1(false);setRows1([]);  
+      setFetch(true);
+      })
+  };
     
     return (
     
@@ -362,6 +482,7 @@ function Mrs() {
 
         </Row>
         </Card>
+        <Row>
        <Row className='mrs'>
        <Col xs={10}><h3>Material Request Slip</h3></Col>
        <Col xs={2} className='d-print-none'>
@@ -373,7 +494,7 @@ function Mrs() {
             {colorCode===0 && <Dropdown.Item href="#" onClick={handleShow}>Add Colour Code</Dropdown.Item> }              
             {colorCode===1 && <Dropdown.Item href="#" onClick={handleSave}>Save</Dropdown.Item> } 
             {colorCode===2 && <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item> }
-             { colorCode===2 && user && <Dropdown.Item href="#" onClick={STRHandle} >Store Request</Dropdown.Item>  }
+             { colorCode===2 && user && <Dropdown.Item href="#" onClick={handleShow1} >Additional</Dropdown.Item>  }
             </Dropdown.Menu>
         </Dropdown>
        </Col>
@@ -472,8 +593,71 @@ function Mrs() {
         </Row>
         ))}
         </Card>
+        </Row>
+        { additionalrows.map((row1) => (          
+        <Row className={row1.addid}>
+       <Row className='additional'>
+       <Col xs={10}><h3>Additional {acount++}</h3></Col>
+       <Col xs={2} className='d-print-none'>
+          <Dropdown>
+            <Dropdown.Toggle variant="success" id="dropdown-basic">
+              Actions
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+            {colorCode===2 && <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item> }
+            </Dropdown.Menu>
+        </Dropdown>
+       </Col>
+        </Row> 
+        
+        <Card className='mrs mb-4 p-3 '>
+        
+        <Row className='mrheader py-2' Style={'background:#f9f9f9;border-bottom:2px solid #f3f3f3 !important'}>         
+        <Col xs={1}>S.N0</Col>
+        <Col xs={1}>CALL NO</Col>
+        <Col xs={2}>DESCRIPTION</Col>   
+        <Col xs={2}>CHEMICAL</Col>        
+        <Col xs={1}>DOSAGE</Col>
+        <Col xs={1}>UNIT</Col>
+        <Col xs={2}>QTY/KGS</Col>
+        <Col xs={1}>TEMP</Col>
+        <Col xs={1}>TIME</Col>
+        </Row>
+       {        
+          addrows.map((row,index) => (  
+            row1.addid === row.addid ?  
+        <Row className='mt-3' >         
+        <Col xs={1}>{count++}</Col>
+        <Col xs={1}>{(row.callno === "") ? <Form.Control
+         type="text"
+         name="callno"  
+         placeholder='Callno'            
+         value={row.callno}
+         ref={(el) => (inputsRef1.current[index] = el)}           
+        required
+       />
+       : row.callno
+      }
+
+      </Col>
+        <Col xs={2}>{row.subprocess}</Col>    
+        <Col xs={2}>{row.chemical}</Col>    
+        <Col xs={1}>{ row.dosage }</Col>
+        <Col xs={1}>{row.unit }
+        {row.unit === 'GPL' && colorCode ===2 && <p>Ratio 1 :{row.ratio}</p>}        
+        </Col>
+        <Col xs={2}>{          
+        row.totalWeight}</Col>
+        <Col xs={1}>{row.temp}</Col>
+        <Col xs={1}>{row.time}</Col>
+        </Row> : ""
+
+        ))}
+        </Card>
+        </Row>
+        ))}
         </div>
-        <Modal size="md" show={show} onHide={handleClose}>
+        { colorCode===0 && <Modal size="md" show={show} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>
           <Row>
@@ -531,6 +715,166 @@ function Mrs() {
           </Button>
         </Modal.Footer>
       </Modal>
+      }
+
+      { colorCode===2 && user &&  <Modal size="lg" show={show1} onHide={handleClose1}>
+              <Modal.Header closeButton>
+                <Modal.Title>Additional Chemical & Dyes 
+                <Button style={{ marginLeft: '50px' }} onClick={addRow1} >Add More</Button>
+                </Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <Form>
+                  {rows1.map((row) => (
+                  <Row className="mt-2">
+                    <Form.Group className="col-1 col-sm-1" >  
+                    <Form.Control
+                    type="text"
+                    name="callno"              
+                    value={row.callno}                    
+                    onChange={(e) =>  setRows1((prevRows) =>
+                      prevRows.map((row1) =>
+                        row1.id === row.id ? { ...row1, callno:e.target.value} : row1
+                      )
+                    )
+                  }    
+                  required
+                  />
+                  </Form.Group>
+                  <Form.Group className="col-3 col-sm-3 px-1" >
+            <input
+              type="text"
+              className="form-control"
+              value={row.value}
+              onChange={(e) => handleInputChange(row.id, e.target.value)}
+              placeholder="Search Chemical..."
+            />
+            {loading && (
+              <div className="position-absolute w-100 text-center">
+                <small>Loading...</small>
+              </div>
+            )}
+            {row.suggestions.length > 0 && (
+              <ul className="list-group position-absolute w-100">
+                {row.suggestions.map((suggestion, index) => (
+                  <li
+                    key={index}
+                    className="w-50 list-group-item list-group-item-action col-4 col-sm-4"
+                    onClick={() => handleSuggestionClick(row.id,suggestion)}
+                  >
+                    {suggestion}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Form.Group>
+          <Form.Group className="col-3 col-sm-3 px-1" >
+            <input
+              type="text"
+              className="form-control"
+              value={row.material}
+              onChange={(e) => handleMaterialInputChange1(row.id, e.target.value)}
+              placeholder="Search Product..."
+            />
+            {loading && (
+              <div className="position-absolute w-100 text-center">
+                <small>Loading...</small>
+              </div>
+            )}
+            {row.materials.length > 0 && (
+              <ul className="list-group position-absolute w-100">
+                {row.materials.map((suggestion, index) => (
+                  <li
+                    key={index}
+                    className="w-50 list-group-item list-group-item-action col-4 col-sm-4"
+                    onClick={() => handleMaterialSuggestionClick1(row.id,suggestion)}
+                  >
+                    {suggestion}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Form.Group>
+          <Form.Group className="col-1 col-sm-1 px-1" >
+        
+                    <Form.Control
+                    type="text"
+                    name="quantity"  
+                    placeholder='Qty'            
+                    value={row.quantity}                   
+                    onChange={(e) =>  setRows1((prevRows) =>
+                      prevRows.map((row1) =>
+                        row1.id === row.id ? { ...row1, quantity:e.target.value} : row1
+                      )
+                    )
+                  }    
+                   required
+                  />
+                  </Form.Group>
+                  <Form.Group className="col-2 col-sm-2 px-1" controlId="formBasicWidth">
+                           
+                              <Form.Select             
+                                 type="text"
+                                 name="unit"              
+                                 value={row.unit}                                
+                                 onChange={(e) =>  setRows1((prevRows) =>
+                                   prevRows.map((row1) =>
+                                     row1.id === row.id ? { ...row1, unit:e.target.value} : row1
+                                   )
+                                 )
+                               }  
+                               required
+                              >
+                                <option  value="">Unit</option>
+                                <option  value="%">%</option>
+                                <option  value="GPL">GPL</option>
+                                
+                             </Form.Select>       
+                            </Form.Group>
+                  <Form.Group className="col-1 col-sm-1 px-1" >  
+                    <Form.Control
+                    type="text"
+                    name="temp"   
+                    placeholder='Temp'            
+                    value={row.temp}                   
+                    onChange={(e) =>  setRows1((prevRows) =>
+                      prevRows.map((row1) =>
+                        row1.id === row.id ? { ...row1, temp:e.target.value} : row1
+                      )
+                    )
+                  }    
+                  required
+                  />
+                  </Form.Group>
+                  <Form.Group className="col-1 col-sm-1 px-1" >  
+                    <Form.Control
+                    type="text"
+                    name="time"    
+                    placeholder='Time'          
+                    value={row.time}                    
+                    onChange={(e) =>  setRows1((prevRows) =>
+                      prevRows.map((row1) =>
+                        row1.id === row.id ? { ...row1, time:e.target.value} : row1
+                      )
+                    )
+                  }    
+                  required
+                  />
+                  </Form.Group>
+                 
+          </Row>    
+      ))}
+                </Form>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose1}>
+                  Close
+                </Button>
+                <Button variant="primary" onClick={handleSubmit1}>
+                  Save 
+                </Button>
+              </Modal.Footer>
+            </Modal>  }
         </Container>
   </div>
   );

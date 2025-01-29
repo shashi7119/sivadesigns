@@ -31,7 +31,7 @@ function App() {
   useEffect(() => {
     document.title = "Sri Shiva Designs"
     const user = localStorage.getItem("user");   
-    console.log(user); 
+    console.log("User details : ",user); 
         user && setUserRole(JSON.parse(user).role || "guest");
  }, []);
 

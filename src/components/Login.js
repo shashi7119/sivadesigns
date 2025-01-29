@@ -31,7 +31,7 @@ function Login() {
         setErrors({});     
         const userData = await login(email, password);
         console.log('Login successful:', userData);        
-        window.location.replace('/home');                      
+        window.location.href = '/home';                      
         //console.log('Login successful:', userData);
         // Here you would typically store the user data and redirect
       } catch (error) {   
