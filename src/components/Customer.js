@@ -116,7 +116,12 @@ function Customer() {
                 <tr>
                     <th>S.No</th>
                     <th>Customer</th> 
-                    <th>Created_at</th>                   
+                    <th>Contact Number</th> 
+                    <th>Email</th> 
+                    <th>Address 1</th> 
+                    <th>Address 2</th> 
+                    <th>Pincode</th> 
+                    <th>GSTIN</th>                   
                 </tr>
             </thead>
         </DataTable>
