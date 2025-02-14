@@ -23,6 +23,7 @@ import Labentry from './components/Labentry';
 import Mrs from './components/Mrs';
 import Processroute from './components/Processroute';
 import Unauthorized from './components/Unauthorized';
+import Storeentry from './components/Storeentry'
 import Role from './components/Role';
 
 function App() {
@@ -98,12 +99,12 @@ function App() {
               </Role>
               } />
             <Route path="/greyentry" element={
-              <Role allowedRoles={["admin","store"]} userRole={userRole}>
+              <Role allowedRoles={["admin","grey"]} userRole={userRole}>
               <Greyentry />
               </Role>
               } />
             <Route path="/batch" element={
-              <Role allowedRoles={["admin","store"]} userRole={userRole}>
+              <Role allowedRoles={["admin","production","batch"]} userRole={userRole}>
               <Batch />
               </Role>
               } />
@@ -115,6 +116,12 @@ function App() {
             <Route path="/labentry" element={
               <Role allowedRoles={["admin","production"]} userRole={userRole}>
               <Labentry />
+              </Role>
+              } />
+
+            <Route path="/storeentry" element={
+              <Role allowedRoles={["admin","store"]} userRole={userRole}>
+              <Storeentry />
               </Role>
               } />
             <Route path="/mrs/:batchid" element={
