@@ -9,28 +9,26 @@ import FixedHeader from 'datatables.net-fixedcolumns-dt';
 
 import DT from 'datatables.net-dt';
 const API_URL = 'https://www.wynstarcreations.com/seyal/api/getMasters?type=store';
-const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/addLabentry';
+const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/addStock';
 
 DataTable.use(DT);DataTable.use(FixedHeader);
 function Storeentry() {
 
     const [formData, setFormData] = useState({
-        mname: '',type:'process'
+        mname: '',stock:'0',unit:''
       });
 
       const regexPatterns = {
-        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,callno: /^[0-9]*$/,quantity: /^[0-9.]*$/, unit: /^[a-zA-Z/%.]*$/, time: /^[0-9.]*$/,temp: /^[0-9.]*$/,
+        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,stock: /^[0-9.]*$/,unit: /^[a-zA-Z ]*$/
       };
 
     const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
     const [fetch, setFetch] = useState(false);
-    const [rows, setRows] = useState([{ process:'',id: 1,callno: "", material:'',quantity: "", materials: [],unit:"",temp:"",time:"" }]);
     const { user , isAuthenticated } = useAuth();
   const handleClose = () => {
     setShow(false);
     setFormData('');
-    setRows([]);
   }
   const handleShow = () => setShow(true);
 
@@ -77,19 +75,15 @@ function Storeentry() {
        };
 
      const handleSubmit = async (event) => {
-        event.preventDefault();
-        rows.map(row => (          
-          row.process= formData.mname
-        ))
-        console.log('Form Submitted with Data:', rows);
+        event.preventDefault();   
+        console.log('Form Submitted with Data:', formData);
         
-            axios.post(`${API_URL1}`, rows)
+            axios.post(`${API_URL1}`, formData)
       .then(function (response) {
 
         setShow(false);
         setFormData('');
-        setFetch(true);
-        setRows([]);
+        setFetch(true);     
         console.log(response);
       })
       .catch(function (error) {
@@ -160,6 +154,34 @@ function Storeentry() {
              required
             />
             </Form.Group> 
+            <Form.Group className="col-3 col-sm-3" >
+              <Form.Control
+              type="text"
+              placeholder='Stock Value'
+              name="stock"              
+              value={formData.stock}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            />
+            </Form.Group>
+            <Form.Group className="col-3 col-sm-3" >
+              <Form.Control
+              type="text"
+              placeholder='Stock Unit'
+              name="unit"              
+              value={formData.unit}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            />
+            </Form.Group>
          </Row>
 
           </Form>
