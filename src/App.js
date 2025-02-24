@@ -54,7 +54,7 @@ function App() {
               
               } />
             <Route path="/planning" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","batch"]} userRole={userRole}>
               <Planning />
                </Role>              
               } />
