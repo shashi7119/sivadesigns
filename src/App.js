@@ -130,9 +130,9 @@ function App() {
               
               } />
             <Route path="/process/:pid" element={
-              <Role allowedRoles={["admin","production"]} userRole={userRole}>
+              
               <Processroute />
-              </Role>
+              
               } />
   
           </Routes>
