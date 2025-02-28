@@ -11,7 +11,7 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api/';
 
 
 DataTable.use(DT);
-function Greyentry() {
+function Bstock() {
   const table = useRef();
     const [formData, setFormData] = useState({
         ide:"",customer:"",fabric: '',construction:'',width:'',
@@ -66,7 +66,7 @@ function Greyentry() {
   useEffect(() => {
     const fetchData = async () => {
       try {        
-        const response = await axios.get(`${API_URL}/inventry`);
+        const response = await axios.get(`${API_URL}/binventry`);
         setTableData(response.data);      
       } catch (error) {
         console.log(error);
@@ -149,7 +149,7 @@ function Greyentry() {
         } else {
           console.log(dataArr); 
           const [eweight] = dataArr[0][7].split("/");
-          const [egmeter] = dataArr[0][8].split("/");
+          const [egmeter] = dataArr[0][6].split("/");
           
            setFormData({ customer:dataArr[0][3],ide:dataArr[0][0],
             fabric:dataArr[0][4],construction:dataArr[0][5],
@@ -192,7 +192,7 @@ function Greyentry() {
         <Container>
         <Row>
           <div class="col-10 col-sm-10">
-          <h1>Grey Fabric Entry</h1>
+          <h1>Batch Stock Entry</h1>
           <p>Welcome, {user.email}!</p>
           </div>
           <div class="col-2 col-sm-2">
@@ -408,4 +408,4 @@ function Greyentry() {
 }
 
 
-export default Greyentry;
+export default Bstock;

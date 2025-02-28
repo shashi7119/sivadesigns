@@ -171,12 +171,16 @@ function Labentry() {
     console.log("data:", newRow);  
   };
 
-  const handleEdit = (event) => { 
-    setEditShow(true); 
+  const handleEdit = (event) => {
+    
     event.preventDefault();       
         let api = table.current.dt();
         let rows1 = api.rows({ selected: true }).data().toArray();
         let dataArr = [];
+        if(rows1.length === 0) {
+          alert('Select plan for lab entry');
+        } else {
+          setEditShow(true); 
         rows1.map(value => (
           dataArr.push(value)
         ));  
@@ -193,7 +197,7 @@ function Labentry() {
           addRow1(value)
         )); 
         console.log("rows:", rows);  
-        
+      }
       } 
 
       const  handleRemove = (event,material) => { 
@@ -214,7 +218,6 @@ function Labentry() {
         rows.map(row => (          
           row.process= formData.mname
         ))
-        console.log('Form Submitted with Edit Data:', rows);
         
             axios.post(`${API_URL2}`, rows)
       .then(function (response) {
@@ -228,8 +231,7 @@ function Labentry() {
       .catch(function (error) {
         console.log(error);
       });
-        //const userData = response.data;
-       // console.log('Data From Backend:', userData);
+
     
       };
 

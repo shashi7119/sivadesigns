@@ -25,6 +25,8 @@ import Processroute from './components/Processroute';
 import Unauthorized from './components/Unauthorized';
 import Storeentry from './components/Storeentry'
 import Role from './components/Role';
+import Pstock from './components/Pstock'
+import Bstock from './components/Bstock'
 
 function App() {
 
@@ -106,6 +108,16 @@ function App() {
             <Route path="/batch" element={
               <Role allowedRoles={["admin","production","batch"]} userRole={userRole}>
               <Batch />
+              </Role>
+              } />
+              <Route path="/pstock" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Pstock />
+              </Role>
+              } />
+              <Route path="/bstock" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Bstock />
               </Role>
               } />
             <Route path="/batch/:batchid" element={

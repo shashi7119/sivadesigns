@@ -19,7 +19,15 @@ function Navigation() {
             {user && (user.role==="admin" || user.role==="grey") && <Nav.Link as={Link} to="/greyentry">Grey Entry</Nav.Link>}
             {user && (user.role==="admin" || user.role==="production") && <Nav.Link as={Link} to="/labentry">Lab Entry</Nav.Link>}
             {user && (user.role==="admin" || user.role==="store") && <Nav.Link as={Link} to="/storeentry">Store</Nav.Link>}
-            {user && user.role==="admin" && <NavDropdown title="Settings" id="basic-nav-dropdown">
+            {user && user.role==="admin" && <NavDropdown title="Stock" id="basic-nav-dropdown">
+              <NavDropdown.Item href="#">
+              <Nav.Link as={Link} to="/pstock">Planning Stock</Nav.Link>
+              </NavDropdown.Item>
+              <NavDropdown.Item href="#">
+              <Nav.Link as={Link} to="/bstock">Batch Stock</Nav.Link>
+              </NavDropdown.Item>
+              </NavDropdown>}
+              {user && user.role==="admin" && <NavDropdown title="Settings" id="basic-nav-dropdown">
               <NavDropdown.Item href="#">
               <Nav.Link as={Link} to="/machine">Machine</Nav.Link>
               </NavDropdown.Item>
