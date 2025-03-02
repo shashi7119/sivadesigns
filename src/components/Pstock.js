@@ -13,12 +13,14 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api/';
 DataTable.use(DT);
 function Pstock() {
   const table = useRef();
-    const [formData, setFormData] = useState({
-        ide:"",customer:"",fabric: '',construction:'',width:'',
-        weight:'',gmeter:'',customerdc:'',remarks:''
+  const [machineData, setMachineData] = useState([]);
+  const [processData, setProcessData] = useState([ ]);
+  const [finishingData, setFinishingData] = useState([ ]);
+  const [formData, setFormData] = useState({
+        ide:"",date:'',customer:"",fabric: '',construction:'',width:'',
+        weight:'',gmeter:'', glm: '',aglm: '',customerdc:'',remarks:'',machine:'',process:'',finishing:'',shade:''
       });
-
-      const [isEdit, setIsEdit] = useState(false);
+     
       const [fetch, setFetch] = useState(false);
       const [customerData, setCusotmerData] = useState([ ]);
       const [widthData, setWidthData] = useState([ ]);
@@ -27,7 +29,11 @@ function Pstock() {
 
       const regexPatterns = {
         weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/  
-        ,customerdc: /^[A-Za-z0-9_@./#&+\-, "]*$/ ,remarks: /^[A-Za-z0-9_@./#&+\-, "]*$/,
+        ,customerdc: /^[A-Za-z0-9_@./#&+\-, "]*$/ ,
+        remarks: /^[A-Za-z0-9_@./#&+\-, "]*$/,
+        shade: /^[A-Za-z0-9_@./#&+\-, ]*$/,
+        machine: /^[0-9]*$/,process: /^[a-zA-Z0-9_+ ]*$/,
+        finishing: /^[a-zA-Z0-9_+ ]*$/,glm: /^[0-9. ]*$/
          };
 
          const { user , isAuthenticated } = useAuth();
@@ -40,6 +46,9 @@ function Pstock() {
             setWidthData(response.data['width']);    
             setFabricData(response.data['fabric']);
             setConstructionData(response.data['construction']);
+            setMachineData(response.data['machine']);
+            setProcessData(response.data['process']);
+            setFinishingData(response.data['finishing']);
             
           } catch (error) {
             console.log(error);
@@ -56,12 +65,7 @@ function Pstock() {
   const handleClose = (e) =>  {
     setFormData("");
     setShow(false);}
-  const handleShow = (e) => { 
-    setIsEdit(false);
-    setShow(true);    
-  }
-  
-
+ 
      // Fetch data from backend API
   useEffect(() => {
     const fetchData = async () => {
@@ -87,6 +91,13 @@ function Pstock() {
     
                 // Step 4: Validate the input value based on the regex pattern
         const isValid = regexPatterns[name].test(value);
+        if((name === "gmeter")&&(formData.weight !==0)&&(formData.weight !=="")){
+          formData.aglm = parseFloat(formData.weight/value).toFixed(2);
+       }
+  
+       if(name === "weight" && formData.gmeter !==0 && formData.gmeter !==""){
+        formData.aglm = parseFloat(value/formData.gmeter).toFixed(2);
+      }
     
         // Step 5: If valid, update the state, otherwise you can show an error or just keep it unchanged
         if (isValid) {
@@ -105,35 +116,22 @@ function Pstock() {
        };
 
      const handleSubmit = async (event) => {
-        event.preventDefault();
-        if(!isEdit) {               
-        axios.post(`${API_URL}/addInventry`, formData)
+        event.preventDefault();                    
+        axios.post(`${API_URL}/planning`, formData)
       .then(function (response) {        
         console.log(response);
       })
       .catch(function (error) {
         console.log(error);
       });
-    } else {
-        console.log(formData);    
-        axios.post(`${API_URL}/updateInventry`, formData)
-        .then(function (response) {        
-          console.log(response);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });    
-    }
-    
+     
     setShow(false);
     setFormData('');
     if(fetch){setFetch(false);} else {setFetch(true);}
     
       };
-
      
-      const edithandle =  (event) => {
-        setIsEdit(true);
+      const edithandle =  (event) => {       
         event.preventDefault();       
         let api = table.current.dt();
         let rows = api.rows({ selected: true }).data().toArray();
@@ -148,44 +146,16 @@ function Pstock() {
           alert('Not allowed multiple entries for edit');
         } else {
           console.log(dataArr); 
-          const [eweight] = dataArr[0][7].split("/");
-          const [egmeter] = dataArr[0][6].split("/");
-          
+          let caglm = parseFloat(dataArr[0][7]/dataArr[0][8]).toFixed(2);
            setFormData({ customer:dataArr[0][3],ide:dataArr[0][0],
-            fabric:dataArr[0][4],construction:dataArr[0][5],
-            weight: eweight,width:dataArr[0][6],
-            gmeter: egmeter, customerdc: dataArr[0][2], remarks: dataArr[0][9] });   
+            fabric:dataArr[0][4],construction:dataArr[0][5],aglm:caglm,
+            weight: dataArr[0][7],width:dataArr[0][6],date:'',glm:'',
+            gmeter: dataArr[0][8], customerdc: dataArr[0][2], remarks: dataArr[0][9] });   
              
           setShow(true);
         }
       };
      
-      const deleteHandle =  (event) => {
-
-        event.preventDefault();
-        if (window.confirm("Delete this item?")) {
-          let api = table.current.dt();
-          let rows = api.rows({ selected: true }).data().toArray();
-          let dataArr = [];
-          rows.map(value => (
-            dataArr.push(value)
-          ));    
-          if(dataArr.length === 0) {
-            alert('Select entry for delete');
-          } else {
-            
-          axios.post(`${API_URL}/deleteInventory`, dataArr)
-          .then(function (response) {      
-            console.log(response);
-          })
-        .catch(function (error) {
-          console.log(error);
-        });
-          console.log(dataArr);
-          api.rows({ selected: true }).remove().draw();
-        }
-      };
-    }
   return (
     <div className="data-wrapper">
    
@@ -201,10 +171,8 @@ function Pstock() {
         Actions
       </Dropdown.Toggle>
 
-      <Dropdown.Menu>
-         <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>   
-         <Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item>             
-         {user && user.role==="admin" && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
+      <Dropdown.Menu>         
+         <Dropdown.Item href="#" onClick={edithandle}>Create Plan</Dropdown.Item>             
       </Dropdown.Menu>
     </Dropdown>
            
@@ -241,11 +209,12 @@ function Pstock() {
         </DataTable>
         <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>{isEdit ? "Edit Grey Fabric" : "Add Grey Fabric"}</Modal.Title>
+          <Modal.Title>{"Create Plan"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>          
-          <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicCustomer">
+          <Form onSubmit={handleSubmit}>  
+            <Row>        
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicCustomer">
             
             <Form.Select             
               name="customer"              
@@ -265,7 +234,7 @@ function Pstock() {
 ))}
            </Form.Select>
            </Form.Group>
-           <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicFabric">
+           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicFabric">
            
             <Form.Select             
               name="fabric"              
@@ -285,7 +254,9 @@ function Pstock() {
 ))}
            </Form.Select>
           </Form.Group>
-          <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicConstruction">
+          </Row>
+          <Row>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicConstruction">
             
             <Form.Select             
               name="construction"              
@@ -305,7 +276,7 @@ function Pstock() {
 ))}
            </Form.Select>      
           </Form.Group>
-          <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicWidth">
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWidth">
            
             <Form.Select             
               name="width"              
@@ -325,6 +296,7 @@ function Pstock() {
 ))}
            </Form.Select>       
           </Form.Group>
+          </Row>
           <Row>
           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
             <Form.Label>Weight </Form.Label>
@@ -359,46 +331,130 @@ function Pstock() {
           </Form.Group>
           </Row>
           <Row>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicDC">
-            <Form.Label>Customer DC No </Form.Label>
-            <Form.Control
-              type="text"
-              name="customerdc"
-             
-              value={formData.customerdc}
-              onKeyUp={handleKeyUp}
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formMachine">
+           
+            <Form.Select             
+              name="machine"              
+              value={formData.machine}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
-              required 
-            />       
+              }))}    
+             required
+            >
+              <option  value="">Select Machine *</option>
+         {machineData.map(machine => (
+          
+  <option  value={machine}>
+    {machine}
+  </option>
+))}
+           </Form.Select>       
           </Form.Group>
-         <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicRemarks">
-            <Form.Label>Remarks </Form.Label>
-            <Form.Control
-              type="text"
-              name="remarks"
-             
-              value={formData.remarks}
-              onKeyUp={handleKeyUp}
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formProcess">
+           
+            <Form.Select             
+              name="process"              
+              value={formData.process}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}  
-                
-            />       
+              }))}    
+             required
+            >
+              <option  value="">Select Process *</option>
+         {processData.map(process => (
+          
+  <option  value={process}>
+    {process}
+  </option>
+))}
+           </Form.Select>       
           </Form.Group>
           </Row>
+          <Row>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formFinishing">
+           
+            <Form.Select             
+              name="finishing"              
+              value={formData.finishing}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            >
+              <option  value="">Select Finishing *</option>
+         {finishingData.map(finishing => (
+          
+  <option  value={finishing}>
+    {finishing}
+  </option>
+))}
+           </Form.Select>       
+          </Form.Group>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicShade">
+                      <Form.Control
+                        type="text"
+                        name="shade"
+                        placeholder='Shade*'
+                        value={formData.shade}
+                        onKeyUp={handleKeyUp}  
+                        onChange={(e) =>  setFormData((prevData) => ({
+                          ...prevData,
+                          [e.target.name]: e.target.value // Update the value of the specific input field
+                        }))}  
+                        required 
+                      />       
+                    </Form.Group>
+                    </Row>
+                    <Row>
+                      <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicFabric">
+                                  <Form.Label>GLM </Form.Label>
+                                  <Form.Control
+                                    type="text"
+                                    name="glm"           
+                                    value={formData.glm}
+                                    onKeyUp={handleKeyUp}
+                                    onChange={(e) =>  setFormData((prevData) => ({
+                                      ...prevData,
+                                      [e.target.name]: e.target.value // Update the value of the specific input field
+                                    }))}   
+                                      
+                                  />       
+                                </Form.Group>
+                                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicaglm">
+                                  <Form.Label>AGLM </Form.Label>
+                                  <Form.Control
+                                    type="text"
+                                    name="aglm"
+                                    disabled="disabled"
+                                 
+                                    value={formData.aglm}
+                                    onKeyUp={handleKeyUp}
+                                    onChange={(e) =>  setFormData((prevData) => ({
+                                      ...prevData,
+                                      [e.target.name]: e.target.value // Update the value of the specific input field
+                                    }))}  
+                                    
+                                  />       
+                                </Form.Group>
+                    </Row>
+                     <Row>
+                     <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicaglm">
+                     <Button variant="secondary" onClick={handleClose}>Close</Button>
+                               </Form.Group>
+                               <Form.Group style={{textAlign:"right"}} className="col-6 col-sm-6 mb-3" controlId="formBasicaglm">
+                                 <Button variant="primary" type="submit" >
+                                 Save
+                                 </Button>
+                                 </Form.Group>
+                           
+                               </Row>
           </Form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Save 
-          </Button>
+        <Modal.Footer>          
+         
         </Modal.Footer>
       </Modal>
       </Container>
