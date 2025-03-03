@@ -15,7 +15,7 @@ function Greyentry() {
   const table = useRef();
     const [formData, setFormData] = useState({
         ide:"",customer:"",fabric: '',construction:'',width:'',
-        weight:'',gmeter:'',customerdc:'',remarks:''
+        weight:'',gmeter:'',customerdc:'',remarks:'',noofpcs:'',ftype:'',ptype:''
       });
 
       const [isEdit, setIsEdit] = useState(false);
@@ -24,10 +24,13 @@ function Greyentry() {
       const [widthData, setWidthData] = useState([ ]);
       const [fabricData, setFabricData] = useState([ ]);
       const [constructionData, setConstructionData] = useState([ ]);
-
+      const [ftypeData] = useState([ 'ORGANIC','NON ORGANIC','OCS','GRS','REGENAGRI']);
+      const [ptypeData] = useState([ 'REWORK','FRESH']);
+      
       const regexPatterns = {
         weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/  
         ,customerdc: /^[A-Za-z0-9_@./#&+\-, "]*$/ ,remarks: /^[A-Za-z0-9_@./#&+\-, "]*$/,
+        noofpcs: /^[0-9."]*$/ 
          };
 
          const { user , isAuthenticated } = useAuth();
@@ -154,7 +157,8 @@ function Greyentry() {
            setFormData({ customer:dataArr[0][3],ide:dataArr[0][0],
             fabric:dataArr[0][4],construction:dataArr[0][5],
             weight: eweight,width:dataArr[0][6],
-            gmeter: egmeter, customerdc: dataArr[0][2], remarks: dataArr[0][9] });   
+            gmeter: egmeter, customerdc: dataArr[0][2], remarks: dataArr[0][9]
+            , noofpcs: dataArr[0][10], ftype: dataArr[0][11], ptype: dataArr[0][12] });   
              
           setShow(true);
         }
@@ -233,8 +237,11 @@ function Greyentry() {
                     <th>Construction</th>
                     <th>Width</th>
                     <th>Weight</th>
-                    <th>GMeter</th>   
-                    <th>Remarks</th>                
+                    <th>GMeter</th> 
+                    <th>Remarks</th>     
+                    <th>No Of Pcs</th>  
+                    <th>Fabric Type</th>  
+                    <th>Process</th>    
                                   
                 </tr>
             </thead>
@@ -244,7 +251,7 @@ function Greyentry() {
           <Modal.Title>{isEdit ? "Edit Grey Fabric" : "Add Grey Fabric"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>          
+          <Form onSubmit={handleSubmit}>          
           <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicCustomer">
             
             <Form.Select             
@@ -285,7 +292,8 @@ function Greyentry() {
 ))}
            </Form.Select>
           </Form.Group>
-          <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicConstruction">
+          <Row>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicConstruction">
             
             <Form.Select             
               name="construction"              
@@ -305,7 +313,7 @@ function Greyentry() {
 ))}
            </Form.Select>      
           </Form.Group>
-          <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicWidth">
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWidth">
            
             <Form.Select             
               name="width"              
@@ -325,6 +333,7 @@ function Greyentry() {
 ))}
            </Form.Select>       
           </Form.Group>
+          </Row>
           <Row>
           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
             <Form.Label>Weight </Form.Label>
@@ -389,16 +398,79 @@ function Greyentry() {
                 
             />       
           </Form.Group>
+          </Row>          
+          <Row>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formProcess">
+         <Form.Select             
+              name="ptype"              
+              value={formData.ptype}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            >
+              <option  value="">Process</option>
+         {ptypeData.map(ptype => (
+          
+  <option  value={ptype}>
+    {ptype}
+  </option>
+))}
+           </Form.Select> 
+          </Form.Group>
+         <Form.Group className="col-6 col-sm-6 mb-3" controlId="formFabricType">
+         <Form.Select             
+              name="ftype"              
+              value={formData.ftype}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            >
+              <option  value="">Fabric Type</option>
+         {ftypeData.map(fabric => (
+          
+  <option  value={fabric}>
+    {fabric}
+  </option>
+))}
+           </Form.Select> 
+          </Form.Group>
+          </Row>
+          <Row>         
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formNoOfPcs">
+            <Form.Label>No of pcs </Form.Label>
+            <Form.Control
+              type="text"
+              name="noofpcs"             
+              value={formData.noofpcs}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))} 
+              required 
+            />       
+          </Form.Group>
+          </Row>
+          <Row>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicaglm">
+                               <Button variant="secondary" onClick={handleClose}>Close</Button>
+                                         </Form.Group>
+                                         <Form.Group style={{textAlign:"right"}} className="col-6 col-sm-6 mb-3" controlId="formBasicaglm">
+                                           <Button variant="primary" type="submit" >
+                                           Save
+                                           </Button>
+                                           </Form.Group>
+                                     
+                                        
           </Row>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Save 
-          </Button>
+          
         </Modal.Footer>
       </Modal>
       </Container>
