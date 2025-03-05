@@ -27,6 +27,7 @@ import Storeentry from './components/Storeentry'
 import Role from './components/Role';
 import Pstock from './components/Pstock'
 import Bstock from './components/Bstock'
+import Batchfinishing from './components/Bathchfinishing';
 
 function App() {
 
@@ -58,6 +59,11 @@ function App() {
             <Route path="/planning" element={
               <Role allowedRoles={["admin","batch"]} userRole={userRole}>
               <Planning />
+               </Role>              
+              } />
+              <Route path="/finishing" element={
+              <Role allowedRoles={["admin","batch"]} userRole={userRole}>
+              <Batchfinishing />
                </Role>              
               } />
             <Route path="/profile/:planid" element={

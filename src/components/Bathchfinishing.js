@@ -15,7 +15,7 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
 DataTable.use(Responsive);DataTable.use(Select);
 DataTable.use(FixedHeader);DataTable.use(DT);
-function Batch() {
+function Batchfinishing() {
   const table = useRef();
   const [tableData, setTableData] = useState([ ]);
   const { user , isAuthenticated } = useAuth();
@@ -23,7 +23,7 @@ function Batch() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${API_URL}/batches`);
+        const response = await axios.get(`${API_URL}/finishing`);
         setTableData(response.data);
       } catch (error) {
         console.log(error);
@@ -162,22 +162,16 @@ function Batch() {
     let dataArr = [];
     rows.map(value => (
       dataArr.push(value)
-    ));
-    
-    if(dataArr.length === 0) {
-      alert('Select batch for complete');
-    }else if(dataArr.length > 1) {
-      alert('Not allowed multiple plans for complete batch');
-    } else {
+    ));    
     axios.post(`${API_URL}/completeBatch`, dataArr)
     .then(function (response) {      
-      alert("Batch Completed");
-      api.rows({ selected: true }).remove().draw();
+      console.log(response);
     })
   .catch(function (error) {
-    alert("Please generate MRS before complete this batch!");
+    console.log(error);
   });
-}
+    console.log(dataArr);
+    api.rows({ selected: true }).remove().draw();
   }
   };
 
@@ -187,7 +181,7 @@ function Batch() {
         <Container>
         <Row>
           <div className="col-10 col-sm-10">
-          <h1>Batch</h1>
+          <h1>Finishing</h1>
           <p>Welcome, {user.email}!</p>
           </div>
           <div className="col-2 col-sm-2">
@@ -249,4 +243,4 @@ function Batch() {
   );
 }
 
-export default Batch;
+export default Batchfinishing;
