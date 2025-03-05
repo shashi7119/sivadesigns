@@ -130,32 +130,11 @@ function Batchfinishing() {
       //console.log(dataArr);  
          
     };
-
-  const deleteHandle =  (event) => {
-
-    event.preventDefault();
-    if (window.confirm("Delete this item?")) {
-    let api = table.current.dt();
-    let rows = api.rows({ selected: true }).data().toArray();
-    let dataArr = [];
-    rows.map(value => (
-      dataArr.push(value)
-    ));    
-    axios.post(`${API_URL}/deleteBatch`, dataArr)
-    .then(function (response) {      
-      console.log(response);
-    })
-  .catch(function (error) {
-    console.log(error);
-  });
-    console.log(dataArr);
-    api.rows({ selected: true }).remove().draw();
-  }
-  };
+  
 
   const completeHandle =  (event) => {
-
-    event.preventDefault();
+ alert("Work In-Progress");return;
+    /*event.preventDefault();
     if (window.confirm("Complete this batch?")) {
     let api = table.current.dt();
     let rows = api.rows({ selected: true }).data().toArray();
@@ -172,7 +151,7 @@ function Batchfinishing() {
   });
     console.log(dataArr);
     api.rows({ selected: true }).remove().draw();
-  }
+  }*/
   };
 
   return (
@@ -191,9 +170,8 @@ function Batchfinishing() {
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>         
-        <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>
-        <Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item>
+         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>  
+        <Dropdown.Item href="#" onClick={completeHandle}>Delivery</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
           
