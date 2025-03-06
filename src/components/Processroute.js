@@ -243,7 +243,7 @@ function Processroute() {
                 </tr>
             </thead>
         </DataTable>
-        <Modal size="lg" show={show} onHide={handleClose}>
+        <Modal size="lg" show={show} onHide={handleClose} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Add Process</Modal.Title>
         </Modal.Header>

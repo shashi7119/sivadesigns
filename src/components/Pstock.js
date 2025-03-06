@@ -26,6 +26,7 @@ function Pstock() {
       const [widthData, setWidthData] = useState([ ]);
       const [fabricData, setFabricData] = useState([ ]);
       const [constructionData, setConstructionData] = useState([ ]);
+      let [selData, setselData] = useState([ ]);
 
       const regexPatterns = {
         weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/  
@@ -155,6 +156,98 @@ function Pstock() {
           setShow(true);
         }
       };
+
+      const rowClick = (e) => {
+    
+        e.preventDefault();
+        let api = table.current.dt();
+        let rows = api.rows({ selected: true }).data().toArray();
+        rows.map(value => (
+          selData.push(value)         
+        ));  
+        selData = [...new Set(selData)];  
+        setselData(selData);  
+      }
+
+      const PrintHandle =  (event) => {
+        event.preventDefault();  
+        let api = table.current.dt();
+        api.rows().deselect();
+        const printableContent = `
+        <html>
+          <head>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                line-height: 1.6;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+              table, th, td {
+                border: 1px solid black;
+              }
+              th, td {
+                padding: 10px;
+                text-align: left;
+              }
+              th {
+                background-color: #f2f2f2;
+              }
+              h1 {
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Planning Stock</h1>
+            <table>
+              <thead>
+                <tr>
+                  <th>Entry.No</th>
+                        <th>Party DC No</th>
+                        <th>Machine</th>
+                        <th>Customer</th>
+                        <th>Fabric</th>                       
+                        <th>Construction</th>
+                        <th>Width</th>
+                        <th>Weight</th>
+                        <th>GMeter</th>                   
+                        <th>Remarks</th>
+                                        </tr>
+              </thead>
+              <tbody>
+                ${selData
+                  .map(
+                    (row) => `
+                      <tr>
+                        <td>${row[0]}</td>
+                        <td>${row[1]}</td>
+                        <td>${row[2]}</td>
+                        <td>${row[3]}</td>
+                        <td>${row[4]}</td>
+                        <td>${row[5]}</td>
+                        <td>${row[6]}</td>
+                        <td>${row[7]}</td>
+                        <td>${row[8]}</td>
+                        <td>${row[9]}</td>                       
+                      </tr>
+                    `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </body>
+        </html>
+      `;
+        
+        const newWindow = window.open("", "_blank");
+        newWindow.document.write(`<pre>${printableContent}</pre>`);
+        newWindow.print();
+        selData.length=0;       
+      };
      
   return (
     <div className="data-wrapper">
@@ -172,13 +265,14 @@ function Pstock() {
       </Dropdown.Toggle>
 
       <Dropdown.Menu>         
-         <Dropdown.Item href="#" onClick={edithandle}>Create Plan</Dropdown.Item>             
+         <Dropdown.Item href="#" onClick={edithandle}>Create Plan</Dropdown.Item>   
+          <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>           
       </Dropdown.Menu>
     </Dropdown>
            
             </div>
        </Row>
-    <DataTable ref={table} data={tableData} options={{
+    <DataTable onSelect={rowClick} ref={table} data={tableData} options={{
                  order: [[0, 'desc']],
                  fixedColumns: {
                    start: 2
@@ -207,7 +301,7 @@ function Pstock() {
                 </tr>
             </thead>
         </DataTable>
-        <Modal show={show} onHide={handleClose}>
+        <Modal show={show} onHide={handleClose} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>{"Create Plan"}</Modal.Title>
         </Modal.Header>

@@ -281,7 +281,7 @@ function Labentry() {
                 </tr>
             </thead>
         </DataTable>
-        <Modal size="lg" show={show} onHide={handleClose}>
+        <Modal size="lg" show={show} onHide={handleClose} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Add Labentry</Modal.Title>
         </Modal.Header>
@@ -417,7 +417,7 @@ function Labentry() {
           </Button>
         </Modal.Footer>
       </Modal>
-      <Modal size="lg" show={eshow} onHide={handleClose1}>
+      <Modal size="lg" show={eshow} onHide={handleClose1} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Edit Labentry</Modal.Title>
         </Modal.Header>
