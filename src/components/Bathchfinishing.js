@@ -1,5 +1,5 @@
 import React, { useState, useEffect,useRef} from 'react';
-import { Container, Row, Dropdown } from 'react-bootstrap';
+import { Container,Button, Row,Modal, Form,Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -19,6 +19,22 @@ function Batchfinishing() {
   const table = useRef();
   const [tableData, setTableData] = useState([ ]);
   const { user , isAuthenticated } = useAuth();
+  const [formData, setFormData] = useState({
+      bid: '', batch_weight: '0', batch_gmeter: '0', 
+      final_weight: '',final_gmeter: '',
+    });  
+    const [fetch, setFetch] = useState(false);
+     const [show, setShow] = useState(false);
+     const handleClose = () => setShow(false);
+    const handleShow = (e) => { 
+      setShow(true);    
+    }
+    const regexPatterns = {
+      batch_weight: /^[0-9.]*$/,          // Only numbers for input1
+      batch_gmeter: /^[0-9.]*$/,              // Only letters for input2
+      final_weight: /^[0-9. ]*$/,       // Alphanumeric and underscores for input3
+      final_gmeter: /^[0-9. ]*$/
+    };
      // Fetch data from backend API
   useEffect(() => {
     const fetchData = async () => {
@@ -30,7 +46,7 @@ function Batchfinishing() {
       } 
     };
     user && fetchData();
-  }, [user]);
+  }, [user,fetch]);
 
       
       if (!isAuthenticated) {
@@ -133,26 +149,100 @@ function Batchfinishing() {
   
 
   const completeHandle =  (event) => {
- alert("Work In-Progress");return;
-    /*event.preventDefault();
-    if (window.confirm("Complete this batch?")) {
+    event.preventDefault();    
     let api = table.current.dt();
     let rows = api.rows({ selected: true }).data().toArray();
     let dataArr = [];
     rows.map(value => (
       dataArr.push(value)
     ));    
-    axios.post(`${API_URL}/completeBatch`, dataArr)
-    .then(function (response) {      
-      console.log(response);
-    })
+    if(dataArr.length === 0) {
+      alert('Select plan for create batch');
+    }else if(dataArr.length > 1) {
+      alert('Not allowed multiple batches for complete');
+    } else {
+
+      formData.bid = dataArr[0][0];
+      formData.batch_weight = dataArr[0][9];
+      formData.batch_gmeter = dataArr[0][10];
+      formData.final_weight = "0";
+      formData.final_gmeter = "0";
+      setFormData(formData);
+          handleShow();
+
+       
+      console.log(dataArr);              
+  }    
+  };
+
+  const handleKeyUp = (event) => {
+    const { name, value } = event.target; // Destructure name and value from the event
+    
+    // Step 4: Validate the input value based on the regex pattern
+    const isValid = regexPatterns[name].test(value);
+
+    // Step 5: If valid, update the state, otherwise you can show an error or just keep it unchanged
+    if (isValid) {
+
+      
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value // Update the value of the specific input field
+      }));
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: '' // Reset the field to empty
+      }));
+    }
+
+    //alert(formData.machine);
+    
+   };
+
+   const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    console.log('Form Submitted with Data:', formData);
+    if((formData.final_weight === 0) || (formData.final_weight === "")){
+      alert("Final weight needed to complete");
+      return;
+    }
+
+    if((formData.final_gmeter === 0) || (formData.final_gmeter === "")){
+      alert("Final gmeter needed to complete");
+      return;
+    }
+    axios.post(`${API_URL}/addDelivery`, formData)
+  .then(function (response) {
+
+    setShow(false);
+    setFormData('');
+    setFetch(true);
+    alert("Batch Completed!!");   
+  })
   .catch(function (error) {
     console.log(error);
   });
-    console.log(dataArr);
-    api.rows({ selected: true }).remove().draw();
-  }*/
+    //const userData = response.data;
+   // console.log('Data From Backend:', userData);
+
   };
+
+  const checkStock = (event) => {
+    const { name, value } = event.target;
+    let stock = 0;    
+    if(name ==="final_weight"){
+      stock = formData.batch_weight;      
+    }else if(name ==="final_gmeter"){
+      stock = formData.batch_gmeter;  
+    }
+   
+    if(parseFloat(stock) < parseFloat(value)){
+      alert("Fianl value should be lesser than stock value");
+      event.target.value=0;
+    }
+  }
 
   return (
     <div className="data-wrapper">
@@ -171,7 +261,7 @@ function Batchfinishing() {
 
       <Dropdown.Menu>
          <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>  
-        <Dropdown.Item href="#" onClick={completeHandle}>Delivery</Dropdown.Item>
+        <Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
           
@@ -212,7 +302,96 @@ function Batchfinishing() {
                     <th>Finishing</th>
                 </tr>
             </thead>
-        </DataTable>    
+        </DataTable>   
+        <Modal show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Complete Finishing</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>          
+          <Row>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
+            <Form.Label>Batch Weight </Form.Label>
+            <Form.Control
+              type="text"
+              name="batch_weight"             
+              value={formData.batch_weight}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))} 
+              required 
+              disabled
+            />       
+          </Form.Group>
+         
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicGmeter">
+            <Form.Label>Batch Gmeter </Form.Label>
+            <Form.Control
+              type="text"
+              name="batch_gmeter"             
+              value={formData.batch_gmeter}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}  
+              required 
+              disabled
+            />       
+          </Form.Group>
+          </Row>          
+          <Row>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAWeight">
+            <Form.Label>Final Weight </Form.Label>
+            <Form.Control
+              type="text"
+              name="final_weight"
+             
+              value={formData.final_weight}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  {setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }));
+              checkStock(e);
+            }
+            } 
+              required 
+            />       
+          </Form.Group>
+         
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
+            <Form.Label>Final Gmeter </Form.Label>
+            <Form.Control
+              type="text"
+              name="final_gmeter"
+             
+              value={formData.final_gmeter}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  {setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }));
+              checkStock(e);
+            }
+            }  
+                
+            />       
+          </Form.Group>
+          </Row>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={handleSubmit}>
+            Save 
+          </Button>
+        </Modal.Footer>
+      </Modal>  
         </Container> 
            
         </div>

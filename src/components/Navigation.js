@@ -17,6 +17,7 @@ function Navigation() {
             {user && (user.role==="admin" || user.role==="batch") && <Nav.Link as={Link} to="/planning">Planning</Nav.Link>}
             {user && (user.role==="admin" || user.role==="batch" || user.role==="production") && <Nav.Link as={Link} to="/batch">Batch</Nav.Link>}
             {user && (user.role==="admin" || user.role==="batch" || user.role==="production") && <Nav.Link as={Link} to="/finishing">Finishing</Nav.Link>}
+            {user && (user.role==="admin" || user.role==="batch" || user.role==="production") && <Nav.Link as={Link} to="/delivery">Delivery</Nav.Link>}
             {user && (user.role==="admin" || user.role==="grey") && <Nav.Link as={Link} to="/greyentry">Grey Entry</Nav.Link>}
             {user && (user.role==="admin" || user.role==="production") && <Nav.Link as={Link} to="/labentry">Lab Entry</Nav.Link>}
             {user && (user.role==="admin" || user.role==="store") && <Nav.Link as={Link} to="/storeentry">Store</Nav.Link>}
@@ -28,28 +29,28 @@ function Navigation() {
               <Nav.Link as={Link} to="/bstock">Batch Stock</Nav.Link>
               </NavDropdown.Item>
               </NavDropdown>}
-              {user && user.role==="admin" && <NavDropdown title="Settings" id="basic-nav-dropdown">
-              <NavDropdown.Item href="#">
+              {user && (user.role==="admin" || user.role==="production") && <NavDropdown title="Settings" id="basic-nav-dropdown">
+                {user && user.role==="admin"  && <NavDropdown.Item href="#">
               <Nav.Link as={Link} to="/machine">Machine</Nav.Link>
-              </NavDropdown.Item>
-              <NavDropdown.Item href="#">
+              </NavDropdown.Item>}
+              {user && user.role==="admin"  &&<NavDropdown.Item href="#">
               <Nav.Link as={Link} to="/customer">Customer</Nav.Link>
-              </NavDropdown.Item>
-              <NavDropdown.Item href="#">
+              </NavDropdown.Item>}
+              {user && user.role==="admin"  &&<NavDropdown.Item href="#">
               <Nav.Link as={Link} to="/fabric">Fabric</Nav.Link>
-              </NavDropdown.Item>
-              <NavDropdown.Item href="#">
+              </NavDropdown.Item>}
+              {user && user.role==="admin"  && <NavDropdown.Item href="#">
               <Nav.Link as={Link} to="/construction">Construction</Nav.Link>
-              </NavDropdown.Item>
-              <NavDropdown.Item href="#">
+              </NavDropdown.Item>}
+              {user && (user.role==="admin" || user.role==="production")  &&<NavDropdown.Item href="#">
               <Nav.Link as={Link} to="/process">Process</Nav.Link>
-              </NavDropdown.Item>
-              <NavDropdown.Item href="#">
+              </NavDropdown.Item>}
+              {user && user.role==="admin"  && <NavDropdown.Item href="#">
               <Nav.Link as={Link} to="/width">Width</Nav.Link>
-              </NavDropdown.Item>
-              <NavDropdown.Item href="#">
-              <Nav.Link as={Link} to="/finishing">Finishing</Nav.Link>
-              </NavDropdown.Item>
+              </NavDropdown.Item>}
+              {user && user.role==="admin"  && <NavDropdown.Item href="#">
+              <Nav.Link as={Link} to="/sfinishing">Finishing</Nav.Link>
+              </NavDropdown.Item>}
             </NavDropdown>}
           </Nav>
           <Nav>

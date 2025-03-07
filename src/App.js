@@ -28,6 +28,7 @@ import Role from './components/Role';
 import Pstock from './components/Pstock'
 import Bstock from './components/Bstock'
 import Batchfinishing from './components/Bathchfinishing';
+import Delivery from './components/Delivery';
 
 function App() {
 
@@ -62,7 +63,7 @@ function App() {
                </Role>              
               } />
               <Route path="/finishing" element={
-              <Role allowedRoles={["admin","batch"]} userRole={userRole}>
+              <Role allowedRoles={["admin","production","batch"]} userRole={userRole}>
               <Batchfinishing />
                </Role>              
               } />
@@ -92,7 +93,7 @@ function App() {
               </Role>
               } />
             <Route path="/process" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","production"]} userRole={userRole}>
               <Process />
               </Role>
               } />
@@ -101,7 +102,7 @@ function App() {
               <Width />
               </Role>
               } />
-            <Route path="/finishing" element={
+            <Route path="/sfinishing" element={
               <Role allowedRoles={["admin"]} userRole={userRole}>
               <Finishing />
               </Role>
@@ -140,6 +141,12 @@ function App() {
             <Route path="/storeentry" element={
               <Role allowedRoles={["admin","store"]} userRole={userRole}>
               <Storeentry />
+              </Role>
+              } />
+
+<Route path="/delivery" element={
+              <Role allowedRoles={["admin","batch","production"]} userRole={userRole}>
+              <Delivery />
               </Role>
               } />
             <Route path="/mrs/:batchid" element={
