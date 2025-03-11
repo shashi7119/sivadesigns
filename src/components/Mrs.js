@@ -91,6 +91,59 @@ function Mrs() {
     window.print();       
   };
 
+  const ExportHandle =  (event) => {
+    event.preventDefault();  
+    let fname = `dispensar_data_${batchid}.csv`;
+    exportTableToCSV(fname);    
+  };
+
+  function exportTableToCSV(filename) {
+    let csv = [];    
+    let bdata = [];
+    bdata.push("Batch Name");
+    bdata.push(batchid);
+    bdata.push("");
+    csv.push(bdata.join(","));
+    bdata = [];
+    bdata.push("Fabric Wt");
+    bdata.push(formData.weight);
+    bdata.push("");
+    csv.push(bdata.join(","));
+
+    bdata = [];
+    bdata.push("MLR");
+    bdata.push("");
+    bdata.push("");
+    csv.push(bdata.join(","));
+
+    bdata = [];
+    bdata.push("Machine No");
+    bdata.push(formData.machine);
+    bdata.push("");
+    csv.push(bdata.join(","));
+
+    bdata = [];
+    bdata.push("seqno");
+    bdata.push("chemical");
+    bdata.push("targetwt");
+    csv.push(bdata.join(","));
+
+    rows.forEach((row) => {
+        let cols = row;
+        let rowData = [];
+        rowData.push(cols.callno);
+        rowData.push(cols.chemical);
+        rowData.push(cols.totalWeight);
+        csv.push(rowData.join(","));
+    });
+
+    let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(csvFile);
+    link.download = filename;
+    link.click();
+}
+
   
   const handleKeyUp = (event) => {
     const { name, value } = event.target; // Destructure name and value from the event
@@ -494,6 +547,7 @@ function Mrs() {
             {colorCode===0 && <Dropdown.Item href="#" onClick={handleShow}>Add Colour Code</Dropdown.Item> }              
             {colorCode===1 && <Dropdown.Item href="#" onClick={handleSave}>Save</Dropdown.Item> } 
             {colorCode===2 && <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item> }
+            {colorCode===2 && <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item> }
              { colorCode===2 && user && <Dropdown.Item href="#" onClick={handleShow1} >Additional</Dropdown.Item>  }
             </Dropdown.Menu>
         </Dropdown>

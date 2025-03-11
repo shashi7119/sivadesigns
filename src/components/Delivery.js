@@ -133,9 +133,6 @@ function Delivery() {
          
     };
   
-
-  
-  
   
 
   return (
