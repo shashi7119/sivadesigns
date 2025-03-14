@@ -9,6 +9,7 @@ import Select from 'datatables.net-select-dt';
 import FixedHeader from 'datatables.net-fixedcolumns-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import DT from 'datatables.net-dt';
+import logo from '../img/slogo.png'
 //import PrintDataTable from '../components/PrintDataTable';
 
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
@@ -165,7 +166,7 @@ white-space: normal !important;
 <body><main><div class="mb-0 p-0 card" style="border:0px;padding:0px !important">
            <div class="row">
              <div class="col-2 col-sm-2">
-             test image
+             <img src="${logo}" style="width:100px">
              </div>
              <div class="col-10 col-sm-10"><div class="row ">
                <div class="col-12 col-sm-12" style="text-align: center;font-size: 25px;"><strong>SRI SHIVA DESIGNS</strong></div>
