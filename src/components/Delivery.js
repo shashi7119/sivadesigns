@@ -181,17 +181,17 @@ white-space: normal !important;
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>To:</strong></p>
-        <p>SRI MANMAYA TEXTILES PRIVATE LIMITED</p>
+        <p>${selectedRows[0][4]}</p>
         <p>51, KALAIGNER NAGAR,, KARUNGALPALAYAM, ERODE</p>
         <p>TAMILNADU, INDIA</p>
         <p>GSTIN: 33AAFCS3659F1ZD</p>
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
-        <div class="row"><div class="col-md-4"><p>DC NO </p></div> <div class="col-md-6"><p>: SSDFD/24-25/004268</p></div></div>
-        <div class="row"><div class="col-md-4"><p>DC DATE </p></div> <div class="col-md-6"><p>: 04-03-2025</p></div></div>
-        <div class="row"><div class="col-md-4"><p>SHADE NAME </p></div> <div class="col-md-6"><p>: BROWN</p></div></div>
-        <div class="row"><div class="col-md-4"><p>Party Dc No </p></div> <div class="col-md-6"><p>: SSB 757</p></div></div>
-        <div class="row"><div class="col-md-4"><p>ProcessName </p></div> <div class="col-md-6"><p>: FABRIC DYEING</p></div></div>
+        <div class="row"><div class="col-md-4"><p>DC NO </p></div> <div class="col-md-6"><p>: </p></div></div>
+        <div class="row"><div class="col-md-4"><p>DC DATE </p></div> <div class="col-md-6"><p>: ${selectedRows[0][2]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>SHADE NAME </p></div> <div class="col-md-6"><p>: ${selectedRows[0][6]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Party Dc No </p></div> <div class="col-md-6"><p>: </p></div></div>
+        <div class="row"><div class="col-md-4"><p>ProcessName </p></div> <div class="col-md-6"><p>: </p></div></div>
 
         </div>
 </div>
@@ -199,17 +199,17 @@ white-space: normal !important;
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>Delivery To:</strong></p>
-        <p>SRI MANMAYA TEXTILES PRIVATE LIMITED</p>
+        <p>${selectedRows[0][4]}</p>
         <p>51, KALAIGNER NAGAR,, KARUNGALPALAYAM, ERODE</p>
         <p>TAMILNADU, INDIA</p>
         <p>GSTIN: 33AAFCS3659F1ZD</p>
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
-        <div class="row"><div class="col-md-4"><p>Design Name </p></div> <div class="col-md-6"><p>: SSDFD/24-25/004268</p></div></div>
-        <div class="row"><div class="col-md-4"><p>Count </p></div> <div class="col-md-6"><p>: 04-03-2025</p></div></div>
-        <div class="row"><div class="col-md-4"><p>Reed Pick</p></div> <div class="col-md-6"><p>: BROWN</p></div></div>
-        <div class="row"><div class="col-md-4"><p>G Width </p></div> <div class="col-md-6"><p>: SSB 757</p></div></div>
-        <div class="row"><div class="col-md-4"><p>Weave </p></div> <div class="col-md-6"><p>: FABRIC DYEING</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Design Name </p></div> <div class="col-md-6"><p>: </p></div></div>
+        <div class="row"><div class="col-md-4"><p>Count </p></div> <div class="col-md-6"><p>: ${selectedRows[0][7]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Reed Pick</p></div> <div class="col-md-6"><p>: ${selectedRows[0][6]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>G Width </p></div> <div class="col-md-6"><p>: ${selectedRows[0][8]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Weave </p></div> <div class="col-md-6"><p>: </p></div></div>
 
         </div>
 </div>
@@ -238,17 +238,17 @@ white-space: normal !important;
                 
                 <tr>
 				  <th scope="row" width="2%">1.</th>
-				  <td width="10%">SSDFPS/24-25/004426</td>
-				  <td width="10%">SSDOAB/24-25/004150</td>
+				  <td width="10%">${selectedRows[0][1]}</td>
+				  <td width="10%">${selectedRows[0][1]}</td>
 				  <td width="5%">89.00</td>
-				  <td width="8%">3,244.10 </td>
+				  <td width="8%">3,${selectedRows[0][10]}</td>
 				  <td width="10%">MTR</td>
-				  <td width="10%">544.80</td>
-				  <td width="10%">59"</td>
-				  <td width="10%">2424503</td>
-				  <td width="10%">167.94</td>
-                                  <td width="10%">3,296.60</td>
-                                  <td width="10%">523.20</td>
+				  <td width="10%">${selectedRows[0][9]}</td>
+				  <td width="10%">${selectedRows[0][8]}</td>
+				  <td width="10%"></td>
+				  <td width="10%">${selectedRows[0][11]}</td>
+                                  <td width="10%">${selectedRows[0][10]}</td>
+                                  <td width="10%">${selectedRows[0][9]}</td>
         
 				</tr>
 
@@ -260,11 +260,11 @@ white-space: normal !important;
         <div class="col-12 col-md-12" style="text-align:left"> 
             <div class="row">
                 <div class="col-md-2"><p>Process Flow </p></div> 
-                <div class="col-md-9"><p>RFD+NEUTRAL - DYEING+NEUTRAL+SOAPING - SOFTNER - HYDRO+ROPE OPEN+RELAX DRYER</p></div>
+                <div class="col-md-9"><p>${selectedRows[0][13]}</p></div>
             </div>
            <div class="row">
                 <div class="col-md-2"><p>Vehicle No </p></div> 
-                <div class="col-md-9"><p>TN33AJ8893</p></div>
+                <div class="col-md-9"><p></p></div>
             </div>
        
         </div>
