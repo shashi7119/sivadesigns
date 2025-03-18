@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect,useRef} from 'react';
 import { Container,Button, Row,Modal, Form,Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { useParams } from 'react-router-dom';
@@ -12,10 +12,12 @@ import RowGroup from 'datatables.net-rowgroup-dt';
 import DT from 'datatables.net-dt';
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/addProcessRoute';
+const API_URL2 = 'https://www.wynstarcreations.com/seyal/api/editProcessRoute';
 
 DataTable.use(DT);DataTable.use(FixedHeader);DataTable.use(RowGroup);
 function Processroute() {
 
+    const table = useRef();
     let { pid } = useParams();
     const [formData, setFormData] = useState({
         ide:'',mname: ''
@@ -27,6 +29,7 @@ function Processroute() {
 
     const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
+    const [eshow, setEditShow] = useState(false);
    const [fetch, setFetch] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([{ process:'',id: 1,callno: 1, value: "",material:'',quantity: "", suggestions: [],materials: [],unit:"",temp:"",time:"",pid:"" }]);
@@ -198,7 +201,77 @@ function Processroute() {
     const newRow = { id: rows.length + 1,process:'',callno:1, value:'',suggestions: [] ,material:'',materials: [] ,quantity: "",temp: "",unit: "",time: "",pid:""};
     setRows([...rows, newRow]);
   };
+  
 
+     const handleSubmit1 = async (event) => {
+        event.preventDefault();
+        rows.map((row) => (          
+          row.process= formData.mname
+        ))
+
+        rows.map((row) => (          
+            row.pid= formData.ide
+          ))
+        console.log('Form Submitted with Data:', rows);
+        
+            axios.post(`${API_URL2}`, rows)
+      .then(function (response) {
+
+       setEditShow(false);
+        setFormData('');
+        setFetch(true);
+        setRows([]);
+        console.log(response);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+        //const userData = response.data;
+       // console.log('Data From Backend:', userData);
+    
+      };
+      
+  const addRow1 = (data) => {   
+    const newRow = { id: data[0],process:data[1],callno:data[2], value:data[3],suggestions: [] ,material:data[4],materials: [] ,quantity: data[5],temp: data[7],unit: data[6],time: data[8],pid:""};
+    setRows(rows=>[...rows, newRow]);
+    console.log("data:", newRow);  
+  };
+  
+  const handleClose1 = () => {
+    setEditShow(false);
+    setFormData('');
+    setRows([]);
+  }
+
+
+  const handleEdit = (event) => {
+    
+    event.preventDefault();       
+        let api = table.current.dt();
+        let rows1 = api.rows({ selected: true }).data().toArray();
+        let dataArr = [];
+        if(rows1.length === 0) {
+          alert('Select plan for lab entry');
+        } else {
+          setEditShow(true); 
+        rows1.map(value => (
+          dataArr.push(value)
+        ));  
+
+        let srows = api.rows((id,data) =>  data[1] === dataArr[0][1]
+        ).data().toArray();
+        setRows([]);
+        setFormData((prevData) => ({
+          ...prevData,
+          'mname': dataArr[0][1] // Update the value of the specific input field
+        }));
+       
+        srows.map((value) => (
+          addRow1(value)
+        )); 
+        console.log("rows:", rows);  
+      }
+      } 
 
   return (
     <div className="data-wrapper">
@@ -214,12 +287,13 @@ function Processroute() {
               Actions
             </Dropdown.Toggle>
             <Dropdown.Menu>
-               <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>                           
+               <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>   
+               <Dropdown.Item href="#" onClick={handleEdit}>Edit</Dropdown.Item>
             </Dropdown.Menu>
         </Dropdown>
             </div>
        </Row>
-    <DataTable data={tableData} options={{
+    <DataTable ref={table} data={tableData} options={{
                 responsive: true,
                 select: true,
                 iDisplayLength:25,
@@ -416,6 +490,184 @@ function Processroute() {
             Close
           </Button>
           <Button variant="primary" onClick={handleSubmit}>
+            Save 
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      
+       <Modal size="lg" show={eshow} onHide={handleClose1} backdrop="static">
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Process</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form><Row>
+            <Form.Group className="col-6 col-sm-6" >
+              <Form.Control
+              type="text"
+              disabled
+              name="mname"              
+              value={formData.mname}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            />
+            </Form.Group> <Form.Group className="col-4 col-sm-4" >
+            <Button onClick={addRow}>Add Call No</Button>
+            </Form.Group></Row>
+            {rows.map((row) => (
+            <Row className="mt-2">
+              <Form.Group className="col-1 col-sm-1" >  
+              <Form.Control
+              type="text"
+              name="callno"              
+              value={row.callno}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setRows((prevRows) =>
+                prevRows.map((row1) =>
+                  row1.id === row.id ? { ...row1, callno:e.target.value} : row1
+                )
+              )
+            }    
+            required
+            />
+            </Form.Group>
+            <Form.Group className="col-3 col-sm-3 px-1" >
+      <input
+        type="text"
+        className="form-control"
+        value={row.value}
+        onChange={(e) => handleInputChange(row.id, e.target.value)}
+        placeholder="Search Chemical..."
+      />
+      {loading && (
+        <div className="position-absolute w-100 text-center">
+          <small>Loading...</small>
+        </div>
+      )}
+      {row.suggestions.length > 0 && (
+        <ul className="list-group position-absolute w-100">
+          {row.suggestions.map((suggestion, index) => (
+            <li
+              key={index}
+              className="w-50 list-group-item list-group-item-action col-4 col-sm-4"
+              onClick={() => handleSuggestionClick(row.id,suggestion)}
+            >
+              {suggestion}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Form.Group>
+    <Form.Group className="col-3 col-sm-3 px-1" >
+      <input
+        type="text"
+        className="form-control"
+        value={row.material}
+        onChange={(e) => handleMaterialInputChange(row.id, e.target.value)}
+        placeholder="Search Product..."
+      />
+      {loading && (
+        <div className="position-absolute w-100 text-center">
+          <small>Loading...</small>
+        </div>
+      )}
+      {row.materials.length > 0 && (
+        <ul className="list-group position-absolute w-100">
+          {row.materials.map((suggestion, index) => (
+            <li
+              key={index}
+              className="w-50 list-group-item list-group-item-action col-4 col-sm-4"
+              onClick={() => handleMaterialSuggestionClick(row.id,suggestion)}
+            >
+              {suggestion}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Form.Group>
+    <Form.Group className="col-1 col-sm-1 px-1" >
+  
+              <Form.Control
+              type="text"
+              name="quantity"  
+              placeholder='Qty'            
+              value={row.quantity}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setRows((prevRows) =>
+                prevRows.map((row1) =>
+                  row1.id === row.id ? { ...row1, quantity:e.target.value} : row1
+                )
+              )
+            }    
+             required
+            />
+            </Form.Group>
+            <Form.Group className="col-2 col-sm-2 px-1" controlId="formBasicWidth">
+                     
+                        <Form.Select             
+                           type="text"
+                           name="unit"              
+                           value={row.unit}
+                           onKeyUp={handleKeyUp}
+                           onChange={(e) =>  setRows((prevRows) =>
+                             prevRows.map((row1) =>
+                               row1.id === row.id ? { ...row1, unit:e.target.value} : row1
+                             )
+                           )
+                         }  
+                         required
+                        >
+                          <option  value="">Unit</option>
+                          <option  value="%">%</option>
+                          <option  value="GPL">GPL</option>
+                          
+                       </Form.Select>       
+                      </Form.Group>
+            <Form.Group className="col-1 col-sm-1 px-1" >  
+              <Form.Control
+              type="text"
+              name="temp"   
+              placeholder='Temp'            
+              value={row.temp}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setRows((prevRows) =>
+                prevRows.map((row1) =>
+                  row1.id === row.id ? { ...row1, temp:e.target.value} : row1
+                )
+              )
+            }    
+            required
+            />
+            </Form.Group>
+            <Form.Group className="col-1 col-sm-1 px-1" >  
+              <Form.Control
+              type="text"
+              name="time"    
+              placeholder='Time'          
+              value={row.time}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setRows((prevRows) =>
+                prevRows.map((row1) =>
+                  row1.id === row.id ? { ...row1, time:e.target.value} : row1
+                )
+              )
+            }    
+            required
+            />
+            </Form.Group>
+           
+    </Row>    
+))}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose1}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={handleSubmit1}>
             Save 
           </Button>
         </Modal.Footer>
