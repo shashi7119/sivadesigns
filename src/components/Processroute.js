@@ -272,6 +272,19 @@ function Processroute() {
         console.log("rows:", rows);  
       }
       } 
+      
+      const  handleRemove = (event,material) => { 
+        event.preventDefault();
+        let srows = rows.map((data,index) =>  (data.material === material ? rows.splice(index, 1) : "" ));
+        console.log('removed Data:', srows);
+        
+        setRows((prevRows) =>
+          prevRows.map((row) =>
+             row
+          )
+        );
+        
+      }
 
   return (
     <div className="data-wrapper">
@@ -534,7 +547,7 @@ function Processroute() {
             required
             />
             </Form.Group>
-            <Form.Group className="col-3 col-sm-3 px-1" >
+            <Form.Group className="col-2 col-sm-2 px-1" >
       <input
         type="text"
         className="form-control"
@@ -658,7 +671,7 @@ function Processroute() {
             required
             />
             </Form.Group>
-           
+           <Form.Group className="col-1 col-sm-1 px-1" onClick={(e) => handleRemove(e,row.material)}>x</Form.Group>
     </Row>    
 ))}
           </Form>
