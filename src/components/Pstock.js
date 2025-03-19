@@ -21,11 +21,7 @@ function Pstock() {
         weight:'',gmeter:'', glm: '',aglm: '',customerdc:'',remarks:'',machine:'',process:'',finishing:'',shade:''
       });
      
-      const [fetch, setFetch] = useState(false);
-      const [customerData, setCusotmerData] = useState([ ]);
-      const [widthData, setWidthData] = useState([ ]);
-      const [fabricData, setFabricData] = useState([ ]);
-      const [constructionData, setConstructionData] = useState([ ]);
+      const [fetch, setFetch] = useState(false);  
       let [selData, setselData] = useState([ ]);
 
       const regexPatterns = {
@@ -42,11 +38,7 @@ function Pstock() {
        useEffect(() => {
         const fetchData = async () => {
           try {
-            const response = await axios.get(`${API_URL}/getAllMasters`);        
-            setCusotmerData(response.data['customer']);
-            setWidthData(response.data['width']);    
-            setFabricData(response.data['fabric']);
-            setConstructionData(response.data['construction']);
+            const response = await axios.get(`${API_URL}/getAllMasters`);
             setMachineData(response.data['machine']);
             setProcessData(response.data['process']);
             setFinishingData(response.data['finishing']);
@@ -136,22 +128,44 @@ function Pstock() {
         event.preventDefault();       
         let api = table.current.dt();
         let rows = api.rows({ selected: true }).data().toArray();
-        let dataArr = [];
+        let dataArr = [];let ide ="";
         rows.map(value => (
           dataArr.push(value)
         ));    
 
         if(dataArr.length === 0) {
           alert('Select entry for edit');
-        }else if(dataArr.length > 1) {
-          alert('Not allowed multiple entries for edit');
         } else {
           console.log(dataArr); 
-          let caglm = parseFloat(dataArr[0][7]/dataArr[0][8]).toFixed(2);
-           setFormData({ customer:dataArr[0][3],ide:dataArr[0][0],
-            fabric:dataArr[0][4],construction:dataArr[0][5],aglm:caglm,
-            weight: dataArr[0][7],width:dataArr[0][6],date:'',glm:'',
-            gmeter: dataArr[0][8], customerdc: dataArr[0][2], remarks: dataArr[0][9] });   
+          let customer = "";let construction = "";let custdc = ""; let fabric = "";
+          let width = "";let weight= 0;let gmeter=0;
+          for(var i=0;i < dataArr.length;i++){
+              if(i === dataArr.length-1){
+                   customer += dataArr[i][3];
+                   construction += dataArr[i][5];
+                   custdc += dataArr[i][2];
+                   fabric += dataArr[i][4];
+                   width += dataArr[i][6];
+                   weight = (parseFloat(weight)+parseFloat(dataArr[i][7])).toFixed(2);
+                   gmeter = (parseFloat(gmeter)+parseFloat(dataArr[i][8])).toFixed(2);
+                   ide += dataArr[i][0];
+              }else {
+                   customer += dataArr[i][3]+",";
+                   construction += dataArr[i][5]+",";
+                   custdc += dataArr[i][2]+",";
+                   fabric += dataArr[i][4]+",";
+                   width += dataArr[i][6]+",";
+                   weight = (parseFloat(weight)+parseFloat(dataArr[i][7])).toFixed(2);
+                   gmeter = (parseFloat(gmeter)+parseFloat(dataArr[i][8])).toFixed(2);
+                   ide += dataArr[i][0]+",";
+              }
+             
+          }
+          let caglm = parseFloat(weight/gmeter).toFixed(2);
+           setFormData({ customer:customer,ide:ide,
+            fabric:fabric,construction:construction,aglm:caglm,
+            weight: weight,width:width,date:'',glm:'',
+            gmeter: gmeter, customerdc: custdc, remarks: dataArr[0][9] });   
              
           setShow(true);
         }
@@ -309,8 +323,9 @@ function Pstock() {
           <Form onSubmit={handleSubmit}>  
             <Row>        
           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicCustomer">
-            
-            <Form.Select             
+             <Form.Label>Customer </Form.Label>
+            <Form.Control  as="textarea" rows={3} 
+             type="text"
               name="customer"              
               value={formData.customer}
               onChange={(e) =>  setFormData((prevData) => ({
@@ -318,19 +333,12 @@ function Pstock() {
                 [e.target.name]: e.target.value // Update the value of the specific input field
               }))}    
              required
-            >
-              <option  value="">Select Customer</option>
-         {customerData.map(customer => (
-          
-  <option  value={customer}>
-    {customer}
-  </option>
-))}
-           </Form.Select>
+            />
            </Form.Group>
            <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicFabric">
-           
-            <Form.Select             
+            <Form.Label>Fabric </Form.Label>
+             <Form.Control   as="textarea" rows={3} 
+              type="text"
               name="fabric"              
               value={formData.fabric}
               onChange={(e) =>  setFormData((prevData) => ({
@@ -338,21 +346,15 @@ function Pstock() {
                 [e.target.name]: e.target.value // Update the value of the specific input field
               }))}    
              required
-            >
-              <option  value="">Select Fabric</option>
-         {fabricData.map(fabric => (
-          
-  <option  value={fabric}>
-    {fabric}
-  </option>
-))}
-           </Form.Select>
+            />
+         
           </Form.Group>
           </Row>
           <Row>
           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicConstruction">
-            
-            <Form.Select             
+            <Form.Label>Construction </Form.Label>
+            <Form.Control  as="textarea" rows={2} 
+              type="text"
               name="construction"              
               value={formData.construction}
               onChange={(e) =>  setFormData((prevData) => ({
@@ -360,19 +362,12 @@ function Pstock() {
                 [e.target.name]: e.target.value // Update the value of the specific input field
               }))}    
              required
-            >
-              <option  value="">Select Construction</option>
-         {constructionData.map(construction => (
-          
-  <option  value={construction}>
-    {construction}
-  </option>
-))}
-           </Form.Select>      
+            />      
           </Form.Group>
           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWidth">
-           
-            <Form.Select             
+           <Form.Label>Width </Form.Label>
+            <Form.Control  as="textarea" rows={2} 
+              type="text"
               name="width"              
               value={formData.width}
               onChange={(e) =>  setFormData((prevData) => ({
@@ -380,15 +375,7 @@ function Pstock() {
                 [e.target.name]: e.target.value // Update the value of the specific input field
               }))}    
              required
-            >
-              <option  value="">Select Width</option>
-         {widthData.map(width => (
-          
-  <option  value={width}>
-    {width}
-  </option>
-))}
-           </Form.Select>       
+           />       
           </Form.Group>
           </Row>
           <Row>
@@ -396,8 +383,7 @@ function Pstock() {
             <Form.Label>Weight </Form.Label>
             <Form.Control
               type="text"
-              name="weight"
-             
+              name="weight"             
               value={formData.weight}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
@@ -533,6 +519,23 @@ function Pstock() {
                                     
                                   />       
                                 </Form.Group>
+                    </Row>
+                    <Row>
+                      <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicFabric">
+                                  <Form.Label>Party DC No </Form.Label>
+                                  <Form.Control
+                                    type="text"
+                                    name="customerdc"           
+                                    value={formData.customerdc}
+                                    onKeyUp={handleKeyUp}
+                                    onChange={(e) =>  setFormData((prevData) => ({
+                                      ...prevData,
+                                      [e.target.name]: e.target.value // Update the value of the specific input field
+                                    }))}   
+                                      
+                                  />       
+                                </Form.Group>
+       
                     </Row>
                      <Row>
                      <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicaglm">
