@@ -210,7 +210,7 @@ function Processroute() {
         ))
 
         rows.map((row) => (          
-            row.pid= formData.ide
+            row.pid= pid
           ))
         console.log('Form Submitted with Data:', rows);
         
@@ -219,7 +219,7 @@ function Processroute() {
 
        setEditShow(false);
         setFormData('');
-        setFetch(true);
+        if(fetch) {setFetch(false);} else {setFetch(true);}        
         setRows([]);
         console.log(response);
       })
