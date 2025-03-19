@@ -337,6 +337,7 @@ function Planning() {
                 <tr>                   
                     <th>Plan.No</th>
                     <th>Inward.No</th>
+                    <th>Date</th>
                     <th>Machine</th>
                     <th>Customer</th>
                     <th>Fabric</th>
