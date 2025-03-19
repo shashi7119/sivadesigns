@@ -225,7 +225,7 @@ function Batch() {
                 <tr>                   
                     <th>Batch.No</th>
                     <th>Batch Date</th>
-                    <th>Planned Date</th>
+                    <th>Inward No</th>
                     <th>Machine</th>
                     <th>Customer</th>
                     <th>Fabric</th>

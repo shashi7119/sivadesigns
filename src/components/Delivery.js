@@ -332,7 +332,7 @@ white-space: normal !important;
             <thead>
                 <tr>                   
                     <th>DC.No</th>
-                    <th>Batch No</th>
+                    <th>Inward No</th>
                     <th>Batch Date</th>
                     <th>Machine</th>
                     <th>Customer</th>

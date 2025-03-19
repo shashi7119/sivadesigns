@@ -96,6 +96,7 @@ function Planning() {
           <thead>
             <tr>
               <th>Plan.No</th>
+        <th>Inward.No</th>
                     <th>Date</th>
                     <th>Machine</th>
                     <th>Customer</th>
@@ -130,6 +131,7 @@ function Planning() {
                     <td>${row[11]}</td>
                     <td>${row[12]}</td>
                     <td>${row[13]}</td>
+                    <td>${row[14]}</td>
                   </tr>
                 `
               )
@@ -334,7 +336,7 @@ function Planning() {
             <thead>
                 <tr>                   
                     <th>Plan.No</th>
-                    <th>Date</th>
+                    <th>Inward.No</th>
                     <th>Machine</th>
                     <th>Customer</th>
                     <th>Fabric</th>
