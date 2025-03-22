@@ -18,7 +18,7 @@ function Pstock() {
   const [finishingData, setFinishingData] = useState([ ]);
   const [formData, setFormData] = useState({
         ide:"",date:'',customer:"",fabric: '',construction:'',width:'',
-        weight:'',gmeter:'', glm: '',aglm: '',customerdc:'',remarks:'',machine:'',process:'',finishing:'',shade:''
+        weight:'',gmeter:'', glm: '',aglm: '',customerdc:'',remarks:'',machine:'',process:'',finishing:'',shade:'',pining:''
       });
      
       const [fetch, setFetch] = useState(false);  
@@ -161,11 +161,13 @@ function Pstock() {
               }
              
           }
-          let caglm = parseFloat(weight/gmeter).toFixed(2);
+          let pining = (dataArr[0][9] !== "0")?parseFloat(dataArr[0][9]/100):"0"; 
+          let gmetercal = (dataArr[0][9] !== "0")? parseFloat(gmeter*pining):gmeter;
+          let caglm = parseFloat(weight/gmetercal).toFixed(2);
            setFormData({ customer:customer,ide:ide,
             fabric:fabric,construction:construction,aglm:caglm,
             weight: weight,width:width,date:'',glm:'',
-            gmeter: gmeter, customerdc: custdc, remarks: dataArr[0][9] });   
+            gmeter: gmeter, customerdc: custdc, remarks: dataArr[0][10], pining: dataArr[0][9] });   
              
           setShow(true);
         }
@@ -228,7 +230,8 @@ function Pstock() {
                         <th>Construction</th>
                         <th>Width</th>
                         <th>Weight</th>
-                        <th>GMeter</th>                   
+                        <th>GMeter</th>    
+                        <th>Pining</th>
                         <th>Remarks</th>
                                         </tr>
               </thead>
@@ -246,7 +249,8 @@ function Pstock() {
                         <td>${row[6]}</td>
                         <td>${row[7]}</td>
                         <td>${row[8]}</td>
-                        <td>${row[9]}</td>                       
+                        <td>${row[9]}</td>  
+                        <td>${row[10]}</td>  
                       </tr>
                     `
                   )
@@ -301,7 +305,7 @@ function Pstock() {
             }} className="display table sortable">
             <thead>
                 <tr>    
-                    <th>Entry No</th>           
+                    <th>Inward No</th>           
                     <th>Date</th>
                     <th>Party Dc No</th>
                     <th>Customer</th>
@@ -309,7 +313,8 @@ function Pstock() {
                     <th>Construction</th>
                     <th>Width</th>
                     <th>Weight</th>
-                    <th>GMeter</th>   
+                    <th>GMeter</th>  
+                    <th>Pining</th> 
                     <th>Remarks</th>                
                                   
                 </tr>
@@ -326,7 +331,8 @@ function Pstock() {
              <Form.Label>Customer </Form.Label>
             <Form.Control  as="textarea" rows={3} 
              type="text"
-              name="customer"              
+              name="customer" 
+              disabled="disabled"
               value={formData.customer}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
@@ -339,7 +345,8 @@ function Pstock() {
             <Form.Label>Fabric </Form.Label>
              <Form.Control   as="textarea" rows={3} 
               type="text"
-              name="fabric"              
+              name="fabric"      
+              disabled="disabled"
               value={formData.fabric}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
@@ -355,7 +362,8 @@ function Pstock() {
             <Form.Label>Construction </Form.Label>
             <Form.Control  as="textarea" rows={2} 
               type="text"
-              name="construction"              
+              name="construction"   
+              disabled="disabled"
               value={formData.construction}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
@@ -368,7 +376,8 @@ function Pstock() {
            <Form.Label>Width </Form.Label>
             <Form.Control  as="textarea" rows={2} 
               type="text"
-              name="width"              
+              name="width"    
+              disabled="disabled"
               value={formData.width}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
@@ -525,8 +534,24 @@ function Pstock() {
                                   <Form.Label>Party DC No </Form.Label>
                                   <Form.Control
                                     type="text"
-                                    name="customerdc"           
+                                    name="customerdc"      
+                                    disabled="disabled"
                                     value={formData.customerdc}
+                                    onKeyUp={handleKeyUp}
+                                    onChange={(e) =>  setFormData((prevData) => ({
+                                      ...prevData,
+                                      [e.target.name]: e.target.value // Update the value of the specific input field
+                                    }))}   
+                                      
+                                  />       
+                                </Form.Group>
+                                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicFabric">
+                                  <Form.Label>Pining </Form.Label>
+                                  <Form.Control
+                                    type="text"
+                                    name="pining"   
+                                    disabled="disabled"
+                                    value={formData.pining}
                                     onKeyUp={handleKeyUp}
                                     onChange={(e) =>  setFormData((prevData) => ({
                                       ...prevData,

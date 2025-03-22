@@ -15,7 +15,7 @@ function Greyentry() {
   const table = useRef();
     const [formData, setFormData] = useState({
         ide:"",customer:"",fabric: '',construction:'',width:'',
-        weight:'',gmeter:'',customerdc:'',remarks:'',noofpcs:'',ftype:'',ptype:''
+        weight:'',gmeter:'',customerdc:'',remarks:'',noofpcs:'',ftype:'',ptype:'',pining:''
       });
 
       const [isEdit, setIsEdit] = useState(false);
@@ -26,6 +26,7 @@ function Greyentry() {
       const [constructionData, setConstructionData] = useState([ ]);
       const [ftypeData] = useState([ 'ORGANIC','NON ORGANIC','OCS','GRS','REGENAGRI']);
       const [ptypeData] = useState([ 'REWORK','FRESH']);
+      const [pintypeData] = useState([ '95','96','97','98','99','100','101','102','103','104','105']);
       
       const regexPatterns = {
         weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/  
@@ -158,7 +159,7 @@ function Greyentry() {
             fabric:dataArr[0][4],construction:dataArr[0][5],
             weight: eweight,width:dataArr[0][6],
             gmeter: egmeter, customerdc: dataArr[0][2], remarks: dataArr[0][9]
-            , noofpcs: dataArr[0][10], ftype: dataArr[0][11], ptype: dataArr[0][12] });   
+            , noofpcs: dataArr[0][10], ftype: dataArr[0][11], ptype: dataArr[0][13], pining: dataArr[0][12] });   
              
           setShow(true);
         }
@@ -229,7 +230,7 @@ function Greyentry() {
             }} className="display table sortable">
             <thead>
                 <tr>    
-                    <th>Entry No</th>           
+                    <th>Inward No</th>           
                     <th>Date</th>
                     <th>Party Dc No</th>
                     <th>Customer</th>
@@ -241,6 +242,7 @@ function Greyentry() {
                     <th>Remarks</th>     
                     <th>No Of Pcs</th>  
                     <th>Fabric Type</th>  
+                    <th>Pining</th>  
                     <th>Process</th>    
                                   
                 </tr>
@@ -453,6 +455,26 @@ function Greyentry() {
               }))} 
               required 
             />       
+          </Form.Group>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formFabricType">
+          <Form.Label>Pining </Form.Label>
+         <Form.Select             
+              name="pining"              
+              value={formData.pining}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            >
+              <option  value="">Select</option>
+         {pintypeData.map(pining => (
+          
+  <option  value={pining}>
+    {pining}
+  </option>
+))}
+           </Form.Select> 
           </Form.Group>
           </Row>
           <Row>
