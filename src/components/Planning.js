@@ -97,6 +97,7 @@ function Planning() {
             <tr>
               <th>Plan.No</th>
         <th>Inward.No</th>
+        <th>Cust.Dc</th>
                     <th>Date</th>
                     <th>Machine</th>
                     <th>Customer</th>
@@ -132,6 +133,7 @@ function Planning() {
                     <td>${row[12]}</td>
                     <td>${row[13]}</td>
                     <td>${row[14]}</td>
+                    <td>${row[15]}</td>
                   </tr>
                 `
               )
@@ -281,7 +283,7 @@ function Planning() {
   }
 
   const rowClick = (e) => {
-    
+      
     e.preventDefault();
     let api = table.current.dt();
     let rows = api.rows({ selected: true }).data().toArray();
@@ -291,7 +293,7 @@ function Planning() {
     selData = [...new Set(selData)];  
     setselData(selData);  
   }
-
+  
   return (
     <div className="data-wrapper">
    
@@ -320,7 +322,7 @@ function Planning() {
                 
     <DataTable onSelect={rowClick} ref={table} data={tableData} 
     options={{
-            order: [[0, 'desc']],
+                order: [[0, 'desc']],
             fixedColumns: {
               start: 2
           },
@@ -330,13 +332,38 @@ function Planning() {
             scrollY: 400,
             select: {
                 style: 'multi'
-            }
+            },
+            columns: [
+                {
+                    className: "dt-control", // Add a class for the toggle button
+                    orderable: false,
+                    data: "0",
+                    defaultContent: ""
+                },
+                { data: "1" },
+                { data: "2" },
+                { data: "3" },
+                { data: "4" },
+                { data: "5" },
+                { data: "6" },
+                { data: "7" },
+                { data: "8" },
+                { data: "9" },
+                { data: "10" },
+                { data: "11" },
+                { data: "12" },
+                { data: "13" },
+                { data: "14" },
+                { data: "15" },
+                
+            ],
               
             } }  className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
             <thead>
                 <tr>                   
                     <th>Plan.No</th>
                     <th>Inward.No</th>
+                    <th>Cust Dc</th>
                     <th>Date</th>
                     <th>Machine</th>
                     <th>Customer</th>

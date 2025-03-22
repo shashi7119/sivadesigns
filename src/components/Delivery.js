@@ -333,6 +333,7 @@ white-space: normal !important;
                 <tr>                   
                     <th>DC.No</th>
                     <th>Inward No</th>
+                    <th>Cust Dc</th>
                     <th>Batch Date</th>
                     <th>Machine</th>
                     <th>Customer</th>

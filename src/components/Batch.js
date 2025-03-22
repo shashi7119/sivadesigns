@@ -79,6 +79,7 @@ function Batch() {
                 <th>Batch.No</th>
                       <th>Date</th>
                       <th>Inward No</th>
+                      <th>Cust Dc</th>
                       <th>Machine</th>
                       <th>Customer</th>
                       <th>Fabric</th>
@@ -113,6 +114,7 @@ function Batch() {
                       <td>${row[12]}</td>
                       <td>${row[13]}</td>
                       <td>${row[14]}</td>
+                      <td>${row[15]}</td>
                     </tr>
                   `
                 )
@@ -225,7 +227,7 @@ function Batch() {
                 <tr>                   
                     <th>Batch.No</th>
                     <th>Batch Date</th>
-                    <th>Inward No</th>
+                    <th>Inward No</th><th>Cust Dc</th>
                     <th>Machine</th>
                     <th>Customer</th>
                     <th>Fabric</th>
