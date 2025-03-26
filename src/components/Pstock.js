@@ -134,8 +134,10 @@ function Pstock() {
         ));    
 
         if(dataArr.length === 0) {
-          alert('Select entry for edit');
-        } else {
+          alert('Select entry to create plan');
+        }else if(dataArr.length > 1) {
+      alert('Not allowed multiple stocks to create plan');
+    } else {
           console.log(dataArr); 
           let customer = "";let construction = "";let custdc = ""; let fabric = "";
           let width = "";let weight= 0;let gmeter=0;

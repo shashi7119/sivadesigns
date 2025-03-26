@@ -20,22 +20,15 @@ function Planning() {
   
   const table = useRef();
   const [show, setShow] = useState(false);
+  const [fetch, setFetch] = useState(false);
   const [tableData, setTableData] = useState([ ]);
-  const [formData, setFormData] = useState({
-    planid: '', stock_weight: '0',  stock_gmeter: '0', 
+  const [formData, setFormData] = useState([{
+    planid: '', customer:'', width:'',construction:'',inwardno:'',
     planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',
-  });  
+  }]);  
   let [selData, setselData] = useState([ ]);
   //const navigate = useNavigate();
   
-  const regexPatterns = {
-    stock_weight: /^[0-9.]*$/,          // Only numbers for input1
-    stock_gmeter: /^[0-9.]*$/,              // Only letters for input2
-    planned_weight: /^[0-9. ]*$/,       // Alphanumeric and underscores for input3
-    planned_gmeter: /^[0-9. ]*$/,
-    actual_weight: /^[0-9.]*$/,       // Alphanumeric and underscores for input3
-    actual_gmeter: /^[0-9.]*$/
-  };
 
   const { user , isAuthenticated } = useAuth();
   // Fetch data from backend API
@@ -49,9 +42,9 @@ function Planning() {
       } 
     };    
     user && fetchData();
-  }, [user]);
-   
- 
+  }, [user,fetch]);
+  
+          
   if (!isAuthenticated) {
     //  return null;
      console.log("not logged in")
@@ -177,84 +170,44 @@ function Planning() {
   }
   };
  
-  const handleClose = () => setShow(false);
+  const handleClose = () =>{ setShow(false);setFormData([]); }
   const handleShow = (e) => { 
     setShow(true);    
+  }
+  
+  const addRow = (dataArr) => {  
+      
+       const newRow = { planid: dataArr[0], customer:dataArr[5], width:dataArr[9],construction:dataArr[8],inwardno:dataArr[1],
+    planned_weight: dataArr[10],planned_gmeter: dataArr[11],actual_weight: '',actual_gmeter: ''};
+        setFormData(formData=>[...formData, newRow]);    
+      
   }
 
   const batchHandle =  (event) => {
     event.preventDefault();    
+    setFormData([]);
     let api = table.current.dt();
-    let rows = api.rows({ selected: true }).data().toArray();
-    let dataArr = [];
+    let rows = api.rows({ selected: true }).data().toArray(); 
+    handleShow();
     rows.map(value => (
-      dataArr.push(value)
+     addRow(value)     
     ));    
-    if(dataArr.length === 0) {
-      alert('Select plan for create batch');
-    }else if(dataArr.length > 1) {
-      alert('Not allowed multiple plans for create batch');
-    } else {
-      const planid = dataArr[0][0];
-
-         axios.get(`${API_URL}/getStock`,{
-          params: {
-              planid: planid
-            }
-        }).then(function (response) {      
-          setFormData(response.data);
-          handleShow();       
-        })
-      .catch(function (error) {
-        console.log(error);
-      });;
-      console.log(dataArr);              
-  }    
+          
   };
 
-  const handleKeyUp = (event) => {
-    const { name, value } = event.target; // Destructure name and value from the event
-    
-    // Step 4: Validate the input value based on the regex pattern
-    const isValid = regexPatterns[name].test(value);
 
-    // Step 5: If valid, update the state, otherwise you can show an error or just keep it unchanged
-    if (isValid) {
-
-      
-      setFormData((prevData) => ({
-        ...prevData,
-        [name]: value // Update the value of the specific input field
-      }));
-    } else {
-      setFormData((prevData) => ({
-        ...prevData,
-        [name]: '' // Reset the field to empty
-      }));
-    }
-
-    //alert(formData.machine);
-    
-   };
 
    const handleSubmit = async (event) => {
     event.preventDefault();
 
     console.log('Form Submitted with Data:', formData);
-    if((formData.stock_weight === 0) || (formData.stock_weight === "")){
-      alert("Grey Stock weight needed to create the batch");
-      return;
-    }
-
-    if((formData.stock_gmeter === 0) || (formData.stock_gmeter === "")){
-      alert("Grey Stock gmeter needed to create the batch");
-      return;
-    }
-    axios.post(`${API_URL}/addBatch`, formData)
+ 
+    axios.post(`${API_URL}/addBatch1`, formData)
   .then(function (response) {
-
+      console.log(response);
+    setFetch(true);
     setShow(false);
-    setFormData('');
+    setFormData([]);
     alert("Batch Created!!");
     let api = table.current.dt();
     api.rows({ selected: true }).remove().draw();
@@ -267,20 +220,6 @@ function Planning() {
 
   };
 
-  const checkStock = (event) => {
-    const { name, value } = event.target;
-    let stock = 0;    
-    if(name ==="actual_weight"){
-      stock = formData.stock_weight;      
-    }else if(name ==="actual_gmeter"){
-      stock = formData.stock_gmeter;  
-    }
-   
-    if(parseFloat(stock) < parseFloat(value)){
-      alert("Stock value should be greater than actual value");
-      event.target.value=0;
-    }
-  }
 
   const rowClick = (e) => {
       
@@ -291,7 +230,7 @@ function Planning() {
       selData.push(value)         
     ));  
     selData = [...new Set(selData)];  
-    setselData(selData);  
+    setselData(selData); 
   }
   
   return (
@@ -319,7 +258,7 @@ function Planning() {
           
             </div>
        </Row>
-                
+   
     <DataTable onSelect={rowClick} ref={table} data={tableData} 
     options={{
                 order: [[0, 'desc']],
@@ -335,7 +274,7 @@ function Planning() {
             },
             columns: [
                 {
-                    className: "dt-control", // Add a class for the toggle button
+                    className: "", // Add a class for the toggle button
                     orderable: false,
                     data: "0",
                     defaultContent: ""
@@ -380,122 +319,93 @@ function Planning() {
                 </tr>
             </thead>
         </DataTable>  
-        <Modal show={show} onHide={handleClose}>
+        <Modal size="lg" show={show} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Create Batch</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>          
+          <Form>       
+          {formData.map((row) => ( 
           <Row>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
-            <Form.Label>Stock Weight </Form.Label>
+          <Form.Group className="col-1 col-sm-1 mb-3" controlId="formBasicWeight">           
             <Form.Control
               type="text"
-              name="stock_weight"             
-              value={formData.stock_weight}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
+              name="planid"             
+              value={row.planid}                            
               required 
               disabled
             />       
           </Form.Group>
-         
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicGmeter">
-            <Form.Label>Stock Gmeter </Form.Label>
+          <Form.Group className="col-2 col-sm-1 mb-3" controlId="formBasicWeight">           
             <Form.Control
               type="text"
-              name="stock_gmeter"             
-              value={formData.stock_gmeter}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}  
+              name="inwardno"             
+              value={row.inwardno}                            
+              required 
+              disabled
+            />       
+          </Form.Group>        
+         
+           <Form.Group className="col-2 col-sm-2 mb-3" controlId="formBasicGmeter">           
+            <Form.Control
+              type="text"
+              name="construction"             
+              value={row.construction}              
               required 
               disabled
             />       
           </Form.Group>
-          </Row>
-          <Row>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAWeight">
-            <Form.Label>Planned Weight </Form.Label>
+          <Form.Group className="col-2 col-sm-2 mb-3" controlId="formBasicGmeter">           
             <Form.Control
               type="text"
-              name="planned_weight"
-             
-              value={formData.planned_weight}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  {setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }));
-
-              
-
-            }
-          } 
+              name="planned_weight"             
+              value={row.planned_weight}              
               required 
+              disabled
             />       
           </Form.Group>
-         
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
-            <Form.Label>Planned Gmeter </Form.Label>
+           <Form.Group className="col-2 col-sm-2 mb-3" controlId="formBasicGmeter">           
             <Form.Control
               type="text"
-              name="planned_gmeter"
-             
-              value={formData.planned_gmeter}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}  
-                
-            />       
-          </Form.Group>
-          </Row>
-          <Row>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAWeight">
-            <Form.Label>Actual Weight </Form.Label>
-            <Form.Control
-              type="text"
-              name="actual_weight"
-             
-              value={formData.actual_weight}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  {setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }));
-              checkStock(e);
-            }
+              name="actual_weight"               
+              value={row.actual_weight}               
+              onChange={(e) =>  setFormData((prevRows) =>
+                prevRows.map((row1) =>
+                  row1.planid === row.planid ? { ...row1, actual_weight:e.target.value} : row1
+                )
+              )
             } 
               required 
+              
+            />       
+          </Form.Group>
+          <Form.Group className="col-2 col-sm-2 mb-3" controlId="formBasicGmeter">           
+            <Form.Control
+              type="text"
+              name="planned_gmeter"             
+              value={row.planned_gmeter}              
+              required 
+              disabled
             />       
           </Form.Group>
          
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
-            <Form.Label>Actual Gmeter </Form.Label>
+          <Form.Group className="col-2 col-sm-2 mb-3" controlId="formBasicGmeter">           
             <Form.Control
               type="text"
-              name="actual_gmeter"
-             
-              value={formData.actual_gmeter}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  {setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }));
-              checkStock(e);
-            }
-            }  
-                
+             name="actual_gmeter"               
+              value={row.actual_gmeter}               
+              onChange={(e) =>  setFormData((prevRows) =>
+                prevRows.map((row1) =>
+                  row1.planid === row.planid ? { ...row1, actual_gmeter:e.target.value} : row1
+                )
+              )
+            } 
+              required
             />       
           </Form.Group>
           </Row>
+          ))}          
+         
           </Form>
         </Modal.Body>
         <Modal.Footer>

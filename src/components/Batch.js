@@ -214,6 +214,9 @@ function Batch() {
             fixedColumns: {
               start: 2
           },
+          rowGroup: {
+        dataSrc: 0
+    },
             paging: false,
             scrollCollapse: true,
             scrollX: true,
