@@ -21,7 +21,7 @@ function Batchfinishing() {
   const { user , isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
       bid: '', batch_weight: '0', batch_gmeter: '0', 
-      final_weight: '',final_gmeter: '',
+      final_weight: '',final_gmeter: '',finishing: '',
     });  
     const [fetch, setFetch] = useState(false);
      const [show, setShow] = useState(false);
@@ -165,8 +165,9 @@ function Batchfinishing() {
     } else {
 
       formData.bid = dataArr[0][0];
-      formData.batch_weight = dataArr[0][9];
-      formData.batch_gmeter = dataArr[0][10];
+      formData.batch_weight = dataArr[0][10];
+      formData.batch_gmeter = dataArr[0][11];
+      formData.finishing    = dataArr[0][15];
       formData.final_weight = "0";
       formData.final_gmeter = "0";
       setFormData(formData);
