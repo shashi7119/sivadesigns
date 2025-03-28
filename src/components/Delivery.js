@@ -95,7 +95,7 @@ white-space: normal !important;
 }
         
         .table{border: 0px solid #364159;border-collapse: separate !important;border-style: solid;border-radius: 10px;box-shadow: 0 0 0 0px #364159;margin: 1rem; table-layout: fixed;border-spacing: 0px;}
-	.table thead th{font-size: 12px;font-weight: 600;color: #6F83AA;letter-spacing: 0.5px;background: #E6EBF7;text-transform: none;padding: 0.5rem;text-align: left;vertical-align: middle;border-bottom: 0px solid #364159;}
+	.table thead th{font-size: 12px;font-weight: 600;color: #6F83AA;letter-spacing: 0.5px;background: #E6EBF7;text-transform: none;padding: 0.5rem;text-align: center;vertical-align: middle;border-bottom: 0px solid #364159;}
 	.table thead tr th:first-child{border-top-left-radius: 10px;border-top: 0px solid #364159;}
 	.table thead tr th:last-child{border-top-right-radius: 10px}
 	.table td, .table th{font-size: 12px;border-top: 0px solid #364159;padding: 0.9rem 0.75rem;color: #364159;font-weight: 600;}
@@ -181,17 +181,18 @@ white-space: normal !important;
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>To:</strong></p>
-        <p>${selectedRows[0][4]}</p>
+        <p>${selectedRows[0][7]}</p>
         <p>51, KALAIGNER NAGAR,, KARUNGALPALAYAM, ERODE</p>
         <p>TAMILNADU, INDIA</p>
         <p>GSTIN: 33AAFCS3659F1ZD</p>
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
-        <div class="row"><div class="col-md-4"><p>DC NO </p></div> <div class="col-md-6"><p>: </p></div></div>
-        <div class="row"><div class="col-md-4"><p>DC DATE </p></div> <div class="col-md-6"><p>: ${selectedRows[0][2]}</p></div></div>
-        <div class="row"><div class="col-md-4"><p>SHADE NAME </p></div> <div class="col-md-6"><p>: ${selectedRows[0][6]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>DC NO </p></div> <div class="col-md-6"><p>: ${selectedRows[0][1]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>DC DATE </p></div> <div class="col-md-6"><p>: ${selectedRows[0][0]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>SHADE NAME </p></div> <div class="col-md-6"><p>: ${selectedRows[0][9]}</p></div></div>
         <div class="row"><div class="col-md-4"><p>Party Dc No </p></div> <div class="col-md-6"><p>: </p></div></div>
-        <div class="row"><div class="col-md-4"><p>ProcessName </p></div> <div class="col-md-6"><p>: </p></div></div>
+        <div class="row"><div class="col-md-4"><p>Lot No </p></div> <div class="col-md-6"><p>: ${selectedRows[0][4]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Batch No </p></div> <div class="col-md-6"><p>: ${selectedRows[0][3]} </p></div></div>
 
         </div>
 </div>
@@ -199,18 +200,16 @@ white-space: normal !important;
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>Delivery To:</strong></p>
-        <p>${selectedRows[0][4]}</p>
+        <p>${selectedRows[0][7]}</p>
         <p>51, KALAIGNER NAGAR,, KARUNGALPALAYAM, ERODE</p>
         <p>TAMILNADU, INDIA</p>
         <p>GSTIN: 33AAFCS3659F1ZD</p>
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
-        <div class="row"><div class="col-md-4"><p>Design Name </p></div> <div class="col-md-6"><p>: </p></div></div>
-        <div class="row"><div class="col-md-4"><p>Count </p></div> <div class="col-md-6"><p>: ${selectedRows[0][7]}</p></div></div>
-        <div class="row"><div class="col-md-4"><p>Reed Pick</p></div> <div class="col-md-6"><p>: ${selectedRows[0][6]}</p></div></div>
-        <div class="row"><div class="col-md-4"><p>G Width </p></div> <div class="col-md-6"><p>: ${selectedRows[0][8]}</p></div></div>
-        <div class="row"><div class="col-md-4"><p>Weave </p></div> <div class="col-md-6"><p>: </p></div></div>
-
+        <div class="row"><div class="col-md-4"><p>Construction </p></div> <div class="col-md-6"><p>: ${selectedRows[0][10]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>G Width </p></div> <div class="col-md-6"><p>: ${selectedRows[0][11]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Fabric </p></div> <div class="col-md-6"><p>: ${selectedRows[0][8]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Process </p></div> <div class="col-md-6"><p>: ${selectedRows[0][19]}</p></div></div>
         </div>
 </div>
 
@@ -219,36 +218,54 @@ white-space: normal !important;
 		 <table class="table" style="margin-top:0px">
               <thead>
                 <tr>
-                    <th scope="col" width="5%">Sl. no.</th>
-                    <th scope="col" width="10%">Packing No</th>				  
-                    <th scope="col" width="10%">Workorderno</th>
-                    <th scope="col" width="5%">Piece No</th>
-                    <th scope="col" width="5%">Grey Qty</th>                  
-                    <th scope="col" width="10%">Qty UOM</th>
-                    <th scope="col" width="10%">Qty in Kgs</th>
-                    <th scope="col" width="10%">Mill F Width</th>
-                    <th scope="col" width="10%">Mill lot No</th>
-                    <th scope="col" width="5%">GLM</th>
-                    <th scope="col" width="10%">Dispatch Qty</th>
-                    <th scope="col" width="10%">Dispatch Kgs</th>
+                    <th scope="col" width="35%">Type.</th>                   
+                    <th scope="col" width="15%">Weight</th>				  
+                    <th scope="col" width="10%">Meter</th>
+                    <th scope="col" width="10%">Pining</th>
+                    <th scope="col" width="10%">GLM</th>                  
+                    <th scope="col" width="10%">Width</th>
+                    <th scope="col" width="10%">No Of Pcs</th>                 
                 </tr>
               </thead>
               <tbody>
                
-                
+               
                 <tr>
-				  <th scope="row" width="2%">1.</th>
-				  <td width="10%">${selectedRows[0][1]}</td>
-				  <td width="10%">${selectedRows[0][1]}</td>
-				  <td width="5%">89.00</td>
-				  <td width="8%">3,${selectedRows[0][10]}</td>
-				  <td width="10%">MTR</td>
-				  <td width="10%">${selectedRows[0][9]}</td>
-				  <td width="10%">${selectedRows[0][8]}</td>
+        <td scope="row" width="35%">Grey Fabric</th>				 
+				  <td width="15%">${selectedRows[0][12]}</td>
+				  <td width="10%">${selectedRows[0][13]}</td>
+				  <td width="10%"></td>
 				  <td width="10%"></td>
 				  <td width="10%">${selectedRows[0][11]}</td>
-                                  <td width="10%">${selectedRows[0][10]}</td>
-                                  <td width="10%">${selectedRows[0][9]}</td>
+				  <td width="10%"></td>			
+        
+				</tr>
+
+              </tbody>
+            </table>
+            
+			</div>
+         <div class="row mb-3">
+		
+		 <table class="table" style="margin-top:0px">
+              <thead>
+                <tr>
+                    <th scope="col" width="35%">Type.</th>                   
+                    <th scope="col" width="15%">Weight</th>				  
+                    <th scope="col" width="10%">Meter</th>
+                    <th scope="col" width="20%">GLM</th>                  
+                    <th scope="col" width="20%">Width</th>          
+                </tr>
+              </thead>
+              <tbody>
+               
+               
+                <tr>
+        <td scope="row" width="35%">Finished Fabric</th>				 
+				  <td width="15%">${selectedRows[0][15]}</td>
+				  <td width="10%">${selectedRows[0][16]}</td>
+				  <td width="20%"></td>
+				  <td width="20%">${selectedRows[0][14]}</td>					
         
 				</tr>
 
@@ -257,11 +274,7 @@ white-space: normal !important;
             
 			</div>
         <div class="row mb-2">
-        <div class="col-12 col-md-12" style="text-align:left"> 
-            <div class="row">
-                <div class="col-md-2"><p>Process Flow </p></div> 
-                <div class="col-md-9"><p>${selectedRows[0][13]}</p></div>
-            </div>
+        <div class="col-12 col-md-12" style="text-align:left">             
            <div class="row">
                 <div class="col-md-2"><p>Vehicle No </p></div> 
                 <div class="col-md-9"><p></p></div>
@@ -330,19 +343,24 @@ white-space: normal !important;
               
             } }  className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
             <thead>
-                <tr>                   
+                <tr>             
+                     <th>Date</th>
                     <th>DC.No</th>
+                    <th>Partial</th>
+                    <th>Batch No</th>
                     <th>Inward No</th>
                     <th>Cust Dc</th>
-                    <th>Batch Date</th>
                     <th>Machine</th>
                     <th>Customer</th>
                     <th>Fabric</th>
                     <th>Shade</th>
                     <th>Construction</th>
-                    <th>Width</th>
-                    <th>Weight</th>
-                    <th>GMeter</th>                   
+                    <th>Grey Width</th>
+                    <th>Grey Weight</th>
+                    <th>Grey Meter</th>     
+                    <th>Final Width</th>
+                    <th>Final Weight</th>
+                    <th>Final Meter</th>
                     <th>GLM</th>
                     <th>AGLM</th>
                     <th>Process</th>

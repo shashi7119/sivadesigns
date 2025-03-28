@@ -21,7 +21,7 @@ function Batchfinishing() {
   const { user , isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
       bid: '', batch_weight: '0', batch_gmeter: '0', 
-      final_weight: '',final_gmeter: '',finishing: '',
+      final_weight: '',final_gmeter: '',finishing: '',final_width: '',partial:''
     });  
     const [fetch, setFetch] = useState(false);
      const [show, setShow] = useState(false);
@@ -33,7 +33,7 @@ function Batchfinishing() {
       batch_weight: /^[0-9.]*$/,          // Only numbers for input1
       batch_gmeter: /^[0-9.]*$/,              // Only letters for input2
       final_weight: /^[0-9. ]*$/,       // Alphanumeric and underscores for input3
-      final_gmeter: /^[0-9. ]*$/
+      final_gmeter: /^[0-9. ]*$/,
     };
      // Fetch data from backend API
   useEffect(() => {
@@ -159,7 +159,7 @@ function Batchfinishing() {
       dataArr.push(value)
     ));    
     if(dataArr.length === 0) {
-      alert('Select plan for create batch');
+      alert('Select batch for delivery');
     }else if(dataArr.length > 1) {
       alert('Not allowed multiple batches for complete');
     } else {
@@ -168,8 +168,8 @@ function Batchfinishing() {
       formData.batch_weight = dataArr[0][10];
       formData.batch_gmeter = dataArr[0][11];
       formData.finishing    = dataArr[0][15];
-      formData.final_weight = "0";
-      formData.final_gmeter = "0";
+      formData.final_weight = "";
+      formData.final_gmeter = "";
       setFormData(formData);
           handleShow();
 
@@ -216,7 +216,7 @@ function Batchfinishing() {
       alert("Final gmeter needed to complete");
       return;
     }
-    axios.post(`${API_URL}/addDelivery`, formData)
+   axios.post(`${API_URL}/addDelivery`, formData)
   .then(function (response) {
 
     setShow(false);
@@ -228,7 +228,7 @@ function Batchfinishing() {
     console.log(error);
   });
     //const userData = response.data;
-   // console.log('Data From Backend:', userData);
+    console.log('Data From Backend:', formData);
 
   };
 
@@ -245,6 +245,12 @@ function Batchfinishing() {
       alert("Fianl value should be lesser than stock value");
       event.target.value=0;
     }
+  }
+  
+  const handleCheckboxChange = (event) => {
+    const target = event.target;
+    const checked = target.checked;
+    formData.partial = checked;   
   }
 
   return (
@@ -382,6 +388,33 @@ function Batchfinishing() {
             }
             }  
                 
+            />       
+          </Form.Group>          
+          </Row>
+          <Row>
+           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
+            <Form.Label>Final Width </Form.Label>
+            <Form.Control
+              type="text"
+              name="final_width"             
+              value={formData.final_width}             
+              onChange={(e) =>  {setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }));
+              
+            }
+            }  
+                
+            />       
+          </Form.Group>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
+            <Form.Label>Partial Delivery </Form.Label>
+            <Form.Check
+              type="switch"
+              name="partial"             
+              value={formData.partial}             
+               onClick={handleCheckboxChange} 
             />       
           </Form.Group>
           </Row>
