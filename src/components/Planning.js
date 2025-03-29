@@ -24,7 +24,7 @@ function Planning() {
   const [tableData, setTableData] = useState([ ]);
   const [formData, setFormData] = useState([{
     planid: '', customer:'', width:'',construction:'',inwardno:'',
-    planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',
+    planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',noofpcs:''
   }]);  
   let [selData, setselData] = useState([ ]);
   //const navigate = useNavigate();
@@ -319,54 +319,31 @@ function Planning() {
                 </tr>
             </thead>
         </DataTable>  
-        <Modal size="lg" show={show} onHide={handleClose}>
+        <Modal size="xl" show={show} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Create Batch</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>       
           {formData.map((row) => ( 
-          <Row>
-          <Form.Group className="col-1 col-sm-1 mb-3" controlId="formBasicWeight">           
-            <Form.Control
-              type="text"
-              name="planid"             
-              value={row.planid}                            
-              required 
-              disabled
-            />       
+          <Row >
+          <Form.Group className="col-6 col-sm-1 mb-3" controlId="formBasicWeight">           
+          <Form.Label>{row.planid} </Form.Label>
           </Form.Group>
-          <Form.Group className="col-2 col-sm-1 mb-3" controlId="formBasicWeight">           
-            <Form.Control
-              type="text"
-              name="inwardno"             
-              value={row.inwardno}                            
-              required 
-              disabled
-            />       
+          <Form.Group className="col-6 col-sm-1 mb-3" controlId="formBasicWeight">           
+            <Form.Label>{row.inwardno} </Form.Label>     
           </Form.Group>        
          
-           <Form.Group className="col-2 col-sm-2 mb-3" controlId="formBasicGmeter">           
-            <Form.Control
-              type="text"
-              name="construction"             
-              value={row.construction}              
-              required 
-              disabled
-            />       
+           <Form.Group className="col-6 col-sm-2 mb-3" controlId="formBasicGmeter">           
+           <Form.Label>{row.construction} </Form.Label>       
           </Form.Group>
-          <Form.Group className="col-2 col-sm-2 mb-3" controlId="formBasicGmeter">           
-            <Form.Control
-              type="text"
-              name="planned_weight"             
-              value={row.planned_weight}              
-              required 
-              disabled
-            />       
+          <Form.Group className="col-6 col-sm-1 mb-3" controlId="formBasicGmeter">  
+          <Form.Label>{row.planned_weight} </Form.Label>                 
           </Form.Group>
-           <Form.Group className="col-2 col-sm-2 mb-3" controlId="formBasicGmeter">           
+           <Form.Group className="col-6 col-sm-2 mb-3" controlId="formBasicGmeter">           
             <Form.Control
               type="text"
+              placeholder="Batch Weight"
               name="actual_weight"               
               value={row.actual_weight}               
               onChange={(e) =>  setFormData((prevRows) =>
@@ -379,19 +356,14 @@ function Planning() {
               
             />       
           </Form.Group>
-          <Form.Group className="col-2 col-sm-2 mb-3" controlId="formBasicGmeter">           
-            <Form.Control
-              type="text"
-              name="planned_gmeter"             
-              value={row.planned_gmeter}              
-              required 
-              disabled
-            />       
+          <Form.Group className="col-6 col-sm-1 mb-3" controlId="formBasicGmeter">   
+           <Form.Label>{row.planned_gmeter} </Form.Label>
           </Form.Group>
          
-          <Form.Group className="col-2 col-sm-2 mb-3" controlId="formBasicGmeter">           
+          <Form.Group className="col-6 col-sm-2 mb-3" controlId="formBasicGmeter">           
             <Form.Control
               type="text"
+              placeholder="Batch Gmeter"
              name="actual_gmeter"               
               value={row.actual_gmeter}               
               onChange={(e) =>  setFormData((prevRows) =>
@@ -403,9 +375,24 @@ function Planning() {
               required
             />       
           </Form.Group>
+          <Form.Group className="col-6 col-sm-2 mb-3" controlId="formBasicGmeter">           
+            <Form.Control
+              type="text"
+             name="noofpcs"    
+             placeholder="No of pcs"
+              value={row.noofpcs}               
+              onChange={(e) =>  setFormData((prevRows) =>
+                prevRows.map((row1) =>
+                  row1.planid === row.planid ? { ...row1, noofpcs:e.target.value} : row1
+                )
+              )
+            } 
+              required
+            />       
+          </Form.Group>
           </Row>
           ))}          
-         
+
           </Form>
         </Modal.Body>
         <Modal.Footer>

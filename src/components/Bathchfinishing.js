@@ -21,7 +21,8 @@ function Batchfinishing() {
   const { user , isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
       bid: '', batch_weight: '0', batch_gmeter: '0', 
-      final_weight: '',final_gmeter: '',finishing: '',final_width: '',partial:'',pide:''
+      final_weight: '',final_gmeter: '',finishing: '',final_width: '',partial:''
+      ,pide:'',pining:'',noofpcs:''
     });  
     const [fetch, setFetch] = useState(false);
      const [show, setShow] = useState(false);
@@ -29,6 +30,7 @@ function Batchfinishing() {
     const handleShow = (e) => { 
       setShow(true);    
     }
+    const [pintypeData] = useState([ '95','96','97','98','99','100','101','102','103','104','105']);
     const regexPatterns = {
       batch_weight: /^[0-9.]*$/,          // Only numbers for input1
       batch_gmeter: /^[0-9.]*$/,              // Only letters for input2
@@ -226,7 +228,7 @@ function Batchfinishing() {
     setShow(false);
     setFormData('');
     setFetch(true);
-    alert("Batch Completed!!");   
+    alert("DC Created!!");   
   })
   .catch(function (error) {
     console.log(error);
@@ -256,6 +258,32 @@ function Batchfinishing() {
     const checked = target.checked;
     formData.partial = checked;   
   }
+  
+    const deleteHandle =  (event) => {
+
+    event.preventDefault();
+    if (window.confirm("Delete this item?")) {
+    let api = table.current.dt();
+    let rows = api.rows({ selected: true }).data().toArray();
+    let dataArr = [];let dataArr1 = [];
+    rows.map(value => (
+      dataArr.push(value)
+    ));    
+    
+    const match = dataArr[0][0].match(/data-pide="([^"]*)"/);
+      const value = match ? match[1] : null;
+      dataArr1.push(value);
+    axios.post(`${API_URL}/deleteFinishing`, dataArr1)
+    .then(function (response) {      
+      console.log(response);
+    })
+  .catch(function (error) {
+    console.log(error);
+  });
+    console.log(dataArr);
+    api.rows({ selected: true }).remove().draw();
+  }
+  };
 
   return (
     <div className="data-wrapper">
@@ -275,6 +303,7 @@ function Batchfinishing() {
       <Dropdown.Menu>
          <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>  
         <Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item>
+        {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
       </Dropdown.Menu>
     </Dropdown>
           
@@ -411,6 +440,45 @@ function Batchfinishing() {
             }  
                 
             />       
+          </Form.Group>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
+            <Form.Label>No of pcs </Form.Label>
+            <Form.Control
+              type="text"
+              name="noofpcs"             
+              value={formData.noofpcs}             
+              onChange={(e) =>  {setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }));
+              
+            }
+            }  
+                
+            />       
+          </Form.Group>
+                    
+          </Row>
+          <Row>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
+            <Form.Label>Pining </Form.Label>
+             <Form.Select             
+              name="pining"              
+              value={formData.pining}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            >
+              <option  value="">Select</option>
+         {pintypeData.map(pining => (
+          
+  <option  value={pining}>
+    {pining}
+  </option>
+))}
+           </Form.Select>       
           </Form.Group>
           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
             <Form.Label>Partial Delivery </Form.Label>

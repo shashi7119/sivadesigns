@@ -161,17 +161,21 @@ function Batch() {
     if (window.confirm("Complete this batch?")) {
     let api = table.current.dt();
     let rows = api.rows({ selected: true }).data().toArray();
-    let dataArr = [];
+    let dataArr = [];let dataArr1 = [];
     rows.map(value => (
       dataArr.push(value)
     ));
+    
+    const match = dataArr[0][3].match(/data-pide="([^"]*)"/);
+      const value = match ? match[1] : null;
+      dataArr1.push(value);
     
     if(dataArr.length === 0) {
       alert('Select batch for complete');
     }else if(dataArr.length > 1) {
       alert('Not allowed multiple plans for complete batch');
     } else {
-    axios.post(`${API_URL}/completeBatch`, dataArr)
+    axios.post(`${API_URL}/completeBatch`, dataArr1)
     .then(function (response) {      
       alert("Batch Completed");
       api.rows({ selected: true }).remove().draw();

@@ -45,10 +45,19 @@ function Delivery() {
       event.preventDefault();
       let api = table.current.dt();
       let selectedRows = api.rows({ selected: true }).data();
+      if(selectedRows.length === 0) {
+        alert('Select DC for print');
+      } else {
       formData.dcno = selectedRows[0][1];
       setFormData(formData);
        axios.post(`${API_URL}/getDCDetails`, formData).then(function (response) {
-           
+         
+           if (response.data) {
+               
+               let pining = (response.data['gpining'] !== "0")?parseFloat(response.data['gpining']/100):"0"; 
+          let gmetercal = (selectedRows[0][13] !== "0")? parseFloat(selectedRows[0][13]*pining):selectedRows[0][13];
+          let caglm = parseFloat(selectedRows[0][12]/gmetercal).toFixed(2);
+          
            const printableContent = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"><style>
    
         html, body, div, span, applet, object, iframe,
@@ -184,7 +193,7 @@ white-space: normal !important;
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>To:</strong></p>
-        <p>${selectedRows[0][7]}</p>
+        <p>${response.data['name']}</p>
         <p>${response.data['address1']}</p>
            <p>${response.data['address2']}</p>
         <p>${response.data['pincode']}</p>
@@ -205,7 +214,7 @@ white-space: normal !important;
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>Delivery To:</strong></p>
-         <p>${selectedRows[0][7]}</p>
+         <p>${response.data['name']}</p>
         <p>${response.data['address1']}</p>
            <p>${response.data['address2']}</p>
         <p>${response.data['pincode']}</p>
@@ -241,10 +250,10 @@ white-space: normal !important;
         <td scope="row" width="35%">Grey Fabric</th>				 
 				  <td width="15%">${selectedRows[0][12]}</td>
 				  <td width="10%">${selectedRows[0][13]}</td>
-				  <td width="10%"></td>
-				  <td width="10%"></td>
+				  <td width="10%">${response.data['gpining']}</td>
+				  <td width="10%">${caglm}</td>
 				  <td width="10%">${selectedRows[0][11]}</td>
-				  <td width="10%"></td>			
+				  <td width="10%">${response.data['gnoofpcs']}</td>			
         
 				</tr>
 
@@ -260,8 +269,10 @@ white-space: normal !important;
                     <th scope="col" width="35%">Type.</th>                   
                     <th scope="col" width="15%">Weight</th>				  
                     <th scope="col" width="10%">Meter</th>
-                    <th scope="col" width="20%">GLM</th>                  
-                    <th scope="col" width="20%">Width</th>          
+                    <th scope="col" width="10%">Pining</th>
+                    <th scope="col" width="10%">GLM</th>                  
+                    <th scope="col" width="10%">Width</th>
+                    <th scope="col" width="10%">No Of Pcs</th>          
                 </tr>
               </thead>
               <tbody>
@@ -271,8 +282,10 @@ white-space: normal !important;
         <td scope="row" width="35%">Finished Fabric</th>				 
 				  <td width="15%">${selectedRows[0][15]}</td>
 				  <td width="10%">${selectedRows[0][16]}</td>
-				  <td width="20%"></td>
-				  <td width="20%">${selectedRows[0][14]}</td>					
+				  <td width="20%">${response.data['pining']}</td>
+                                  <td width="20%">${selectedRows[0][17]}</td>
+				  <td width="20%">${selectedRows[0][14]}</td>	
+                                  <td width="20%">${response.data['noofpcs']}</td>
         
 				</tr>
 
@@ -304,7 +317,9 @@ white-space: normal !important;
       const newWindow = window.open("", "_blank");
       newWindow.document.write(`<pre>${printableContent}</pre>`);
       newWindow.print();
-
+           } else {
+               alert("DC not available");
+           }
              
         })
         .catch(function (error) {
@@ -312,10 +327,38 @@ white-space: normal !important;
         });
   
       
-      //setSelectedData(dataArr);
-      //console.log(dataArr);  
+      }
          
     };
+    
+    const deleteHandle =  (event) => {
+
+    event.preventDefault();
+    if (window.confirm("Delete this item?")) {
+    let api = table.current.dt();
+    let rows = api.rows({ selected: true }).data().toArray();
+    let dataArr = [];let dataArr1 = [];
+    rows.map(value => (
+      dataArr.push(value)
+    ));    
+    if(dataArr.length === 0) {
+        alert('Select DC for delete');
+      } else {    
+    
+        const value = dataArr[0][1];
+        dataArr1.push(value);
+        axios.post(`${API_URL}/deleteDC`, dataArr1)
+        .then(function (response) {      
+          console.log(response);
+        })
+      .catch(function (error) {
+        console.log(error);
+      });
+        console.log(dataArr);
+        api.rows({ selected: true }).remove().draw();
+      }
+  }
+  };
   
   
 
@@ -335,7 +378,8 @@ white-space: normal !important;
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>     
+         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>  
+         {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
       </Dropdown.Menu>
     </Dropdown>
           
