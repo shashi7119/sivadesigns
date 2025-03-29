@@ -21,7 +21,7 @@ function Batchfinishing() {
   const { user , isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
       bid: '', batch_weight: '0', batch_gmeter: '0', 
-      final_weight: '',final_gmeter: '',finishing: '',final_width: '',partial:''
+      final_weight: '',final_gmeter: '',finishing: '',final_width: '',partial:'',pide:''
     });  
     const [fetch, setFetch] = useState(false);
      const [show, setShow] = useState(false);
@@ -164,17 +164,21 @@ function Batchfinishing() {
       alert('Not allowed multiple batches for complete');
     } else {
 
+      const match = dataArr[0][0].match(/data-pide="([^"]*)"/);
+      const value = match ? match[1] : null;
+
       formData.bid = dataArr[0][0];
       formData.batch_weight = dataArr[0][10];
       formData.batch_gmeter = dataArr[0][11];
       formData.finishing    = dataArr[0][15];
+      formData.pide    = value;
       formData.final_weight = "";
       formData.final_gmeter = "";
       setFormData(formData);
           handleShow();
 
        
-      console.log(dataArr);              
+      console.log(formData);              
   }    
   };
 

@@ -20,7 +20,7 @@ function Delivery() {
   const table = useRef();
   const [tableData, setTableData] = useState([ ]);
   const { user , isAuthenticated } = useAuth();
- 
+ const [formData, setFormData] = useState({ dcno: '' }); 
 
      // Fetch data from backend API
   useEffect(() => {
@@ -45,8 +45,11 @@ function Delivery() {
       event.preventDefault();
       let api = table.current.dt();
       let selectedRows = api.rows({ selected: true }).data();
-  console.log(selectedRows);
-      const printableContent = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"><style>
+      formData.dcno = selectedRows[0][1];
+      setFormData(formData);
+       axios.post(`${API_URL}/getDCDetails`, formData).then(function (response) {
+           
+           const printableContent = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"><style>
    
         html, body, div, span, applet, object, iframe,
  h3,h2,h4,h5, h6,blockquote, pre,
@@ -182,9 +185,11 @@ white-space: normal !important;
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>To:</strong></p>
         <p>${selectedRows[0][7]}</p>
-        <p>51, KALAIGNER NAGAR,, KARUNGALPALAYAM, ERODE</p>
-        <p>TAMILNADU, INDIA</p>
-        <p>GSTIN: 33AAFCS3659F1ZD</p>
+        <p>${response.data['address1']}</p>
+           <p>${response.data['address2']}</p>
+        <p>${response.data['pincode']}</p>
+        <p><strong>GSTIN:</strong> ${response.data['gstin']}</p>
+         <p><strong>Contact:</strong> ${response.data['contact_number']}</p>
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
         <div class="row"><div class="col-md-4"><p>DC NO </p></div> <div class="col-md-6"><p>: ${selectedRows[0][1]}</p></div></div>
@@ -200,10 +205,12 @@ white-space: normal !important;
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>Delivery To:</strong></p>
-        <p>${selectedRows[0][7]}</p>
-        <p>51, KALAIGNER NAGAR,, KARUNGALPALAYAM, ERODE</p>
-        <p>TAMILNADU, INDIA</p>
-        <p>GSTIN: 33AAFCS3659F1ZD</p>
+         <p>${selectedRows[0][7]}</p>
+        <p>${response.data['address1']}</p>
+           <p>${response.data['address2']}</p>
+        <p>${response.data['pincode']}</p>
+        <p><strong>GSTIN:</strong> ${response.data['gstin']}</p>
+           <p><strong>Contact:</strong> ${response.data['contact_number']}</p>
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
         <div class="row"><div class="col-md-4"><p>Construction </p></div> <div class="col-md-6"><p>: ${selectedRows[0][10]}</p></div></div>
@@ -297,6 +304,14 @@ white-space: normal !important;
       const newWindow = window.open("", "_blank");
       newWindow.document.write(`<pre>${printableContent}</pre>`);
       newWindow.print();
+
+             
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+  
+      
       //setSelectedData(dataArr);
       //console.log(dataArr);  
          
