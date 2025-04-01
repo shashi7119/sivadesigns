@@ -1,5 +1,5 @@
 import React, { useState, useEffect,useRef} from 'react';
-import { Container, Row, Dropdown } from 'react-bootstrap';
+import { Container, Button,Row, Dropdown, Modal, Form,} from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -20,7 +20,12 @@ function Delivery() {
   const table = useRef();
   const [tableData, setTableData] = useState([ ]);
   const { user , isAuthenticated } = useAuth();
- const [formData, setFormData] = useState({ dcno: '' }); 
+ const [formData, setFormData] = useState({ dcno: '' ,vchno:''}); 
+ const [show, setShow] = useState(false);
+     const handleClose = () => setShow(false);
+    const handleShow = (e) => { 
+      setShow(true);    
+    }
 
      // Fetch data from backend API
   useEffect(() => {
@@ -41,16 +46,61 @@ function Delivery() {
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated
      }
    
+    const handleSubmit = async (event) => {
+    event.preventDefault();
+    
+    axios.post(`${API_URL}/updateVechileNo`, formData)
+   .then(function (response) {
+
+     setShow(false);
+     setFormData('');
+     let api = table.current.dt();
+       let selectedRows = api.rows({ selected: true }).data();
+       DCPrint(selectedRows);
+        console.log('Form Submitted with Data:', response.data);
+
+   })
+   .catch(function (error) {
+     console.log(error);
+   });
+   
+    //const userData = response.data;
+    console.log('Data From Backend:', formData);
+
+  };
+  
      const PrintHandle =  (event) => {
       event.preventDefault();
       let api = table.current.dt();
       let selectedRows = api.rows({ selected: true }).data();
+      
       if(selectedRows.length === 0) {
         alert('Select DC for print');
       } else {
-      formData.dcno = selectedRows[0][1];
-      setFormData(formData);
-       axios.post(`${API_URL}/getDCDetails`, formData).then(function (response) {
+      
+        const match = selectedRows[0][6].match(/data-vchno="([^"]*)"/);
+        const vchno = match ? match[1] : null;
+        
+        formData.dcno = selectedRows[0][1];
+        if(vchno ===""){
+            
+            handleShow();
+            
+        }else {
+            DCPrint(selectedRows);
+        }
+      
+  
+      
+      }
+         
+    };
+    
+    const DCPrint = (selectedRows)=>{
+        
+          formData.dcno = selectedRows[0][1];
+        setFormData(formData);
+        axios.post(`${API_URL}/getDCDetails`, formData).then(function (response) {
          
            if (response.data) {
                
@@ -204,7 +254,7 @@ white-space: normal !important;
         <div class="row"><div class="col-md-4"><p>DC NO </p></div> <div class="col-md-6"><p>: ${selectedRows[0][1]}</p></div></div>
         <div class="row"><div class="col-md-4"><p>DC DATE </p></div> <div class="col-md-6"><p>: ${selectedRows[0][0]}</p></div></div>
         <div class="row"><div class="col-md-4"><p>SHADE NAME </p></div> <div class="col-md-6"><p>: ${selectedRows[0][9]}</p></div></div>
-        <div class="row"><div class="col-md-4"><p>Party Dc No </p></div> <div class="col-md-6"><p>: </p></div></div>
+        <div class="row"><div class="col-md-4"><p>Party Dc No </p></div> <div class="col-md-6"><p>: ${selectedRows[0][5]}</p></div></div>
         <div class="row"><div class="col-md-4"><p>Lot No </p></div> <div class="col-md-6"><p>: ${selectedRows[0][4]}</p></div></div>
         <div class="row"><div class="col-md-4"><p>Batch No </p></div> <div class="col-md-6"><p>: ${selectedRows[0][3]} </p></div></div>
 
@@ -296,8 +346,7 @@ white-space: normal !important;
         <div class="row mb-2">
         <div class="col-12 col-md-12" style="text-align:left">             
            <div class="row">
-                <div class="col-md-2"><p>Vehicle No </p></div> 
-                <div class="col-md-9"><p></p></div>
+                <div class="col-12 col-md-6"><p>Vehicle No :${response.data['vehicleno']}</p></div>                
             </div>
        
         </div>
@@ -325,11 +374,8 @@ white-space: normal !important;
         .catch(function (error) {
           console.log(error);
         });
-  
-      
-      }
-         
-    };
+        
+    }
     
     const deleteHandle =  (event) => {
 
@@ -360,6 +406,7 @@ white-space: normal !important;
   }
   };
   
+    
   
 
   return (
@@ -388,7 +435,7 @@ white-space: normal !important;
                 
     <DataTable ref={table} data={tableData} 
     options={{
-            order: [[0, 'desc']],
+            order: [[1, 'desc']],
             fixedColumns: {
               start: 2
           },
@@ -427,6 +474,55 @@ white-space: normal !important;
                 </tr>
             </thead>
         </DataTable>   
+        <Modal show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Enter Vechile No</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>          
+          <Row>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
+            <Form.Label>DC No </Form.Label>
+            <Form.Control
+              type="text"
+              name="dcno"             
+              value={formData.dcno}              
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))} 
+              required
+              disabled
+            />       
+          </Form.Group><aside></aside>
+          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
+            <Form.Label>Vechile No </Form.Label>
+            <Form.Control
+              type="text"
+              name="vchno"             
+              value={formData.vchno}              
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))} 
+              required               
+            />       
+          </Form.Group>
+         
+         
+          </Row>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={handleSubmit}>
+            Save 
+          </Button>
+        </Modal.Footer>
+      </Modal>  
+        
        
         </Container> 
            
