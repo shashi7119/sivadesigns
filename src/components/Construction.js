@@ -83,7 +83,7 @@ function Construction() {
         setShow(false);
         setFormData('');
         console.log(response);
-        setFetch(true);
+        if(fetch){ setFetch(false);}else {setFetch(true);}
       })
       .catch(function (error) {
         console.log(error);

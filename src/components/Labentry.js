@@ -128,19 +128,19 @@ function Labentry() {
 
       const fetchSuggestions = async (query,id) => {
         if (!query.trim()) {
-          updateMaterialSuggestions(id, []);
+          updateMaterialSuggestions(id, {materials:[], selectedIndex: -1 });
           return;
         }
         try {
           setLoading(true);
           const response = await axios.get(`https://www.wynstarcreations.com/seyal/api/search?type=chemical&q=${query}`);
           const data = response.data;          
-          updateMaterialSuggestions(id, data.results || []);
+          updateMaterialSuggestions(id, {materials:data.results || [],selectedIndex: -1 });
           
          
         } catch (error) {
           console.error("Error fetching suggestions:", error);          
-          updateMaterialSuggestions(id, []);          
+          updateMaterialSuggestions(id, {materials:[],selectedIndex: -1});          
         } finally {
           setLoading(false);
         }
@@ -149,7 +149,7 @@ function Labentry() {
       const updateMaterialSuggestions = (id, materials) => {
         setRows((prevRows) =>
           prevRows.map((row) =>
-            row.id === id ? { ...row, materials } : row
+            row.id === id ? { ...row, ...materials } : row
           )
         );
       };
@@ -254,8 +254,8 @@ function Labentry() {
      
     setRows((prevRows) =>
       prevRows.map((row) => {
-        if (row.id !== id) return row;
-        let { selectedIndex, materials, value } = row;
+        if (row.id !== id) return row;        
+        let { selectedIndex, materials, material,unit } = row;
 
         if (event.key === "ArrowDown") {
           event.preventDefault();
@@ -267,14 +267,15 @@ function Labentry() {
         } else if (event.key === "Enter") {
           event.preventDefault();
           if (selectedIndex >= 0 && selectedIndex < materials.length) {
-            value = materials[selectedIndex];
+            material = materials[selectedIndex];
+            if(material ==="SODA ASH" || material ==="GLAUBERS SALT") { unit="GPL"}
             materials = [];
           }
         } else if (event.key === "Escape") {
           materials = [];
         }
 
-        return { ...row, selectedIndex, value, materials };
+        return { ...row, selectedIndex, material, materials,unit };
       })
     );
   };
@@ -365,7 +366,7 @@ function Labentry() {
         </div>
       )}
       {row.materials.length > 0 && (
-        <ul className="list-group position-absolute" Style="height:300px;overflow-y: scroll">
+        <ul className="list-group position-absolute" Style="height: auto;max-height:300px;overflow-y: scroll">
           {row.materials.map((suggestion, index) => (
             <li
               key={index}

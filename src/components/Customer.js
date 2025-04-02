@@ -84,7 +84,8 @@ function Customer() {
 
         setShow(false);
         setFormData('');
-        setFetch(true);
+        if(fetch){ setFetch(false);}else {setFetch(true);}
+        
         console.log(response);
       })
       .catch(function (error) {
