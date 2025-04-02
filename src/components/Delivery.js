@@ -278,8 +278,7 @@ white-space: normal !important;
         <div class="row"><div class="col-md-4"><p>Process </p></div> <div class="col-md-6"><p>: ${selectedRows[0][19]}</p></div></div>
         </div>
 </div>
-
-        <div class="row mb-2">
+       ${(response.data['partial'] === 'N')?`<div class="row mb-2">
 		
 		 <table class="table" style="margin-top:0px">
               <thead>
@@ -310,7 +309,8 @@ white-space: normal !important;
               </tbody>
             </table>
             
-			</div>
+			</div>`:``}
+        
          <div class="row mb-3">
 		
 		 <table class="table" style="margin-top:0px">
@@ -346,7 +346,8 @@ white-space: normal !important;
         <div class="row mb-2">
         <div class="col-12 col-md-12" style="text-align:left">             
            <div class="row">
-                <div class="col-12 col-md-6"><p>Vehicle No :${response.data['vehicleno']}</p></div>                
+                <div class="col-12 col-md-6"><p>Vehicle No :${response.data['vehicleno']}</p></div> 
+                 <div class="col-12 col-md-6"><p>Remarks :${response.data['remarks']}</p></div> 
             </div>
        
         </div>

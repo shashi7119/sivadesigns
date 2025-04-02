@@ -168,7 +168,7 @@ function Batchfinishing() {
 
       const match = dataArr[0][0].match(/data-pide="([^"]*)"/);
       const value = match ? match[1] : null;
-
+      
       formData.bid = dataArr[0][0];
       formData.batch_weight = dataArr[0][10];
       formData.batch_gmeter = dataArr[0][11];
@@ -226,7 +226,14 @@ function Batchfinishing() {
   .then(function (response) {
 
     setShow(false);
-    setFormData('');
+  formData.bid = '';
+      formData.batch_weight = '';
+      formData.batch_gmeter = '';
+      formData.finishing    = '';
+      formData.pide    = '';
+      formData.final_weight = "";
+      formData.final_gmeter = "";
+      setFormData(formData);
     setFetch(true);
     alert("DC Created!!");   
   })

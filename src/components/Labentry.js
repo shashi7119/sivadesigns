@@ -17,6 +17,7 @@ DataTable.use(DT);DataTable.use(FixedHeader);DataTable.use(RowGroup);
 function Labentry() {
 
    const table = useRef();
+   const suggestionRefs = useRef({});
     const [formData, setFormData] = useState({
         mname: '',type:'process'
       });
@@ -30,7 +31,7 @@ function Labentry() {
     const [eshow, setEditShow] = useState(false);
     const [fetch, setFetch] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [rows, setRows] = useState([{ process:'',id: 1,callno: "", material:'',quantity: "", materials: [],unit:"",temp:"",time:"" }]);
+    const [rows, setRows] = useState([{ process:'',id: 1,callno: "", material:'',quantity: "", materials: [],unit:"",temp:"",time:"" ,selectedIndex: -1}]);
     const { user , isAuthenticated } = useAuth();
   const handleClose = () => {
     setShow(false);
@@ -46,6 +47,17 @@ function Labentry() {
 
   const handleShow = () => setShow(true);
   
+  // Scroll into view when navigating suggestions
+  useEffect(() => {
+    rows.forEach((row) => {
+      if (row.selectedIndex >= 0 && suggestionRefs.current[row.id]) {
+        const selectedItem = suggestionRefs.current[row.id][row.selectedIndex];
+        if (selectedItem) {
+          selectedItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      }
+    });
+  }, [rows]);
 
      // Fetch data from backend API
   useEffect(() => {
@@ -65,6 +77,8 @@ function Labentry() {
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated
      }
 
+
+  
      const handleKeyUp = (event) => {
         const { name, value } = event.target; // Destructure name and value from the event
     
@@ -155,18 +169,18 @@ function Labentry() {
   const handleMaterialSuggestionClick = (id, material) => {
     setRows((prevRows) =>
       prevRows.map((row) =>
-        row.id === id ? { ...row, material: material, materials: []} : row
+        row.id === id ? { ...row, material: material, materials: [], selectedIndex: -1} : row
       )
     );
   };
 
   const addRow = () => {
-    const newRow = { id: rows.length + 1,process:'',callno:"", material:'',materials: [] ,quantity: "",temp: "",unit: "",time: "",};
+    const newRow = { id: rows.length + 1,process:'',callno:"", material:'',materials: [] ,quantity: "",temp: "",unit: "",time: "",selectedIndex: -1};
     setRows([...rows, newRow]);
   };
 
   const addRow1 = (data) => {   
-    const newRow = { id: data[0],process:'',callno:"", material:data[2],materials: [] ,quantity: data[3],temp: data[5],unit: data[4],time: data[6],};
+    const newRow = { id: data[0],process:'',callno:"", material:data[2],materials: [] ,quantity: data[3],temp: data[5],unit: data[4],time: data[6],selectedIndex: -1};
     setRows(rows=>[...rows, newRow]);
     console.log("data:", newRow);  
   };
@@ -234,6 +248,36 @@ function Labentry() {
 
     
       };
+      
+      // Handle keyboard navigation
+  const handleKeyDown = (event, id) => {
+     
+    setRows((prevRows) =>
+      prevRows.map((row) => {
+        if (row.id !== id) return row;
+        let { selectedIndex, materials, value } = row;
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          selectedIndex = Math.min(selectedIndex + 1, materials.length - 1);
+   
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          selectedIndex = Math.max(selectedIndex - 1, 0);
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          if (selectedIndex >= 0 && selectedIndex < materials.length) {
+            value = materials[selectedIndex];
+            materials = [];
+          }
+        } else if (event.key === "Escape") {
+          materials = [];
+        }
+
+        return { ...row, selectedIndex, value, materials };
+      })
+    );
+  };
 
 
   return (
@@ -306,25 +350,35 @@ function Labentry() {
             {rows.map((row) => (
             <Row className="mt-2">
                     
-    <Form.Group className="col-4 col-sm-4 px-1" >
+    <Form.Group className="col-4 col-sm-4 px-1 " >
       <input
         type="text"
         className="form-control"
         value={row.material}
         onChange={(e) => handleMaterialInputChange(row.id, e.target.value)}
+        onKeyDown={(e) => handleKeyDown(e, row.id)}
         placeholder="Search Product..."
       />
       {loading && (
-        <div className="position-absolute w-100 text-center">
+        <div className="position-absolute w-50 text-center">
           <small>Loading...</small>
         </div>
       )}
       {row.materials.length > 0 && (
-        <ul className="list-group position-absolute w-100">
+        <ul className="list-group position-absolute" Style="height:300px;overflow-y: scroll">
           {row.materials.map((suggestion, index) => (
             <li
               key={index}
-              className="w-50 list-group-item list-group-item-action col-4 col-sm-4"
+              ref={(el) => {
+                    if (!suggestionRefs.current[row.id]) {
+                      suggestionRefs.current[row.id] = [];
+                    }
+                    suggestionRefs.current[row.id][index] = el;
+                  }}
+              className={`w-100 list-group-item list-group-item-action col-4 col-sm-4 ${
+                    index === row.selectedIndex ? "active" : ""
+                  }`}
+              
               onClick={() => handleMaterialSuggestionClick(row.id,suggestion)}
             >
               {suggestion}
