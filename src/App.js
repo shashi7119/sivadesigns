@@ -63,7 +63,7 @@ function App() {
                </Role>              
               } />
               <Route path="/finishing" element={
-              <Role allowedRoles={["admin","production","batch"]} userRole={userRole}>
+              <Role allowedRoles={["admin","finishing"]} userRole={userRole}>
               <Batchfinishing />
                </Role>              
               } />
@@ -145,7 +145,7 @@ function App() {
               } />
 
 <Route path="/delivery" element={
-              <Role allowedRoles={["admin","batch","production"]} userRole={userRole}>
+              <Role allowedRoles={["admin","delivery"]} userRole={userRole}>
               <Delivery />
               </Role>
               } />

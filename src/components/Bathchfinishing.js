@@ -177,10 +177,7 @@ function Batchfinishing() {
       formData.final_weight = "";
       formData.final_gmeter = "";
       setFormData(formData);
-          handleShow();
-
-       
-      console.log(formData);              
+          handleShow();           
   }    
   };
 
