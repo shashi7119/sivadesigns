@@ -412,105 +412,51 @@ white-space: normal !important;
       let api = table.current.dt();
       let selectedRows = api.rows({ selected: true }).data();
   console.log(selectedRows);
-      const printableContent = `
-      <html>
-        <head>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
-              line-height: 1.6;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-            }
-            table, th, td {
-              border: 1px solid black;
-            }
-            th, td {
-              padding: 10px;
-              text-align: left;
-            }
-            th {
-              background-color: #f2f2f2;
-            }
-            h1 {
-              text-align: center;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>Delivery Challan</h1>
-          <table>
-            <thead>
-              <tr>
-        <th>Date</th><th>DC No</th>
-                <th>Batch.No</th>
-                      <th>Inward No</th>
-                      <th>Cust Dc</th>
-                      <th>Machine</th>
-                      <th>Customer</th>
-                      <th>Fabric</th>
-                      <th>Shade</th>
-                      <th>Construction</th>
-                      <th>Grey Width</th>
-                      <th>Grey Weight</th>
-                      <th>Grey Meter</th>   
-                      <th>Final Width</th>
-                      <th>Final Weight</th>
-                      <th>Final Meter</th>     
-                      <th>GLM</th>
-                      <th>AGLM</th>
-                      <th>Process</th>
-                      <th>Finishing</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${selectedRows
-                .map(
-                  (row) => `
-                    <tr>
-                      <td>${row[0]}</td>
-                      <td>${row[1]}</td>
-                      <td>${row[3]}</td>
-                      <td>${row[4]}</td>
-                      <td>${row[5]}</td>
-                      <td>${row[6]}</td>
-                      <td>${row[7]}</td>
-                      <td>${row[8]}</td>
-                      <td>${row[9]}</td>
-                      <td>${row[10]}</td>
-                      <td>${row[11]}</td>
-                      <td>${row[12]}</td>
-                      <td>${row[13]}</td>
-                      <td>${row[14]}</td>
-                      <td>${row[15]}</td>
-                      <td>${row[16]}</td>
-                        <td>${row[17]}</td>
-                        <td>${row[18]}</td>
-                        <td>${row[19]}</td>
-        <td>${row[20]}</td>
-                    </tr>
-                  `
-                )
-                .join("")}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
   
-      const newWindow = window.open("", "_blank");
-      newWindow.document.write(`<pre>${printableContent}</pre>`);
-      newWindow.print();
-      //setSelectedData(dataArr);
-      //console.log(dataArr);  
-         
+  let csv = [];    
+    let bdata = [];
+
+    bdata = [];
+    bdata.push("Date");
+    bdata.push("DC No");
+    bdata.push("Batch.No");bdata.push("Inward No");
+    bdata.push("Cust Dc");bdata.push("Machine");
+    bdata.push("Customer");bdata.push("Fabric");
+    bdata.push("Shade");bdata.push("Construction");
+    bdata.push("Grey Width");bdata.push("Grey Weight");
+    bdata.push("Grey Meter");bdata.push("Final Width");
+    bdata.push("Final Weight");bdata.push("Final Meter");
+    bdata.push("GLM");bdata.push("AGLM");
+    bdata.push("Process");bdata.push("Finishing");
+    
+    csv.push(bdata.join(","));  
+
+    const rt = selectedRows.map((row) => {
+        let rowData = [];
+        const match = row[6].match(/>(.*?)</);
+        const machine = match ? match[1] : null;
+        rowData.push(row[0]);rowData.push(row[1]);rowData.push(row[3]);
+        rowData.push(row[4]);rowData.push(row[5]);rowData.push(machine);
+        rowData.push(row[7]);rowData.push(row[8]);rowData.push(row[9]);
+        rowData.push(row[10]);rowData.push(row[11]);rowData.push(row[12]);
+        rowData.push(row[13]);rowData.push(row[14]);rowData.push(row[15]);
+        rowData.push(row[16]);rowData.push(row[17]);rowData.push(row[18]);
+        rowData.push(row[19]);rowData.push(row[20]);
+        csv.push(rowData.join(","));
+        return true;
+    })
+    
+    console.log(rt);
+
+    let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(csvFile);
+    link.download = `dc_data.csv`;;
+    link.click();
+     api.rows({ selected: true }).remove().draw();
     };
 
   
-
   return (
     <div className="data-wrapper">
    
@@ -529,7 +475,7 @@ white-space: normal !important;
       <Dropdown.Menu>
          <Dropdown.Item href="#" onClick={PrintHandle}>DC Print</Dropdown.Item>  
          {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-         {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={ExportHandle}>Print</Dropdown.Item>}
+         {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
       </Dropdown.Menu>
     </Dropdown>
           
