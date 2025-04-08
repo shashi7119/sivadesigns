@@ -407,7 +407,108 @@ white-space: normal !important;
   }
   };
   
-    
+    const ExportHandle =  (event) => {
+      event.preventDefault();
+      let api = table.current.dt();
+      let selectedRows = api.rows({ selected: true }).data();
+  console.log(selectedRows);
+      const printableContent = `
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              line-height: 1.6;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            table, th, td {
+              border: 1px solid black;
+            }
+            th, td {
+              padding: 10px;
+              text-align: left;
+            }
+            th {
+              background-color: #f2f2f2;
+            }
+            h1 {
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Delivery Challan</h1>
+          <table>
+            <thead>
+              <tr>
+        <th>Date</th><th>DC No</th>
+                <th>Batch.No</th>
+                      <th>Inward No</th>
+                      <th>Cust Dc</th>
+                      <th>Machine</th>
+                      <th>Customer</th>
+                      <th>Fabric</th>
+                      <th>Shade</th>
+                      <th>Construction</th>
+                      <th>Grey Width</th>
+                      <th>Grey Weight</th>
+                      <th>Grey Meter</th>   
+                      <th>Final Width</th>
+                      <th>Final Weight</th>
+                      <th>Final Meter</th>     
+                      <th>GLM</th>
+                      <th>AGLM</th>
+                      <th>Process</th>
+                      <th>Finishing</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${selectedRows
+                .map(
+                  (row) => `
+                    <tr>
+                      <td>${row[0]}</td>
+                      <td>${row[1]}</td>
+                      <td>${row[3]}</td>
+                      <td>${row[4]}</td>
+                      <td>${row[5]}</td>
+                      <td>${row[6]}</td>
+                      <td>${row[7]}</td>
+                      <td>${row[8]}</td>
+                      <td>${row[9]}</td>
+                      <td>${row[10]}</td>
+                      <td>${row[11]}</td>
+                      <td>${row[12]}</td>
+                      <td>${row[13]}</td>
+                      <td>${row[14]}</td>
+                      <td>${row[15]}</td>
+                      <td>${row[16]}</td>
+                        <td>${row[17]}</td>
+                        <td>${row[18]}</td>
+                        <td>${row[19]}</td>
+        <td>${row[20]}</td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+  
+      const newWindow = window.open("", "_blank");
+      newWindow.document.write(`<pre>${printableContent}</pre>`);
+      newWindow.print();
+      //setSelectedData(dataArr);
+      //console.log(dataArr);  
+         
+    };
+
   
 
   return (
@@ -426,8 +527,9 @@ white-space: normal !important;
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>  
+         <Dropdown.Item href="#" onClick={PrintHandle}>DC Print</Dropdown.Item>  
          {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
+         {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={ExportHandle}>Print</Dropdown.Item>}
       </Dropdown.Menu>
     </Dropdown>
           
