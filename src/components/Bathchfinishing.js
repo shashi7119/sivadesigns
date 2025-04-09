@@ -251,8 +251,8 @@ function Batchfinishing() {
       stock = formData.batch_gmeter;  
     }
    
-    if(parseFloat(stock) < parseFloat(value)){
-      alert("Fianl value should be lesser than stock value");
+    if((parseFloat(stock) < parseFloat(value)) && (formData.finishing !== "Hydro+stenter")){
+      alert("Final value should be lesser than stock value");
       event.target.value=0;
     }
   }
