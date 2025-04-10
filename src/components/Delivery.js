@@ -453,10 +453,8 @@ white-space: normal !important;
     link.href = URL.createObjectURL(csvFile);
     link.download = `dc_data.csv`;;
     link.click();
-     api.rows({ selected: true }).remove().draw();
+    
     };
-    
-    
 
      const InvExcelHandle =  (selectedRows) => {
 
@@ -529,7 +527,7 @@ white-space: normal !important;
            if (response.data) {
                InvExcelHandle(response.data);
                console.log(response.data); 
-              api.rows({ selected: true }).remove().draw();
+              
           }
             })
             .catch(function (error) {
