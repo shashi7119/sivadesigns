@@ -1,5 +1,5 @@
-import React, { useState, useEffect} from 'react';
-import { Container,Button, Row,Modal, Form } from 'react-bootstrap';
+import React, { useState, useEffect,useRef} from 'react';
+import { Container,Button, Row,Modal, Form,Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -11,24 +11,25 @@ const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/addMaster';
 
 DataTable.use(DT);
 function Customer() {
-
+const table = useRef();
     const [formData, setFormData] = useState({
-        mname: '',type:'customer',email:'',contact_number:''
-        ,address1:'',address2:'',pincode:'',gstin:''
+        mname: '',type:'customer',email:'',contact_number:'',ide:''
+        ,address1:'',address2:'',pincode:'',gstin:'',state:''
       });
 
       const regexPatterns = {
-        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,email: /^[a-zA-Z0-9_@./#&+\-, ]*$/,
+        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,state: /^[a-zA-Z0-9_@./#&+\-, ]*$/,email: /^[a-zA-Z0-9_@./#&+\-, ]*$/,
         address1: /^[a-zA-Z0-9_@./#&+\-, ]*$/,contact_number: /^[0-9 ]*$/,
         address2: /^[a-zA-Z0-9_@./#&+\-, ]*$/,pincode: /^[0-9 ]*$/,
         gstin: /^[a-zA-Z0-9]*$/
       };
 
+    const [isEdit, setIsEdit] = useState(false);
     const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
     const [fetch, setFetch] = useState(false);
 
-  const handleClose = () => setShow(false);
+  const handleClose = () => { setIsEdit(false);setShow(false); }
   const handleShow = () => setShow(true);
   const { user , isAuthenticated } = useAuth();
 
@@ -79,6 +80,7 @@ function Customer() {
     
         console.log('Form Submitted with Data:', formData);
         formData.type="customer";
+        if(!isEdit) {
             axios.post(`${API_URL1}`, formData)
       .then(function (response) {
 
@@ -91,9 +93,45 @@ function Customer() {
       .catch(function (error) {
         console.log(error);
       });
+  } else {
+       axios.post(`https://www.wynstarcreations.com/seyal/api/updateCustomer`, formData)
+        .then(function (response) {        
+          setShow(false);
+        setFormData('');
+        if(fetch){ setFetch(false);}else {setFetch(true);}
+        
+        })
+        .catch(function (error) {
+          console.log(error);
+        });    
+  }
         //const userData = response.data;
        // console.log('Data From Backend:', userData);
     
+      };
+     
+       const edithandle =  (event) => {
+        setIsEdit(true);
+        event.preventDefault();       
+        let api = table.current.dt();
+        let rows = api.rows({ selected: true }).data().toArray();
+        let dataArr = [];
+        rows.map(value => (
+          dataArr.push(value)
+        ));    
+
+        if(dataArr.length === 0) {
+          alert('Select entry for edit');
+        }else if(dataArr.length > 1) {
+          alert('Not allowed multiple entries for edit');
+        } else {
+          console.log(dataArr);          
+          
+           setFormData({  mname: dataArr[0][1],ide:dataArr[0][0],type:'customer',email:dataArr[0][3],contact_number:dataArr[0][2]
+        ,address1:dataArr[0][4],address2:dataArr[0][5],state:dataArr[0][6],pincode:dataArr[0][7],gstin:dataArr[0][8]});   
+             
+          setShow(true);
+        }
       };
      
 
@@ -107,12 +145,19 @@ function Customer() {
         <Row>
           <div class="col-10 col-sm-10"></div>
           <div class="col-2 col-sm-2">
-            <Button variant="primary" type="submit" className="login-button" onClick={handleShow}>
-              Add
-            </Button>
+            <Dropdown>
+      <Dropdown.Toggle variant="success" id="dropdown-basic">
+        Actions
+      </Dropdown.Toggle>
+
+      <Dropdown.Menu>
+         <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>   
+         <Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item>    
+      </Dropdown.Menu>
+    </Dropdown>
             </div>
        </Row>
-    <DataTable data={tableData} options={{
+    <DataTable ref={table} data={tableData} options={{
       order: [[0, 'desc']],
                 responsive: true,
                 select: true,
@@ -126,6 +171,7 @@ function Customer() {
                     <th>Email</th> 
                     <th>Address 1</th> 
                     <th>Address 2</th> 
+                    <th>State</th>
                     <th>Pincode</th> 
                     <th>GSTIN</th>                   
                 </tr>
@@ -133,7 +179,7 @@ function Customer() {
         </DataTable>
         <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Add Customer</Modal.Title>
+           <Modal.Title>{isEdit ? "Edit Customer" : "Add Customer"}</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{
       maxHeight: '400px',
@@ -202,6 +248,20 @@ function Customer() {
               type="text"
               name="address2"              
               value={formData.address2}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             
+            />
+            </Form.Group>
+             <Form.Group className="mb-2" >
+              <Form.Label>State</Form.Label>
+              <Form.Control
+              type="text"
+              name="state"              
+              value={formData.state}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
