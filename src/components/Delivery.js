@@ -472,7 +472,7 @@ white-space: normal !important;
     bdata.push("Place of Supply");bdata.push("GSTIN");
     bdata.push("Item Name");bdata.push("HSN");
     bdata.push("TAX");bdata.push("QTY");bdata.push("Unit");
-    bdata.push("QTY");bdata.push("Unit");bdata.push("Rate");bdata.push("Amount");
+    bdata.push("Rate");bdata.push("Amount");
     bdata.push("Freight Charges");bdata.push("Packing Charges");bdata.push("Discount (-)");
     bdata.push("CGST"); bdata.push("SGST"); bdata.push("IGST"); bdata.push("CESS");
      bdata.push("TCS"); bdata.push("Rounded off");bdata.push("Total Amount");
@@ -486,8 +486,7 @@ white-space: normal !important;
         rowData.push(row['address1']);rowData.push(row['address2']);rowData.push(row['pincode']);
         rowData.push(row['state']);rowData.push(row['state']);rowData.push(row['gstin']);
         rowData.push(row['itemname']);rowData.push("998821");rowData.push('5%');
-        rowData.push(row['weight']);rowData.push('KG');rowData.push(row['gmeter']);
-        rowData.push('Meter');rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');
+        rowData.push(row['weight']);rowData.push('KG');rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');
         rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');
         const escapedData = rowData.map(field => {
   if (typeof field === 'string') {
