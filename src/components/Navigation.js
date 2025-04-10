@@ -49,7 +49,7 @@ function Navigation() {
             {user && (user.role==="admin" || user.role==="grey") && <Nav.Link as={Link} to="/greyentry">Grey Entry</Nav.Link>}
             {user && (user.role==="admin" || user.role==="batch") && <Nav.Link as={Link} to="/planning">Planning</Nav.Link>}
             {user && (user.role==="admin" || user.role==="production") && <Nav.Link as={Link} to="/labentry">Lab Entry</Nav.Link>}
-            {user && (user.role==="admin" || user.role==="batch" || user.role==="production") && <Nav.Link as={Link} to="/batch">Batch</Nav.Link>}
+            {user && (user.role==="admin" || user.role==="batch" || user.role==="production" || user.role==="batchcomplete") && <Nav.Link as={Link} to="/batch">Batch</Nav.Link>}
             {user && (user.role==="admin" || user.role==="finishing" ) && <Nav.Link as={Link} to="/finishing">Finishing</Nav.Link>}
             {user && (user.role==="admin" || user.role==="delivery" ) && <Nav.Link as={Link} to="/delivery">Delivery</Nav.Link>}
             

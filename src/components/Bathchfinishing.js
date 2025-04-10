@@ -410,7 +410,7 @@ function Batchfinishing() {
           </Form.Group>
          
           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
-            <Form.Label>Final Gmeter </Form.Label>
+            <Form.Label>Final Meter </Form.Label>
             <Form.Control
               type="text"
               name="final_gmeter"

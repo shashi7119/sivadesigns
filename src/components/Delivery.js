@@ -455,7 +455,89 @@ white-space: normal !important;
     link.click();
      api.rows({ selected: true }).remove().draw();
     };
+    
+    
 
+     const InvExcelHandle =  (selectedRows) => {
+
+  
+  let csv = [];    
+    let bdata = [];
+
+    bdata = [];
+    bdata.push("VCH TYPE");
+    bdata.push("INVOICE NO");
+    bdata.push("INVOICE DATE");bdata.push("Reference No");
+    bdata.push("Reference Date");bdata.push("Ledger Name");
+    bdata.push("Addr Ln1");bdata.push("Addr Ln2");
+    bdata.push("Pincode");bdata.push("State");
+    bdata.push("Place of Supply");bdata.push("GSTIN");
+    bdata.push("Item Name");bdata.push("HSN");
+    bdata.push("TAX");bdata.push("QTY");bdata.push("Unit");
+    bdata.push("QTY");bdata.push("Unit");bdata.push("Rate");bdata.push("Amount");
+    bdata.push("Freight Charges");bdata.push("Packing Charges");bdata.push("Discount (-)");
+    bdata.push("CGST"); bdata.push("SGST"); bdata.push("IGST"); bdata.push("CESS");
+     bdata.push("TCS"); bdata.push("Rounded off");bdata.push("Total Amount");
+    
+    csv.push(bdata.join(","));  
+
+    const rt = selectedRows.map((row) => {
+        let rowData = [];       
+        rowData.push('Sales');rowData.push(row['invno']);rowData.push(row['invdate']);
+        rowData.push('');rowData.push('');rowData.push(row['name']);
+        rowData.push(row['address1']);rowData.push(row['address2']);rowData.push(row['pincode']);
+        rowData.push(row['state']);rowData.push(row['state']);rowData.push(row['gstin']);
+        rowData.push(row['itemname']);rowData.push("998821");rowData.push('5%');
+        rowData.push(row['weight']);rowData.push('KG');rowData.push(row['gmeter']);
+        rowData.push('Meter');rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');
+        rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');
+        const escapedData = rowData.map(field => {
+  if (typeof field === 'string') {
+    // Replace " with "" and wrap in quotes
+    return `"${field.replace(/"/g, '""')}"`;
+  }
+  return field;
+});
+        csv.push(escapedData.join(","));
+        return true;
+    })
+    
+    console.log(rt);
+
+    let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(csvFile);
+    link.download = `inv_data.csv`;;
+    link.click();
+     
+    };
+
+  
+ const InvExport = ()=>{
+        
+        let api = table.current.dt(); let dataArr = [];
+        let selectedRows = api.rows({ selected: true }).data();
+         if(selectedRows.length === 0) {
+        alert('Select DC for print');
+      } else {
+         
+        selectedRows.map(value => (
+        dataArr.push(value[1])
+      )); 
+        axios.post(`${API_URL}/getInvDetails`, dataArr).then(function (response) {
+      
+           if (response.data) {
+               InvExcelHandle(response.data);
+               console.log(response.data); 
+              api.rows({ selected: true }).remove().draw();
+          }
+            })
+            .catch(function (error) {
+                   
+          console.log(error);
+        });
+        }
+    };
   
   return (
     <div className="data-wrapper">
@@ -476,6 +558,7 @@ white-space: normal !important;
          <Dropdown.Item href="#" onClick={PrintHandle}>DC Print</Dropdown.Item>  
          {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
          {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
+          {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={InvExport}>Invoice Export</Dropdown.Item>}
       </Dropdown.Menu>
     </Dropdown>
           

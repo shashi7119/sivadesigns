@@ -204,8 +204,8 @@ function Batch() {
 
       <Dropdown.Menu>
          <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>         
-        <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>
-        <Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item>
+       {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item> }
+        {user && ((user.role==="admin" ) || (user.role==="batchcomplete" )) && <Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item>}
       </Dropdown.Menu>
     </Dropdown>
           
