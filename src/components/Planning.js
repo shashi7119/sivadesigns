@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef} from 'react';
+import React, { useState, useRef} from 'react';
 //import { useNavigate } from 'react-router-dom';
 import { Container,Button, Row,Modal, Form,Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
@@ -20,30 +20,15 @@ function Planning() {
   
   const table = useRef();
   const [show, setShow] = useState(false);
-  const [fetch, setFetch] = useState(false);
-  const [tableData, setTableData] = useState([ ]);
   const [formData, setFormData] = useState([{
     planid: '', customer:'', width:'',construction:'',inwardno:'',
     planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',noofpcs:''
   }]);  
   let [selData, setselData] = useState([ ]);
-  //const navigate = useNavigate();
   
 
   const { user , isAuthenticated } = useAuth();
-  // Fetch data from backend API
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/plans`);
-        setTableData(response.data);
-      } catch (error) {
-        console.log(error);
-      } 
-    };    
-    user && fetchData();
-  }, [user,fetch]);
-  
+   
           
   if (!isAuthenticated) {
     //  return null;
@@ -199,13 +184,12 @@ function Planning() {
 
    const handleSubmit = async (event) => {
     event.preventDefault();
-
     console.log('Form Submitted with Data:', formData);
+    //table.current.dt().ajax.reload(null, false);
  
     axios.post(`${API_URL}/addBatch1`, formData)
   .then(function (response) {
-      console.log(response);
-    setFetch(true);
+      console.log(response);   
     setShow(false);
     setFormData([]);
     alert("Batch Created!!");
@@ -215,8 +199,7 @@ function Planning() {
   .catch(function (error) {
     console.log(error);
   });
-    //const userData = response.data;
-   // console.log('Data From Backend:', userData);
+
 
   };
 
@@ -258,24 +241,38 @@ function Planning() {
           
             </div>
        </Row>
-   
-    <DataTable onSelect={rowClick} ref={table} data={tableData} 
+      
+    <DataTable onSelect={rowClick} ref={table} 
     options={{
                 order: [[0, 'desc']],
             fixedColumns: {
               start: 2
           },
-            paging: false,
+            paging: true,
             scrollCollapse: true,
             scrollX: true,
             scrollY: 400,
+            processing: true,
+      serverSide: true,
             select: {
                 style: 'multi'
             },
+            ajax: {
+        url: `${API_URL}/plans1`,
+        type: 'POST',
+        data: function (d) {
+             d.searchcol = "greyid";
+            if (d.length === -1) {
+                d.length = 25; // Set default page length
+              }
+              return d;
+         // d.customSearch = searchText; // send custom filter to server
+        },
+      },
+       pageLength: 25,
             columns: [
                 {
-                    className: "", // Add a class for the toggle button
-                    orderable: false,
+                    className: "", // Add a class for the toggle button                    
                     data: "0",
                     defaultContent: ""
                 },

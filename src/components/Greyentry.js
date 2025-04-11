@@ -19,7 +19,7 @@ function Greyentry() {
       });
 
       const [isEdit, setIsEdit] = useState(false);
-      const [fetch, setFetch] = useState(false);
+     // const [fetch, setFetch] = useState(false);
       const [customerData, setCusotmerData] = useState([ ]);
       const [widthData, setWidthData] = useState([ ]);
       const [fabricData, setFabricData] = useState([ ]);
@@ -27,6 +27,7 @@ function Greyentry() {
       const [ftypeData] = useState([ 'ORGANIC','NON ORGANIC','OCS','GRS','REGENAGRI']);
       const [ptypeData] = useState([ 'REWORK','FRESH']);
       const [pintypeData] = useState([ '95','96','97','98','99','100','101','102','103','104','105']);
+      const [isSaving, setIsSaving] = useState(false);
       
       const regexPatterns = {
         weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/  
@@ -53,7 +54,7 @@ function Greyentry() {
         user && fetchData();
       }, [user]);
 
-    const [tableData, setTableData] = useState([ ]);
+   // const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
 
 
@@ -67,18 +68,20 @@ function Greyentry() {
   
 
      // Fetch data from backend API
-  useEffect(() => {
+  /*useEffect(() => {
     const fetchData = async () => {
       try {        
         const response = await axios.get(`${API_URL}/inventry`);
-        setTableData(response.data);      
+        setTableData(response.data);   
+         setShow(false);
+         setIsSaving(false); 
       } catch (error) {
         console.log(error);
       } 
     };
     
     user && fetchData();
-  }, [fetch,user]);
+  }, [fetch,user]);*/
 
      
       if (!isAuthenticated) {
@@ -109,11 +112,13 @@ function Greyentry() {
        };
 
      const handleSubmit = async (event) => {
+         setIsSaving(true); 
         event.preventDefault();
         if(!isEdit) {               
         axios.post(`${API_URL}/addInventry`, formData)
-      .then(function (response) {        
-        console.log(response);
+      .then(function (response) {    
+        setShow(false); setIsSaving(false); 
+        table.current.dt().ajax.reload(null, false);
       })
       .catch(function (error) {
         console.log(error);
@@ -122,16 +127,15 @@ function Greyentry() {
         console.log(formData);    
         axios.post(`${API_URL}/updateInventry`, formData)
         .then(function (response) {        
-          console.log(response);
+          setShow(false); setIsSaving(false); 
+         table.current.dt().ajax.reload(null, false);
         })
         .catch(function (error) {
           console.log(error);
         });    
     }
-    
-    setShow(false);
-    setFormData('');
-    if(fetch){setFetch(false);} else {setFetch(true);}
+        
+    setFormData('');    
     
       };
 
@@ -215,19 +219,56 @@ function Greyentry() {
            
             </div>
        </Row>
-    <DataTable ref={table} data={tableData} options={{
+    <DataTable ref={table}  options={{
                  order: [[0, 'desc']],
                  fixedColumns: {
                    start: 2
                },
-                 paging: false,
+                 paging: true,
                  scrollCollapse: true,
                  scrollX: true,
                  scrollY: 400,
+                  processing: true,
+      serverSide: true,
                  select: {
                      style: 'multi'
-                 }
-            }} className="display table sortable">
+                 },
+                 ajax: {
+        url: `${API_URL}/inventry1`,
+        type: 'POST',
+        data: function (d) {
+             d.searchcol = "greyid";
+            if (d.length === -1) {
+                d.length = 25; // Set default page length
+              }
+              return d;
+         // d.customSearch = searchText; // send custom filter to server
+        },
+      },
+       pageLength: 25,
+            columns: [
+                {
+                    className: "", // Add a class for the toggle button
+                    orderable: false,
+                    data: "0",
+                    defaultContent: ""
+                },
+                { data: "1" },
+                { data: "2" },
+                { data: "3" },
+                { data: "4" },
+                { data: "5" },
+                { data: "6" },
+                { data: "7" },
+                { data: "8" },
+                { data: "9" },
+                { data: "10" },
+                { data: "11" },
+                { data: "12" },
+                { data: "13" }          
+                
+            ],
+            }} className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
             <thead>
                 <tr>    
                     <th>Inward No</th>           
@@ -482,7 +523,7 @@ function Greyentry() {
                                <Button variant="secondary" onClick={handleClose}>Close</Button>
                                          </Form.Group>
                                          <Form.Group style={{textAlign:"right"}} className="col-6 col-sm-6 mb-3" controlId="formBasicaglm">
-                                           <Button variant="primary" type="submit" >
+                                           <Button disabled={isSaving} variant="primary" type="submit" >
                                            Save
                                            </Button>
                                            </Form.Group>

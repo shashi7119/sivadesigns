@@ -30,6 +30,7 @@ function Batchfinishing() {
     const handleShow = (e) => { 
       setShow(true);    
     }
+     const [isSaving, setIsSaving] = useState(false);
     const [pintypeData] = useState([ '95','96','97','98','99','100','101','102','103','104','105']);
     const regexPatterns = {
       batch_weight: /^[0-9.]*$/,          // Only numbers for input1
@@ -43,6 +44,8 @@ function Batchfinishing() {
       try {
         const response = await axios.get(`${API_URL}/finishing`);
         setTableData(response.data);
+         setShow(false);
+          setIsSaving(false);
       } catch (error) {
         console.log(error);
       } 
@@ -208,7 +211,7 @@ function Batchfinishing() {
 
    const handleSubmit = async (event) => {
     event.preventDefault();
-
+      setIsSaving(true); 
     console.log('Form Submitted with Data:', formData);
     if((formData.final_weight === 0) || (formData.final_weight === "")){
       alert("Final weight needed to complete");
@@ -222,7 +225,7 @@ function Batchfinishing() {
    axios.post(`${API_URL}/addDelivery`, formData)
   .then(function (response) {
 
-    setShow(false);
+   
   formData.bid = '';
       formData.batch_weight = '';
       formData.batch_gmeter = '';
@@ -231,7 +234,7 @@ function Batchfinishing() {
       formData.final_weight = "";
       formData.final_gmeter = "";
       setFormData(formData);
-    setFetch(true);
+     if(fetch){setFetch(false);} else {setFetch(true);}
     alert("DC Created!!");   
   })
   .catch(function (error) {
@@ -500,7 +503,7 @@ function Batchfinishing() {
           <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleSubmit}>
+          <Button disabled={isSaving} variant="primary" onClick={handleSubmit}>
             Save 
           </Button>
         </Modal.Footer>

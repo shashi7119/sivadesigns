@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef} from 'react';
+import React, {  useRef} from 'react';
 import { Container, Row, Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
@@ -17,20 +17,8 @@ DataTable.use(Responsive);DataTable.use(Select);
 DataTable.use(FixedHeader);DataTable.use(DT);
 function Batch() {
   const table = useRef();
-  const [tableData, setTableData] = useState([ ]);
   const { user , isAuthenticated } = useAuth();
      // Fetch data from backend API
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/batches`);
-        setTableData(response.data);
-      } catch (error) {
-        console.log(error);
-      } 
-    };
-    user && fetchData();
-  }, [user]);
 
       
       if (!isAuthenticated) {
@@ -212,7 +200,7 @@ function Batch() {
             </div>
        </Row>
                 
-    <DataTable ref={table} data={tableData} 
+    <DataTable ref={table} 
     options={{
             order: [[0, 'desc']],
             fixedColumns: {
@@ -221,13 +209,51 @@ function Batch() {
           rowGroup: {
         dataSrc: 0
     },
-            paging: false,
+            paging: true,
             scrollCollapse: true,
             scrollX: true,
             scrollY: 400,
+             processing: true,
+      serverSide: true,
             select: {
                 style: 'multi'
-            }
+            },
+            ajax: {
+        url: `${API_URL}/batches1`,
+        type: 'POST',
+        data: function (d) {
+             d.searchcol = "greyid";
+            if (d.length === -1) {
+                d.length = 25; // Set default page length
+              }
+              return d;
+         // d.customSearch = searchText; // send custom filter to server
+        },
+      },
+       pageLength: 25,
+            columns: [
+                {
+                    className: "", // Add a class for the toggle button                    
+                    data: "0",
+                    defaultContent: ""
+                },
+                { data: "1" },
+                { data: "2" },
+                { data: "3" },
+                { data: "4" },
+                { data: "5" },
+                { data: "6" },
+                { data: "7" },
+                { data: "8" },
+                { data: "9" },
+                { data: "10" },
+                { data: "11" },
+                { data: "12" },
+                { data: "13" },
+                { data: "14" },
+                { data: "15" },
+                
+            ],            
               
             } }  className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
             <thead>
