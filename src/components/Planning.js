@@ -10,7 +10,7 @@ import Select from 'datatables.net-select-dt';
 import FixedHeader from 'datatables.net-fixedcolumns-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import DT from 'datatables.net-dt';
-//import PrintDataTable from '../components/PrintDataTable';
+import $ from 'jquery';
 
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
@@ -24,6 +24,7 @@ function Planning() {
     planid: '', customer:'', width:'',construction:'',inwardno:'',
     planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',noofpcs:''
   }]);  
+  const [searchState, setSearchState] = useState('');
   let [selData, setselData] = useState([ ]);
   
 
@@ -160,6 +161,11 @@ function Planning() {
     setShow(true);    
   }
   
+  const handleColumnChange = (e) => {
+    setSearchState(e.target.value);
+   
+  };
+  
   const addRow = (dataArr) => {  
       
        const newRow = { planid: dataArr[0], customer:dataArr[5], width:dataArr[9],construction:dataArr[8],inwardno:dataArr[1],
@@ -241,7 +247,18 @@ function Planning() {
           
             </div>
        </Row>
-      
+        <Row style={{float:"right",marginRight:"81px",marginBottom:"10px"}}>
+        <Form.Select
+        className="form-control tsearch"
+              value={searchState}
+              onChange={handleColumnChange} 
+             style={{width:"150px",fontSize:"14px"}}
+            >
+              <option  value="greyid">Grey Entry No</option>
+              <option  value="customer">Customer</option>
+   
+        </Form.Select> 
+    </Row>
     <DataTable onSelect={rowClick} ref={table} 
     options={{
                 order: [[0, 'desc']],
@@ -261,7 +278,7 @@ function Planning() {
         url: `${API_URL}/plans1`,
         type: 'POST',
         data: function (d) {
-             d.searchcol = "greyid";
+             d.searchcol = $(".tsearch").val();
             if (d.length === -1) {
                 d.length = 25; // Set default page length
               }

@@ -6,6 +6,7 @@ import '../css/DataTable.css';
 import axios from 'axios';
 import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
+import $ from 'jquery';
 import 'react-datepicker/dist/react-datepicker.css'
 const API_URL = 'https://www.wynstarcreations.com/seyal/api/';
 
@@ -18,6 +19,7 @@ function Greyentry() {
         weight:'',gmeter:'',customerdc:'',remarks:'',noofpcs:'',ftype:'',ptype:'',pining:''
       });
 
+      const [searchState, setSearchState] = useState('');
       const [isEdit, setIsEdit] = useState(false);
      // const [fetch, setFetch] = useState(false);
       const [customerData, setCusotmerData] = useState([ ]);
@@ -64,24 +66,12 @@ function Greyentry() {
   const handleShow = (e) => { 
     setIsEdit(false);
     setShow(true);    
-  }
-  
+  };
 
-     // Fetch data from backend API
-  /*useEffect(() => {
-    const fetchData = async () => {
-      try {        
-        const response = await axios.get(`${API_URL}/inventry`);
-        setTableData(response.data);   
-         setShow(false);
-         setIsSaving(false); 
-      } catch (error) {
-        console.log(error);
-      } 
-    };
-    
-    user && fetchData();
-  }, [fetch,user]);*/
+const handleColumnChange = (e) => {
+    setSearchState(e.target.value);
+   
+  };
 
      
       if (!isAuthenticated) {
@@ -168,7 +158,7 @@ function Greyentry() {
           setShow(true);
         }
       };
-     
+          
       const deleteHandle =  (event) => {
 
         event.preventDefault();
@@ -194,7 +184,10 @@ function Greyentry() {
           api.rows({ selected: true }).remove().draw();
         }
       };
-    }
+    };
+    
+
+  
   return (
     <div className="data-wrapper">
    
@@ -219,6 +212,18 @@ function Greyentry() {
            
             </div>
        </Row>
+       <Row style={{float:"right",marginRight:"81px",marginBottom:"10px"}}>
+        <Form.Select
+        className="form-control tsearch"
+              value={searchState}
+              onChange={handleColumnChange} 
+             style={{width:"150px",fontSize:"14px"}}
+            >
+              <option  value="greyid">Grey Entry No</option>
+              <option  value="customer">Customer</option>
+   
+        </Form.Select> 
+    </Row>
     <DataTable ref={table}  options={{
                  order: [[0, 'desc']],
                  fixedColumns: {
@@ -237,7 +242,7 @@ function Greyentry() {
         url: `${API_URL}/inventry1`,
         type: 'POST',
         data: function (d) {
-             d.searchcol = "greyid";
+             d.searchcol = $(".tsearch").val();
             if (d.length === -1) {
                 d.length = 25; // Set default page length
               }

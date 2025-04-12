@@ -291,7 +291,7 @@ function Batchfinishing() {
     api.rows({ selected: true }).remove().draw();
   }
   };
-
+  
   return (
     <div className="data-wrapper">
    
@@ -316,7 +316,7 @@ function Batchfinishing() {
           
             </div>
        </Row>
-                
+   
     <DataTable ref={table} data={tableData} 
     options={{
             order: [[0, 'desc']],
@@ -329,8 +329,8 @@ function Batchfinishing() {
             scrollY: 400,
             select: {
                 style: 'multi'
-            }
-              
+              }
+                
             } }  className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
             <thead>
                 <tr>                   

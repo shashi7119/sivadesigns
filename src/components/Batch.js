@@ -1,5 +1,5 @@
-import React, {  useRef} from 'react';
-import { Container, Row, Dropdown } from 'react-bootstrap';
+import React, { useState, useRef} from 'react';
+import { Container, Row, Dropdown,Form } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -9,7 +9,7 @@ import Select from 'datatables.net-select-dt';
 import FixedHeader from 'datatables.net-fixedcolumns-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import DT from 'datatables.net-dt';
-//import PrintDataTable from '../components/PrintDataTable';
+import $ from 'jquery';
 
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
@@ -20,7 +20,7 @@ function Batch() {
   const { user , isAuthenticated } = useAuth();
      // Fetch data from backend API
 
-      
+      const [searchState, setSearchState] = useState('');
       if (!isAuthenticated) {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated
@@ -174,6 +174,11 @@ function Batch() {
 }
   }
   };
+  
+    const handleColumnChange = (e) => {
+    setSearchState(e.target.value);
+   
+  };
 
   return (
     <div className="data-wrapper">
@@ -199,7 +204,19 @@ function Batch() {
           
             </div>
        </Row>
-                
+      <Row style={{float:"right",marginRight:"81px",marginBottom:"10px"}}>
+        <Form.Select
+        className="form-control tsearch"
+              value={searchState}
+              onChange={handleColumnChange} 
+             style={{width:"150px",fontSize:"14px"}}
+            >
+            <option  value="batchid">Batch No</option>
+              <option  value="greyid">Grey Entry No</option>
+              <option  value="customer">Customer</option>
+   
+        </Form.Select> 
+    </Row>          
     <DataTable ref={table} 
     options={{
             order: [[0, 'desc']],
@@ -222,7 +239,7 @@ function Batch() {
         url: `${API_URL}/batches1`,
         type: 'POST',
         data: function (d) {
-             d.searchcol = "greyid";
+             d.searchcol = $(".tsearch").val();
             if (d.length === -1) {
                 d.length = 25; // Set default page length
               }
