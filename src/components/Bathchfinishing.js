@@ -233,7 +233,7 @@ function Batchfinishing() {
       formData.pide    = '';
       formData.final_weight = "";
       formData.final_gmeter = "";
-      setFormData(formData);
+      setFormData(formData);      
      if(fetch){setFetch(false);} else {setFetch(true);}
     alert("DC Created!!");   
   })
