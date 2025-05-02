@@ -424,8 +424,8 @@ white-space: normal !important;
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-         <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>   
-         <Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item>             
+         {user && user.role !=="SP2" &&<Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>  }
+         {user && user.role !=="SP2" && user.role !=="SP1" &&<Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item> }            
          {user && user.role==="admin" && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
           <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>     
       </Dropdown.Menu>

@@ -58,12 +58,12 @@ function App() {
               
               } />
             <Route path="/planning" element={
-              <Role allowedRoles={["admin","batch"]} userRole={userRole}>
+              <Role allowedRoles={["admin","batch","SP1","SP2"]} userRole={userRole}>
               <Planning />
                </Role>              
               } />
               <Route path="/finishing" element={
-              <Role allowedRoles={["admin","finishing"]} userRole={userRole}>
+              <Role allowedRoles={["admin","finishing","SP1","SP2"]} userRole={userRole}>
               <Batchfinishing />
                </Role>              
               } />
@@ -108,17 +108,17 @@ function App() {
               </Role>
               } />
             <Route path="/greyentry" element={
-              <Role allowedRoles={["admin","grey"]} userRole={userRole}>
+              <Role allowedRoles={["admin","grey","SP1","SP2"]} userRole={userRole}>
               <Greyentry />
               </Role>
               } />
             <Route path="/batch" element={
-              <Role allowedRoles={["admin","production","batch","batchcomplete"]} userRole={userRole}>
+              <Role allowedRoles={["admin","production","batch","batchcomplete","SP1","SP2","SP3"]} userRole={userRole}>
               <Batch />
               </Role>
               } />
               <Route path="/pstock" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","SP1","SP2"]} userRole={userRole}>
               <Pstock />
               </Role>
               } />
@@ -145,7 +145,7 @@ function App() {
               } />
 
 <Route path="/delivery" element={
-              <Role allowedRoles={["admin","delivery"]} userRole={userRole}>
+              <Role allowedRoles={["admin","delivery","SP1","SP2","SP3"]} userRole={userRole}>
               <Delivery />
               </Role>
               } />

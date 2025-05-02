@@ -38,20 +38,20 @@ function Navigation() {
               </NavDropdown.Item>}
             </NavDropdown>}
              {user && (user.role==="admin" || user.role==="store") && <Nav.Link as={Link} to="/storeentry">Store</Nav.Link>}
-            {user && user.role==="admin" && <NavDropdown title="Stock" id="basic-nav-dropdown">
+            {user && (user.role==="admin" || user.role==="SP1"|| user.role==="SP2") && <NavDropdown title="Stock" id="basic-nav-dropdown">
               <NavDropdown.Item href="#">
               <Nav.Link as={Link} to="/pstock">Planning Stock</Nav.Link>
               </NavDropdown.Item>
               <NavDropdown.Item href="#">
-              <Nav.Link as={Link} to="/bstock">Batch Stock</Nav.Link>
+              {user && (user.role==="admin") && <Nav.Link as={Link} to="/bstock">Batch Stock</Nav.Link> }
               </NavDropdown.Item>
               </NavDropdown>}
-            {user && (user.role==="admin" || user.role==="grey") && <Nav.Link as={Link} to="/greyentry">Grey Entry</Nav.Link>}
-            {user && (user.role==="admin" || user.role==="batch") && <Nav.Link as={Link} to="/planning">Planning</Nav.Link>}
+            {user && (user.role==="admin" || user.role==="grey"|| user.role==="SP1"|| user.role==="SP2") && <Nav.Link as={Link} to="/greyentry">Grey Entry</Nav.Link>}
+            {user && (user.role==="admin" || user.role==="batch" || user.role==="SP1" || user.role==="SP2") && <Nav.Link as={Link} to="/planning">Planning</Nav.Link>}
             {user && (user.role==="admin" || user.role==="production") && <Nav.Link as={Link} to="/labentry">Lab Entry</Nav.Link>}
-            {user && (user.role==="admin" || user.role==="batch" || user.role==="production" || user.role==="batchcomplete") && <Nav.Link as={Link} to="/batch">Batch</Nav.Link>}
-            {user && (user.role==="admin" || user.role==="finishing" ) && <Nav.Link as={Link} to="/finishing">Finishing</Nav.Link>}
-            {user && (user.role==="admin" || user.role==="delivery" ) && <Nav.Link as={Link} to="/delivery">Delivery</Nav.Link>}
+            {user && (user.role==="admin" || user.role==="batch" || user.role==="production" || user.role==="batchcomplete"|| user.role==="SP1"|| user.role==="SP2") && <Nav.Link as={Link} to="/batch">Batch</Nav.Link>}
+            {user && (user.role==="admin" || user.role==="finishing" || user.role==="SP1" || user.role==="SP2" ) && <Nav.Link as={Link} to="/finishing">Finishing</Nav.Link>}
+            {user && (user.role==="admin" || user.role==="delivery" || user.role==="SP1" || user.role==="SP2" ) && <Nav.Link as={Link} to="/delivery">Delivery</Nav.Link>}
             
            
            

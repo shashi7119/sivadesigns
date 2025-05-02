@@ -238,10 +238,10 @@ function Planning() {
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-        <Dropdown.Item href="/profile">Add</Dropdown.Item>
-         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>   
-         <Dropdown.Item href="#" onClick={batchHandle}>Create batch</Dropdown.Item>    
-        <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>
+        {user && user.role !=="SP2" && user.role !=="SP1" &&<Dropdown.Item href="/profile">Add</Dropdown.Item>}
+         {user && user.role !=="SP2" &&<Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>   }
+         {user && user.role !=="SP2" &&<Dropdown.Item href="#" onClick={batchHandle}>Create batch</Dropdown.Item>}
+        {user && user.role ==="admin" &&<Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item> }
       </Dropdown.Menu>
     </Dropdown>
           

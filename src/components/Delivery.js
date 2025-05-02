@@ -554,8 +554,8 @@ white-space: normal !important;
       <Dropdown.Menu>
          <Dropdown.Item href="#" onClick={PrintHandle}>DC Print</Dropdown.Item>  
          {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-         {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
-          {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={InvExport}>Invoice Export</Dropdown.Item>}
+         {user && ((user.role==="admin" ) || (user.role==="SP1" ) ) && <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
+          {user && ((user.role==="admin" ) || (user.role==="SP1" )) && <Dropdown.Item href="#" onClick={InvExport}>Invoice Export</Dropdown.Item>}
       </Dropdown.Menu>
     </Dropdown>
           
