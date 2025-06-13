@@ -1,5 +1,5 @@
-import React, { useState, useEffect,useRef} from 'react';
-import { Container, Button,Row, Dropdown, Modal, Form,} from 'react-bootstrap';
+import React, { useState,  useRef } from 'react';
+import { Container, Button, Row, Dropdown, Modal, Form, } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -10,106 +10,95 @@ import FixedHeader from 'datatables.net-fixedcolumns-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import DT from 'datatables.net-dt';
 import logo from '../img/slogo.png'
+import $ from 'jquery';
 //import PrintDataTable from '../components/PrintDataTable';
 
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
-DataTable.use(Responsive);DataTable.use(Select);
-DataTable.use(FixedHeader);DataTable.use(DT);
+DataTable.use(Responsive); DataTable.use(Select);
+DataTable.use(FixedHeader); DataTable.use(DT);
 function Delivery() {
   const table = useRef();
-  const [tableData, setTableData] = useState([ ]);
-  const { user , isAuthenticated } = useAuth();
- const [formData, setFormData] = useState({ dcno: '' ,vchno:''}); 
- const [show, setShow] = useState(false);
-     const handleClose = () => setShow(false);
-    const handleShow = (e) => { 
-      setShow(true);    
-    }
+  const { user, isAuthenticated } = useAuth();
+  const [formData, setFormData] = useState({ dcno: '', vchno: '' });
+  const [show, setShow] = useState(false);
+   const [searchState, setSearchState] = useState('');
+  const handleClose = () => setShow(false);
+  const handleShow = (e) => {
+    setShow(true);
+  }
 
-     // Fetch data from backend API
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/delivery`);
-        setTableData(response.data);
-      } catch (error) {
-        console.log(error);
-      } 
-    };
-    user && fetchData();
-  }, [user]);
+  // Remove the useEffect that was fetching tableData since we're using server-side processing
 
-      
-      if (!isAuthenticated) {
-        return null;
-      // navigate('/login');  // Avoid rendering profile if the user is not authenticated
-     }
-   
-    const handleSubmit = async (event) => {
+  if (!isAuthenticated) {
+    return null;
+  // navigate('/login');  // Avoid rendering profile if the user is not authenticated
+  }
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    
-    axios.post(`${API_URL}/updateVechileNo`, formData)
-   .then(function (response) {
 
-     setShow(false);
-     setFormData('');
-     let api = table.current.dt();
-       let selectedRows = api.rows({ selected: true }).data();
-       DCPrint(selectedRows);
+    axios.post(`${API_URL}/updateVechileNo`, formData)
+      .then(function (response) {
+
+        setShow(false);
+        setFormData('');
+        let api = table.current.dt();
+        let selectedRows = api.rows({ selected: true }).data();
+        DCPrint(selectedRows);
         console.log('Form Submitted with Data:', response.data);
 
-   })
-   .catch(function (error) {
-     console.log(error);
-   });
-   
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+
     //const userData = response.data;
     console.log('Data From Backend:', formData);
 
   };
-  
-     const PrintHandle =  (event) => {
-      event.preventDefault();
-      let api = table.current.dt();
-      let selectedRows = api.rows({ selected: true }).data();
-      
-      if(selectedRows.length === 0) {
-        alert('Select DC for print');
+
+  const PrintHandle = (event) => {
+    event.preventDefault();
+    let api = table.current.dt();
+    let selectedRows = api.rows({ selected: true }).data();
+
+    if (selectedRows.length === 0) {
+      alert('Select DC for print');
+    } else {
+
+      const match = selectedRows[0][6].match(/data-vchno="([^"]*)"/);
+      const vchno = match ? match[1] : null;
+
+      formData.dcno = selectedRows[0][1];
+      if (vchno === "") {
+
+        handleShow();
+
       } else {
-      
-        const match = selectedRows[0][6].match(/data-vchno="([^"]*)"/);
-        const vchno = match ? match[1] : null;
-        
-        formData.dcno = selectedRows[0][1];
-        if(vchno ===""){
-            
-            handleShow();
-            
-        }else {
-            DCPrint(selectedRows);
-        }
-      
-  
-      
+        DCPrint(selectedRows);
       }
-         
-    };
-    
-    const DCPrint = (selectedRows)=>{
-        
-          formData.dcno = selectedRows[0][1];
-        setFormData(formData);
-        axios.post(`${API_URL}/getDCDetails`, formData).then(function (response) {
-         
-           if (response.data) {
-               
-               let pining = (response.data['gpining'] !== "0")?parseFloat(response.data['gpining']/100):"0"; 
-          let gmetercal = (selectedRows[0][13] !== "0")? parseFloat(selectedRows[0][13]*pining):selectedRows[0][13];
-          let caglm = parseFloat(selectedRows[0][12]/gmetercal).toFixed(2);
-          
-           const printableContent = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"><style>
-   
+
+
+
+    }
+
+  };
+
+  const DCPrint = (selectedRows) => {
+
+    formData.dcno = selectedRows[0][1];
+    setFormData(formData);
+    axios.post(`${API_URL}/getDCDetails`, formData).then(function (response) {
+
+      if (response.data) {
+
+        let pining = (response.data['gpining'] !== "0") ? parseFloat(response.data['gpining'] / 100) : "0";
+        let gmetercal = (selectedRows[0][13] !== "0") ? parseFloat(selectedRows[0][13] * pining) : selectedRows[0][13];
+        let caglm = parseFloat(selectedRows[0][12] / gmetercal).toFixed(2);
+
+        const printableContent = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"><style>
+
         html, body, div, span, applet, object, iframe,
  h3,h2,h4,h5, h6,blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -128,7 +117,7 @@ table, caption, tbody, tfoot, thead, tr, th, td, textarea, input {
    font-family: Arial, sans-serif;
    vertical-align: baseline;
    text-decoration:none;overflow:hidden;
-  
+
 
 }
         body{
@@ -147,7 +136,7 @@ white-space: normal !important;
   background: #fff;
         border-top:1px solid #000;
 }
-        
+
         p {
   color: #181E29;
   font-size: 12px;
@@ -155,13 +144,13 @@ white-space: normal !important;
   font-weight: normal;
   margin-bottom: 5px;
 }
-        
+
         .table{border: 0px solid #364159;border-collapse: separate !important;border-style: solid;border-radius: 10px;box-shadow: 0 0 0 0px #364159;margin: 1rem; table-layout: fixed;border-spacing: 0px;}
 	.table thead th{font-size: 12px;font-weight: 600;color: #6F83AA;letter-spacing: 0.5px;background: #E6EBF7;text-transform: none;padding: 0.5rem;text-align: center;vertical-align: middle;border-bottom: 0px solid #364159;}
 	.table thead tr th:first-child{border-top-left-radius: 10px;border-top: 0px solid #364159;}
 	.table thead tr th:last-child{border-top-right-radius: 10px}
 	.table td, .table th{font-size: 12px;border-top: 0px solid #364159;padding: 0.9rem 0.75rem;color: #364159;font-weight: 600;}
-	
+
  .card {
   background: linear-gradient(0deg, #FFFFFF, #FFFFFF), #C4C4C4;
   box-shadow: 0px 0px 7px rgba(196, 196, 196, 0.35);
@@ -169,7 +158,7 @@ white-space: normal !important;
   width: 100%;
   border-bottom: 11px solid #F8BD02;
 }
-	
+
 .table {
     border: 1px solid #364159;
     -moz-border-radius: 10px;
@@ -278,8 +267,8 @@ white-space: normal !important;
         <div class="row"><div class="col-md-4"><p>Process </p></div> <div class="col-md-6"><p>: ${selectedRows[0][19]}</p></div></div>
         </div>
 </div>
-       ${(response.data['partial'] === 'N')?`<div class="row mb-2">
-		
+       ${(response.data['partial'] === 'N') ? `<div class="row mb-2">
+
 		 <table class="table" style="margin-top:0px">
               <thead>
                 <tr>
@@ -309,8 +298,8 @@ white-space: normal !important;
               </tbody>
             </table>
             
-			</div>`:``}
-        
+			</div>` : ``}
+
          <div class="row mb-3">
 		
 		 <table class="table" style="margin-top:0px">
@@ -363,89 +352,89 @@ white-space: normal !important;
 </div></main></body>
       </html>
     `;
-  
-      const newWindow = window.open("", "_blank");
-      newWindow.document.write(`<pre>${printableContent}</pre>`);
-      newWindow.print();
-           } else {
-               alert("DC not available");
-           }
-             
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-        
-    }
-    
-    const deleteHandle =  (event) => {
 
-    event.preventDefault();
-    if (window.confirm("Delete this item?")) {
-    let api = table.current.dt();
-    let rows = api.rows({ selected: true }).data().toArray();
-    let dataArr = [];let dataArr1 = [];
-    rows.map(value => (
-      dataArr.push(value)
-    ));    
-    if(dataArr.length === 0) {
-        alert('Select DC for delete');
-      } else {    
-    
-        const value = dataArr[0][1];
-        dataArr1.push(value);
-        axios.post(`${API_URL}/deleteDC`, dataArr1)
-        .then(function (response) {      
-          console.log(response);
-        })
+        const newWindow = window.open("", "_blank");
+        newWindow.document.write(`<pre>${printableContent}</pre>`);
+        newWindow.print();
+      } else {
+        alert("DC not available");
+      }
+
+    })
       .catch(function (error) {
         console.log(error);
       });
+
+  }
+
+  const deleteHandle = (event) => {
+
+    event.preventDefault();
+    if (window.confirm("Delete this item?")) {
+      let api = table.current.dt();
+      let rows = api.rows({ selected: true }).data().toArray();
+      let dataArr = []; let dataArr1 = [];
+      rows.map(value => (
+        dataArr.push(value)
+      ));
+      if (dataArr.length === 0) {
+        alert('Select DC for delete');
+      } else {
+
+        const value = dataArr[0][1];
+        dataArr1.push(value);
+        axios.post(`${API_URL}/deleteDC`, dataArr1)
+          .then(function (response) {
+            console.log(response);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
         console.log(dataArr);
         api.rows({ selected: true }).remove().draw();
       }
-  }
+    }
   };
-  
-    const ExportHandle =  (event) => {
-      event.preventDefault();
-      let api = table.current.dt();
-      let selectedRows = api.rows({ selected: true }).data();
-  console.log(selectedRows);
-  
-  let csv = [];    
+
+  const ExportHandle = (event) => {
+    event.preventDefault();
+    let api = table.current.dt();
+    let selectedRows = api.rows({ selected: true }).data();
+    console.log(selectedRows);
+
+    let csv = [];
     let bdata = [];
 
     bdata = [];
     bdata.push("Date");
     bdata.push("DC No");
-    bdata.push("Batch.No");bdata.push("Inward No");
-    bdata.push("Cust Dc");bdata.push("Machine");
-    bdata.push("Customer");bdata.push("Fabric");
-    bdata.push("Shade");bdata.push("Construction");
-    bdata.push("Grey Width");bdata.push("Grey Weight");
-    bdata.push("Grey Meter");bdata.push("Final Width");
-    bdata.push("Final Weight");bdata.push("Final Meter");
-    bdata.push("GLM");bdata.push("AGLM");
-    bdata.push("Process");bdata.push("Finishing");
-    
-    csv.push(bdata.join(","));  
+    bdata.push("Batch.No"); bdata.push("Inward No");
+    bdata.push("Cust Dc"); bdata.push("Machine");
+    bdata.push("Customer"); bdata.push("Fabric");
+    bdata.push("Shade"); bdata.push("Construction");
+    bdata.push("Grey Width"); bdata.push("Grey Weight");
+    bdata.push("Grey Meter"); bdata.push("Final Width");
+    bdata.push("Final Weight"); bdata.push("Final Meter");
+    bdata.push("GLM"); bdata.push("AGLM");
+    bdata.push("Process"); bdata.push("Finishing");
+
+    csv.push(bdata.join(","));
 
     const rt = selectedRows.map((row) => {
-        let rowData = [];
-        const match = row[6].match(/>(.*?)</);
-        const machine = match ? match[1] : null;
-        rowData.push(row[0]);rowData.push(row[1]);rowData.push(row[3]);
-        rowData.push(row[4]);rowData.push(row[5]);rowData.push(machine);
-        rowData.push(row[7]);rowData.push(row[8]);rowData.push(row[9]);
-        rowData.push(row[10]);rowData.push(row[11]);rowData.push(row[12]);
-        rowData.push(row[13]);rowData.push(row[14]);rowData.push(row[15]);
-        rowData.push(row[16]);rowData.push(row[17]);rowData.push(row[18]);
-        rowData.push(row[19]);rowData.push(row[20]);
-        csv.push(rowData.join(","));
-        return true;
+      let rowData = [];
+      const match = row[6].match(/>(.*?)</);
+      const machine = match ? match[1] : null;
+      rowData.push(row[0]); rowData.push(row[1]); rowData.push(row[3]);
+      rowData.push(row[4]); rowData.push(row[5]); rowData.push(machine);
+      rowData.push(row[7]); rowData.push(row[8]); rowData.push(row[9]);
+      rowData.push(row[10]); rowData.push(row[11]); rowData.push(row[12]);
+      rowData.push(row[13]); rowData.push(row[14]); rowData.push(row[15]);
+      rowData.push(row[16]); rowData.push(row[17]); rowData.push(row[18]);
+      rowData.push(row[19]); rowData.push(row[20]);
+      csv.push(rowData.join(","));
+      return true;
     })
-    
+
     console.log(rt);
 
     let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
@@ -453,211 +442,297 @@ white-space: normal !important;
     link.href = URL.createObjectURL(csvFile);
     link.download = `dc_data.csv`;;
     link.click();
-    
-    };
 
-     const InvExcelHandle =  (selectedRows) => {
+  };
 
-  
-  let csv = [];    
+  const InvExcelHandle = (selectedRows) => {
+
+
+    let csv = [];
     let bdata = [];
 
     bdata = [];
     bdata.push("VCH TYPE");
     bdata.push("INVOICE NO");
-    bdata.push("INVOICE DATE");bdata.push("Reference No");
-    bdata.push("Reference Date");bdata.push("Ledger Name");
-    bdata.push("Addr Ln1");bdata.push("Addr Ln2");
-    bdata.push("Pincode");bdata.push("State");
-    bdata.push("Place of Supply");bdata.push("GSTIN");
-    bdata.push("Item Name");bdata.push("HSN");
-    bdata.push("TAX");bdata.push("QTY");bdata.push("Unit");
-    bdata.push("Rate");bdata.push("Amount");
-    bdata.push("Freight Charges");bdata.push("Packing Charges");bdata.push("Discount (-)");
+    bdata.push("INVOICE DATE"); bdata.push("Reference No");
+    bdata.push("Reference Date"); bdata.push("Ledger Name");
+    bdata.push("Addr Ln1"); bdata.push("Addr Ln2");
+    bdata.push("Pincode"); bdata.push("State");
+    bdata.push("Place of Supply"); bdata.push("GSTIN");
+    bdata.push("Item Name"); bdata.push("HSN");
+    bdata.push("TAX"); bdata.push("QTY"); bdata.push("Unit");
+    bdata.push("Rate"); bdata.push("Amount");
+    bdata.push("Freight Charges"); bdata.push("Packing Charges"); bdata.push("Discount (-)");
     bdata.push("CGST"); bdata.push("SGST"); bdata.push("IGST"); bdata.push("CESS");
-     bdata.push("TCS"); bdata.push("Rounded off");bdata.push("Total Amount");
-    
-    csv.push(bdata.join(","));  
+    bdata.push("TCS"); bdata.push("Rounded off"); bdata.push("Total Amount");
+
+    csv.push(bdata.join(","));
 
     const rt = selectedRows.map((row) => {
-        let rowData = [];       
-        rowData.push('Sales');rowData.push(row['invno']);rowData.push(row['invdate']);
-        rowData.push('');rowData.push('');rowData.push(row['name']);
-        rowData.push(row['address1']);rowData.push(row['address2']);rowData.push(row['pincode']);
-        rowData.push(row['state']);rowData.push(row['state']);rowData.push(row['gstin']);
-        rowData.push(row['itemname']);rowData.push("998821");rowData.push('5%');
-        rowData.push(row['weight']);rowData.push('KG');rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');
-        rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');rowData.push('');
-        const escapedData = rowData.map(field => {
-  if (typeof field === 'string') {
-    // Replace " with "" and wrap in quotes
-    return `"${field.replace(/"/g, '""')}"`;
-  }
-  return field;
-});
-        csv.push(escapedData.join(","));
-        return true;
+      let rowData = [];
+      rowData.push('Sales'); rowData.push(row['invno']); rowData.push(row['invdate']);
+      rowData.push(''); rowData.push(''); rowData.push(row['name']);
+      rowData.push(row['address1']); rowData.push(row['address2']); rowData.push(row['pincode']);
+      rowData.push(row['state']); rowData.push(row['state']); rowData.push(row['gstin']);
+      rowData.push(row['itemname']); rowData.push("998821"); rowData.push('5%');
+      rowData.push(row['weight']); rowData.push('KG'); rowData.push(''); rowData.push(''); rowData.push(''); rowData.push(''); rowData.push('');
+      rowData.push(''); rowData.push(''); rowData.push(''); rowData.push(''); rowData.push(''); rowData.push(''); rowData.push('');
+      const escapedData = rowData.map(field => {
+        if (typeof field === 'string') {
+          // Replace " with "" and wrap in quotes
+          return `"${field.replace(/"/g, '""')}"`;
+        }
+        return field;
+      });
+      csv.push(escapedData.join(","));
+      return true;
     })
-    
-    console.log(rt);
 
+ console.log(rt);
     let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
     let link = document.createElement("a");
     link.href = URL.createObjectURL(csvFile);
     link.download = `inv_data.csv`;;
     link.click();
-     
-    };
 
-  
- const InvExport = ()=>{
-        
-        let api = table.current.dt(); let dataArr = [];
-        let selectedRows = api.rows({ selected: true }).data();
-         if(selectedRows.length === 0) {
-        alert('Select DC for print');
-      } else {
-         
-        selectedRows.map(value => (
+  };
+
+
+  const InvExport = () => {
+
+    let api = table.current.dt(); let dataArr = [];
+    let selectedRows = api.rows({ selected: true }).data();
+    if (selectedRows.length === 0) {
+      alert('Select DC for print');
+    } else {
+
+      selectedRows.map(value => (
         dataArr.push(value[1])
-      )); 
-        axios.post(`${API_URL}/getInvDetails`, dataArr).then(function (response) {
-      
-           if (response.data) {
-               InvExcelHandle(response.data);
-               console.log(response.data); 
-              
-          }
-            })
-            .catch(function (error) {
-                   
+      ));
+      axios.post(`${API_URL}/getInvDetails`, dataArr).then(function (response) {
+
+        if (response.data) {
+          InvExcelHandle(response.data);
+          console.log(response.data);
+
+
+        }
+      })
+        .catch(function (error) {
+
           console.log(error);
         });
-        }
-    };
-  
-  return (
-    <div className="data-wrapper">
-   
-        <Container>
-        <Row>
-          <div className="col-10 col-sm-10">
-          <h1>Delivery</h1>
-          <p>Welcome, {user.email}!</p>
-          </div>
-          <div className="col-2 col-sm-2">
-          <Dropdown>
-      <Dropdown.Toggle variant="success" id="dropdown-basic">
-        Actions
-      </Dropdown.Toggle>
+    }
+  };
 
-      <Dropdown.Menu>
-         <Dropdown.Item href="#" onClick={PrintHandle}>DC Print</Dropdown.Item>  
-         {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-         {user && ((user.role==="admin" ) || (user.role==="SP1" ) ) && <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
-          {user && ((user.role==="admin" ) || (user.role==="SP1" )) && <Dropdown.Item href="#" onClick={InvExport}>Invoice Export</Dropdown.Item>}
-      </Dropdown.Menu>
-    </Dropdown>
-          
-            </div>
-       </Row>
-                
-    <DataTable ref={table} data={tableData} 
-    options={{
-            order: [[1, 'desc']],
-            fixedColumns: {
-              start: 2
-          },
-            paging: false,
-            scrollCollapse: true,
-            scrollX: true,
-            scrollY: 400,
-            select: {
-                style: 'multi'
-            }
-              
-            } }  className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
-            <thead>
-                <tr>             
-                     <th>Date</th>
-                    <th>DC.No</th>
-                    <th>Partial</th>
-                    <th>Batch No</th>
-                    <th>Inward No</th>
-                    <th>Cust Dc</th>
-                    <th>Machine</th>
-                    <th>Customer</th>
-                    <th>Fabric</th>
-                    <th>Shade</th>
-                    <th>Construction</th>
-                    <th>Grey Width</th>
-                    <th>Grey Weight</th>
-                    <th>Grey Meter</th>     
-                    <th>Final Width</th>
-                    <th>Final Weight</th>
-                    <th>Final Meter</th>
-                    <th>GLM</th>
-                    <th>AGLM</th>
-                    <th>Process</th>
-                    <th>Finishing</th>
-                </tr>
-            </thead>
-        </DataTable>   
-        <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Enter Vechile No</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>          
-          <Row>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
-            <Form.Label>DC No </Form.Label>
-            <Form.Control
-              type="text"
-              name="dcno"             
-              value={formData.dcno}              
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
-              required
-              disabled
-            />       
-          </Form.Group><aside></aside>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
-            <Form.Label>Vechile No </Form.Label>
-            <Form.Control
-              type="text"
-              name="vchno"             
-              value={formData.vchno}              
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
-              required               
-            />       
-          </Form.Group>
-         
-         
-          </Row>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Save 
-          </Button>
-        </Modal.Footer>
-      </Modal>  
-        
-       
-        </Container> 
-           
+
+    const handleColumnChange = (e) => {
+    setSearchState(e.target.value);
+   
+  };
+
+  return (
+    <div className="main-content" >
+      <Container fluid className="relative">
+        <Row className="mb-6">
+          <div className="col-10 col-sm-10">
+            <h1 className="text-2xl font-bold text-gray-800">Delivery</h1>
+            <p className="text-gray-600">Welcome, {user.user}!</p>
+          </div>
+        </Row>
+
+        <div className="flex justify-end mb-4">
+          <div className="col-2 col-sm-2">
+            <Dropdown className="">
+              <Dropdown.Toggle variant="primary" id="dropdown-basic" 
+                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                Actions
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu className="mt-2">
+                <Dropdown.Item href="#" onClick={PrintHandle}>DC Print</Dropdown.Item>
+                {user && (user.role === "admin") && 
+                  <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
+                {user && ((user.role === "admin") || (user.role === "SP1")) && 
+                  <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
+                {user && ((user.role === "admin") || (user.role === "SP1")) && 
+                  <Dropdown.Item href="#" onClick={InvExport}>Invoice Export</Dropdown.Item>}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+          <div className="ml-auto w-1/5">
+                      <Form.Select
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 tsearch"
+                        value={searchState}
+                        onChange={handleColumnChange}
+                      >
+                        <option value="ide">DC No</option>
+                        <option value="batchid">Batch No</option>
+                        <option value="greyid">Grey Entry No</option>
+                        <option value="customer">Customer</option>
+                      </Form.Select>
+                    </div>
         </div>
-        
-       
+
+        <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
+          <DataTable 
+            ref={table}
+            options={{
+              scrollX: true,
+              scrollY: '60vh',
+              scrollCollapse: true,
+              fixedColumns: {
+                left: 2
+              },
+              order: [[1, 'desc']],
+              paging: true,
+              processing: true,
+              serverSide: true,
+              select: { style: 'multi' },
+              ajax: {
+                url: `${API_URL}/delivery1`,
+                type: 'POST',
+                data: function (d) {
+                  d.searchcol = $(".tsearch").val();
+                  if (d.length === -1) {
+                    d.length = 25;
+                  }
+                  return d;
+                }
+              },
+              pageLength: 25,
+              columns: [
+                { data: "0" }, // Date
+                { data: "1" }, // DC.No
+                { data: "2" }, // Partial
+                { data: "3" }, // Batch No
+                { data: "4" }, // Inward No
+                { data: "5" }, // Cust Dc
+                { data: "6" }, // Machine
+                { data: "7" }, // Customer
+                { data: "8" }, // Fabric
+                { data: "9" }, // Shade
+                { data: "10" }, // Construction
+                { data: "11" }, // Grey Width
+                { data: "12" }, // Grey Weight
+                { data: "13" }, // Grey Meter
+                { data: "14" }, // Final Width
+                { data: "15" }, // Final Weight
+                { data: "16" }, // Final Meter
+                { data: "17" }, // GLM
+                { data: "18" }, // AGLM
+                { data: "19" }, // Process
+                { data: "20" }  // Finishing
+              ],
+              dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
+              language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                paginate: {
+                  first: "First",
+                  last: "Last",
+                  next: "Next",
+                  previous: "Previous"
+                }
+              },
+              className: "w-full text-sm text-left text-gray-500"
+            }}
+          >
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+              <th className="px-6 py-3">Date</th>
+              <th className="px-6 py-3">DC.No</th>
+              <th className="px-6 py-3">Partial</th>
+              <th className="px-6 py-3">Batch No</th>
+              <th className="px-6 py-3">Inward No</th>
+              <th className="px-6 py-3">Cust Dc</th>
+              <th className="px-6 py-3">Machine</th>
+              <th className="px-6 py-3">Customer</th>
+              <th className="px-6 py-3">Fabric</th>
+              <th className="px-6 py-3">Shade</th>
+              <th className="px-6 py-3">Construction</th>
+              <th className="px-6 py-3">Grey Width</th>
+              <th className="px-6 py-3">Grey Weight</th>
+              <th className="px-6 py-3">Grey Meter</th>
+              <th className="px-6 py-3">Final Width</th>
+              <th className="px-6 py-3">Final Weight</th>
+              <th className="px-6 py-3">Final Meter</th>
+              <th className="px-6 py-3">GLM</th>
+              <th className="px-6 py-3">AGLM</th>
+              <th className="px-6 py-3">Process</th>
+              <th className="px-6 py-3">Finishing</th>
+            </tr>
+          </thead>
+        </DataTable>
+        </div>
+
+        <Modal size="lg" show={show} onHide={handleClose} className="rounded-lg">
+          <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
+            <Modal.Title className="text-xl font-semibold text-gray-800">
+              Enter Vehicle No
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-6">
+            <Form className="space-y-4">
+              <Row className="flex items-center space-x-4">
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    DC No
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="dcno"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={formData.dcno}
+                    onChange={(e) => setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value
+                    }))}
+                    disabled
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    Vehicle No
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="vchno"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={formData.vchno}
+                    onChange={(e) => setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value
+                    }))}
+                    required
+                  />
+                </Form.Group>
+              </Row>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer className="bg-gray-50 border-t border-gray-200">
+            <Button 
+              variant="secondary" 
+              onClick={handleClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Close
+            </Button>
+            <Button 
+              variant="primary" 
+              onClick={handleSubmit}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              Save
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </Container>
+    </div>
+
+
   );
 }
 

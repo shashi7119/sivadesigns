@@ -1,5 +1,5 @@
-import React, { useState, useEffect,useRef} from 'react';
-import { Container,Button, Row,Modal, Form,Dropdown } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Button, Row, Modal, Form, Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -293,226 +293,261 @@ function Batchfinishing() {
   };
   
   return (
-    <div className="data-wrapper">
-   
-        <Container>
-        <Row>
+    <div className="main-content" >
+      <Container fluid className="relative">
+        <Row className="mb-6">
           <div className="col-10 col-sm-10">
-          <h1>Finishing</h1>
-          <p>Welcome, {user.email}!</p>
+            <h1 className="text-2xl font-bold text-gray-800">Batch Finishing</h1>
+            <p className="text-gray-600">Welcome, {user.user}!</p>
           </div>
-          <div className="col-2 col-sm-2">
-          <Dropdown>
-      <Dropdown.Toggle variant="success" id="dropdown-basic">
-        Actions
-      </Dropdown.Toggle>
+        </Row>
 
-      <Dropdown.Menu>
-         <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>  
-        {user && ((user.role==="admin" ) || (user.role==="SP1" )) &&<Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item> }
-        {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-      </Dropdown.Menu>
-    </Dropdown>
-          
-            </div>
-       </Row>
-   
-    <DataTable ref={table} data={tableData} 
-    options={{
-            order: [[0, 'desc']],
-            fixedColumns: {
-              start: 2
-          },
-            paging: false,
-            scrollCollapse: true,
-            scrollX: true,
-            scrollY: 400,
-            select: {
-                style: 'multi'
-              }
-                
-            } }  className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
-            <thead>
-                <tr>                   
-                    <th>Batch.No</th>
-                    <th>Batch Date</th>
-                    <th>Inward.No</th>
-                    <th>Cust.Dc</th>
-                    <th>Machine</th>
-                    <th>Customer</th>
-                    <th>Fabric</th>
-                    <th>Shade</th>
-                    <th>Construction</th>
-                    <th>Width</th>
-                    <th>Weight</th>
-                    <th>GMeter</th>                   
-                    <th>GLM</th>
-                    <th>AGLM</th>
-                    <th>Process</th>
-                    <th>Finishing</th>
-                </tr>
-            </thead>
-        </DataTable>   
-        <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Complete Finishing</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>          
-          <Row>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
-            <Form.Label>Batch Weight </Form.Label>
-            <Form.Control
-              type="text"
-              name="batch_weight"             
-              value={formData.batch_weight}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
-              required 
-              disabled
-            />       
-          </Form.Group>
-         
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicGmeter">
-            <Form.Label>Batch Gmeter </Form.Label>
-            <Form.Control
-              type="text"
-              name="batch_gmeter"             
-              value={formData.batch_gmeter}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}  
-              required 
-              disabled
-            />       
-          </Form.Group>
-          </Row>          
-          <Row>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAWeight">
-            <Form.Label>Final Weight </Form.Label>
-            <Form.Control
-              type="text"
-              name="final_weight"
-             
-              value={formData.final_weight}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  {setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }));
-              checkStock(e);
-            }
-            } 
-              required 
-            />       
-          </Form.Group>
-         
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
-            <Form.Label>Final Meter </Form.Label>
-            <Form.Control
-              type="text"
-              name="final_gmeter"
-             
-              value={formData.final_gmeter}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  {setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }));
-              checkStock(e);
-            }
-            }  
-                
-            />       
-          </Form.Group>          
-          </Row>
-          <Row>
-           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
-            <Form.Label>Final Width </Form.Label>
-            <Form.Control
-              type="text"
-              name="final_width"             
-              value={formData.final_width}             
-              onChange={(e) =>  {setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }));
-              
-            }
-            }  
-                
-            />       
-          </Form.Group>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
-            <Form.Label>No of pcs </Form.Label>
-            <Form.Control
-              type="text"
-              name="noofpcs"             
-              value={formData.noofpcs}             
-              onChange={(e) =>  {setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }));
-              
-            }
-            }  
-                
-            />       
-          </Form.Group>
-                    
-          </Row>
-          <Row>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
-            <Form.Label>Pining </Form.Label>
-             <Form.Select             
-              name="pining"              
-              value={formData.pining}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}    
-             required
-            >
-              <option  value="">Select</option>
-         {pintypeData.map(pining => (
-          
-  <option  value={pining}>
-    {pining}
-  </option>
-))}
-           </Form.Select>       
-          </Form.Group>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicAGmeter">
-            <Form.Label>Partial Delivery </Form.Label>
-            <Form.Check
-              type="switch"
-              name="partial"             
-              value={formData.partial}             
-               onClick={handleCheckboxChange} 
-            />       
-          </Form.Group>
-          </Row>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button disabled={isSaving} variant="primary" onClick={handleSubmit}>
-            Save 
-          </Button>
-        </Modal.Footer>
-      </Modal>  
-        </Container> 
-           
+        <div className="flex justify-end mb-4">
+          <div className="col-2 col-sm-2">
+            <Dropdown className="">
+              <Dropdown.Toggle variant="primary" id="dropdown-basic" 
+                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                Actions
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu className="mt-2">
+                <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>
+                {user && ((user.role==="admin") || (user.role==="SP1")) && 
+                  <Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item>}
+                {user && (user.role==="admin") && 
+                  <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
         </div>
-        
-       
+
+        <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
+          <DataTable 
+            ref={table}
+            data={tableData}
+            options={{
+              scrollX: true,
+              scrollY: '60vh',
+              scrollCollapse: true,
+              fixedColumns: {
+                left: 2,
+                leftColumns: {
+                  className: 'dtfc-fixed-left'
+                }
+              },
+              pageLength: 25,
+              lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+              order: [[0, 'desc']],
+              paging: true,
+              select: { style: 'multi' },
+              dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
+              language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                paginate: {
+                  first: "First",
+                  last: "Last",
+                  next: "Next",
+                  previous: "Previous"
+                }
+              },
+              className: "w-full text-sm text-left text-gray-500",
+              containerClassName: "relative z-10"
+            }}
+          >
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th className="px-6 py-3">Batch.No</th>
+                <th className="px-6 py-3">Batch Date</th>
+                <th className="px-6 py-3">Inward.No</th>
+                <th className="px-6 py-3">Cust.Dc</th>
+                <th className="px-6 py-3">Machine</th>
+                <th className="px-6 py-3">Customer</th>
+                <th className="px-6 py-3">Fabric</th>
+                <th className="px-6 py-3">Shade</th>
+                <th className="px-6 py-3">Construction</th>
+                <th className="px-6 py-3">Width</th>
+                <th className="px-6 py-3">Weight</th>
+                <th className="px-6 py-3">GMeter</th>                   
+                <th className="px-6 py-3">GLM</th>
+                <th className="px-6 py-3">AGLM</th>
+                <th className="px-6 py-3">Process</th>
+                <th className="px-6 py-3">Finishing</th>
+              </tr>
+            </thead>
+          </DataTable>
+        </div>
+
+        <Modal size="xl" show={show} onHide={handleClose} className="rounded-lg">
+          <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
+            <Modal.Title className="text-xl font-semibold text-gray-800">
+              Complete Finishing
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-6">
+            <Form className="space-y-4">
+              <Row className="flex items-center space-x-4">
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    Batch Weight
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="batch_weight"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={formData.batch_weight}
+                    disabled
+                  />
+                </Form.Group>
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    Batch Gmeter
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="batch_gmeter"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={formData.batch_gmeter}
+                    disabled
+                  />
+                </Form.Group>
+              </Row>
+              <Row className="flex items-center space-x-4">
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    Final Weight
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="final_weight"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={formData.final_weight}
+                    onKeyUp={handleKeyUp}
+                    onChange={(e) =>  {setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }));
+                    checkStock(e);
+                  }
+                  } 
+                  />
+                </Form.Group>
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    Final Meter
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="final_gmeter"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={formData.final_gmeter}
+                    onKeyUp={handleKeyUp}
+                    onChange={(e) =>  {setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }));
+                    checkStock(e);
+                  }
+                  }  
+                  />
+                </Form.Group>
+              </Row>
+              <Row className="flex items-center space-x-4">
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    Final Width
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="final_width"             
+                    value={formData.final_width}             
+                    onChange={(e) =>  {setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }));
+                    
+                  }
+                  }  
+                      
+                  />
+                </Form.Group>
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    No of pcs
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="noofpcs"             
+                    value={formData.noofpcs}             
+                    onChange={(e) =>  {setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }));
+                    
+                  }
+                  }  
+                      
+                  />
+                </Form.Group>
+              </Row>
+              <Row className="flex items-center space-x-4">
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    Pining
+                  </Form.Label>
+                   <Form.Select             
+                    name="pining"              
+                    value={formData.pining}
+                    onChange={(e) =>  setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }))}    
+                   required
+                  >
+                    <option  value="">Select</option>
+               {pintypeData.map(pining => (
+                
+      <option  value={pining}>
+        {pining}
+      </option>
+    ))}
+               </Form.Select>       
+                </Form.Group>
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    Partial Delivery
+                  </Form.Label>
+                  <Form.Check
+                    type="switch"
+                    name="partial"             
+                    value={formData.partial}             
+                     onClick={handleCheckboxChange} 
+                  />       
+                </Form.Group>
+              </Row>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer className="bg-gray-50 border-t border-gray-200">
+            <Button 
+              variant="secondary" 
+              onClick={handleClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Close
+            </Button>
+            <Button 
+              disabled={isSaving} 
+              variant="primary" 
+              onClick={handleSubmit}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              Save
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </Container>
+    </div>
   );
 }
 

@@ -14,3 +14,160 @@ table.dataTable{margin-top: 1rem !important;width: 99% !important;margin: auto}
 	.table td{background: #ffffff;}
 
 	.form-control { padding:5px !important}
+
+.vertical-nav {
+  @apply fixed left-0 top-0 h-full z-50;
+  min-height: 100vh;
+  transition: width 0.3s ease-in-out;
+}
+
+/* Smooth transition for text elements */
+.nav-item span {
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Show text when nav is expanded */
+.vertical-nav:hover .nav-item span {
+  opacity: 1;
+}
+
+/* Dropdown positioning */
+.vertical-nav:hover .absolute.left-full {
+  left: 100% !important;
+}
+
+/* Navigation item spacing */
+.nav-item {
+  @apply flex items-center text-white px-4 py-2.5 rounded-md hover:bg-blue-700 transition-colors duration-200 no-underline;
+  margin-bottom: 1px; /* Explicit 10px spacing */
+  text-decoration: none;
+  font-size: 14px;
+  padding: 7px 10px; /* Adjust padding for better spacing */
+  position: relative; /* For dropdown positioning */
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Align items to the left */
+  gap: 10px; /* Space between icon and text */
+  color: white; /* Ensure text is white */
+
+}
+
+.nav-item:last-child {
+  margin-bottom: 0; /* Remove margin from last item */
+}
+
+/* DataTable styling */
+.dataTables_wrapper {
+  @apply relative;
+  margin-left: 70px;
+  z-index: 10;
+}
+
+.main-content {
+  @apply pl-[70px] p-4;
+  min-height: 100vh;
+}
+
+/* Form controls */
+.form-control {
+  @apply rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500;
+}
+
+/* Fixed columns */
+.DTFC_LeftWrapper {
+  position: sticky !important;
+  left: 0;
+  z-index: 1000;
+  background-color: white;
+}
+
+/* Remove underline from menu items */
+.nav-item:hover {
+  text-decoration: none;
+}
+
+/* Remove underline from dropdown menu items */
+.nav-item.dropdown-item {
+  text-decoration: none;
+}
+
+/* Navigation scroll styles */
+.vertical-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.vertical-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.vertical-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.vertical-nav::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+/* Mobile specific styles */
+@media (max-width: 768px) {
+  .nav-item span {
+    opacity: 1;
+  }
+  
+  .vertical-nav {
+    transform: translateX(-100%);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 240px !important;
+    z-index: 998;
+    transition: transform 0.3s ease-in-out;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  /* Show menu when mobile menu is open */
+  .vertical-nav.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Hide menu when a nav item is clicked */
+  .nav-item:active + .vertical-nav {
+    transform: translateX(-100%);
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    width: 100%;
+    padding-left: 0px;
+  }
+
+  /* Ensure hamburger button is always visible */
+  button[aria-label="Toggle menu"] {
+    display: block;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 999;
+  }
+}
+
+/* Desktop navigation styles */
+@media (min-width: 769px) {
+  .vertical-nav {
+    transform: translateX(0); /* Always show on desktop */
+  }
+
+  button[aria-label="Toggle menu"] {
+    display: none;
+  }
+}
+
+/* Smooth transitions for menu */
+.vertical-nav {
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+}

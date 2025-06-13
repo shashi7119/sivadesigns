@@ -409,70 +409,71 @@ white-space: normal !important;
 
   
   return (
-    <div className="data-wrapper">
-   
-        <Container>
-        <Row>
-          <div class="col-10 col-sm-10">
-          <h1>Grey Fabric Entry</h1>
-          <p>Welcome, {user.email}!</p>
+    <div className="main-content" >
+      <Container fluid className="relative">
+        <Row className="mb-6">
+          <div className="col-10 col-sm-10">
+            <h1 className="text-2xl font-bold text-gray-800">Grey Fabric Entry</h1>
+            <p className="text-gray-600">Welcome, {user.user}!</p>
           </div>
-          <div class="col-2 col-sm-2">
-          <Dropdown>
-      <Dropdown.Toggle variant="success" id="dropdown-basic">
-        Actions
-      </Dropdown.Toggle>
+        </Row>
 
-      <Dropdown.Menu>
-         {user && user.role !=="SP2" &&<Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>  }
-         {user && user.role !=="SP2" && user.role !=="SP1" &&<Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item> }            
-         {user && user.role==="admin" && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-          <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>     
-      </Dropdown.Menu>
-    </Dropdown>
-           
-            </div>
-       </Row>
-       <Row style={{float:"right",marginRight:"81px",marginBottom:"10px"}}>
-        <Form.Select
-        className="form-control tsearch"
+        <div className="flex justify-end mb-4">
+          <div className="col-2 col-sm-2">
+            <Dropdown className="">
+              <Dropdown.Toggle variant="primary" id="dropdown-basic" 
+                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                Actions
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu className="mt-2">
+                {user && user.role !=="SP2" && <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>}
+                {user && user.role !=="SP2" && user.role !=="SP1" && <Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item>}
+                {user && user.role==="admin" && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
+                <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+          <div className="ml-auto w-1/5">
+            <Form.Select
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 tsearch"
               value={searchState}
-              onChange={handleColumnChange} 
-             style={{width:"150px",fontSize:"14px"}}
+              onChange={handleColumnChange}
             >
-              <option  value="greyid">Grey Entry No</option>
-              <option  value="customer">Customer</option>
-   
-        </Form.Select> 
-    </Row>
-    <DataTable ref={table}  options={{
-                 order: [[0, 'desc']],
-                 fixedColumns: {
-                   start: 2
-               },
-                 paging: true,
-                 scrollCollapse: true,
-                 scrollX: true,
-                 scrollY: 400,
-                  processing: true,
-      serverSide: true,
-                 select: {
-                     style: 'multi'
-                 },
-                 ajax: {
-        url: `${API_URL}/inventry1`,
-        type: 'POST',
-        data: function (d) {
-             d.searchcol = $(".tsearch").val();
-            if (d.length === -1) {
-                d.length = 25; // Set default page length
-              }
-              return d;
-         // d.customSearch = searchText; // send custom filter to server
-        },
-      },
-       pageLength: 25,
-            columns: [
+              <option value="greyid">Grey Entry No</option>
+              <option value="customer">Customer</option>
+            </Form.Select>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
+          <DataTable 
+            ref={table}
+            options={{
+              scrollX: true,
+              scrollY: '60vh',
+              scrollCollapse: true,
+              fixedColumns: {
+                left: 2
+              },
+              order: [[0, 'desc']],
+              paging: true,
+              processing: true,
+              serverSide: true,
+              select: { style: 'multi' },
+              ajax: {
+                url: `${API_URL}/inventry1`,
+                type: 'POST',
+                data: function (d) {
+                  d.searchcol = $(".tsearch").val();
+                  if (d.length === -1) {
+                    d.length = 25;
+                  }
+                  return d;
+                },
+              },
+              pageLength: 25,
+              columns: [
                 {
                     className: "", // Add a class for the toggle button
                     orderable: false,
@@ -495,31 +496,36 @@ white-space: normal !important;
                 
             ],
             }} className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
-            <thead>
-                <tr>    
-                    <th>Inward No</th>           
-                    <th>Date</th>
-                    <th>Party Dc No</th>
-                    <th>Customer</th>
-                    <th>Fabric</th>
-                    <th>Construction</th>
-                    <th>Width</th>
-                    <th>Weight</th>
-                    <th>GMeter</th> 
-                    <th>Remarks</th>     
-                    <th>No Of Pcs</th>  
-                    <th>Fabric Type</th>  
-                    <th>Pining</th>  
-                    <th>Process</th>    
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th className="px-6 py-3">Inward No</th>
+                <th className="px-6 py-3">Date</th>
+                <th className="px-6 py-3">Party Dc No</th>
+                <th className="px-6 py-3">Customer</th>
+                <th className="px-6 py-3">Fabric</th>
+                <th className="px-6 py-3">Construction</th>
+                <th className="px-6 py-3">Width</th>
+                <th className="px-6 py-3">Weight</th>
+                <th className="px-6 py-3">GMeter</th> 
+                <th className="px-6 py-3">Remarks</th>     
+                <th className="px-6 py-3">No Of Pcs</th>  
+                <th className="px-6 py-3">Fabric Type</th>  
+                <th className="px-6 py-3">Pining</th>  
+                <th className="px-6 py-3">Process</th>    
                                   
-                </tr>
+              </tr>
             </thead>
         </DataTable>
-        <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>{isEdit ? "Edit Grey Fabric" : "Add Grey Fabric"}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
+        </div>
+
+        {/* Modal remains the same but with updated styling classes */}
+        <Modal size="xl" show={show} onHide={handleClose} className="rounded-lg">
+          <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
+            <Modal.Title className="text-xl font-semibold text-gray-800">
+              {isEdit ? "Edit Grey Fabric" : "Add Grey Fabric"}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
           <Form onSubmit={handleSubmit}>          
           <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicCustomer">
             
@@ -763,7 +769,7 @@ white-space: normal !important;
         </Modal.Footer>
       </Modal>
       </Container>
-        </div>
+    </div>
         
   );
 }

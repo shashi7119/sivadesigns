@@ -141,18 +141,26 @@ function Storeentry() {
 
      
   return (
-    <div className="data-wrapper">    
-        <Container>
+    <div className="main-content" >   
+            <Container fluid className="relative">
+               <Row className="mb-6">
+                                            <div className="col-10 col-sm-10">
+                                              <h1 className="text-2xl font-bold text-gray-800">Store Entry</h1>
+                                              <p className="text-gray-600">Welcome, {user.email}!</p>
+                                            </div>
+                                          </Row>
+                    
         <Row>
-          <div class="col-10 col-sm-10">
-          <h1>Store Entry</h1>
-          <p>Welcome, {user.email}!</p>
-          </div>
-          <div class="col-2 col-sm-2">
+                   <div className="flex justify-end mb-4">
+          <div className="col-2 col-sm-2">
           <Dropdown>
-      <Dropdown.Toggle variant="success" id="dropdown-basic">
-        Actions
-      </Dropdown.Toggle>
+      <Dropdown.Toggle 
+                            variant="primary" 
+                            id="dropdown-basic" 
+                            className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+                          >
+              Actions
+            </Dropdown.Toggle>
 
       <Dropdown.Menu>
          <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>   
@@ -160,7 +168,7 @@ function Storeentry() {
       </Dropdown.Menu>
     </Dropdown>
            
-            </div>
+            </div></div>
        </Row>
     <DataTable onSelect={rowClick} data={tableData} ref={table} options={{
                 responsive: true,

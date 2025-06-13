@@ -1,6 +1,5 @@
-import React, { useState, useRef} from 'react';
-//import { useNavigate } from 'react-router-dom';
-import { Container,Button, Row,Modal, Form,Dropdown } from 'react-bootstrap';
+import React, { useState, useRef } from 'react';
+import { Container, Button, Row, Modal, Form, Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -17,22 +16,17 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 DataTable.use(Responsive);DataTable.use(Select);
 DataTable.use(FixedHeader);DataTable.use(DT);
 function Planning() {
-  
   const table = useRef();
   const [show, setShow] = useState(false);
   const [formData, setFormData] = useState([{
     planid: '', customer:'', width:'',construction:'',inwardno:'',
     planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',noofpcs:''
-  }]);  
+  }]);
   const [searchState, setSearchState] = useState('');
-  let [selData, setselData] = useState([ ]);
-  
+  const [selData, setSelData] = useState([]); // Changed from setselData to setSelData
+  const { user, isAuthenticated } = useAuth();
 
-  const { user , isAuthenticated } = useAuth();
-   
-          
   if (!isAuthenticated) {
-    //  return null;
      console.log("not logged in")
      return null;  // Avoid rendering profile if the user is not authenticated
    }
@@ -211,70 +205,76 @@ function Planning() {
 
 
   const rowClick = (e) => {
-      
     e.preventDefault();
     let api = table.current.dt();
     let rows = api.rows({ selected: true }).data().toArray();
-    rows.map(value => (
-      selData.push(value)         
-    ));  
-    selData = [...new Set(selData)];  
-    setselData(selData); 
+    let newSelData = [...selData];
+
+    rows.forEach(value => {
+      if (!newSelData.some(existing => existing[0] === value[0])) {
+        newSelData.push(value);
+      }
+    });
+
+    setSelData(newSelData); // Now this matches the state setter name
   }
   
   return (
-    <div className="data-wrapper">
-   
-        <Container>
-        <Row>
+    <div className="main-content" >
+      <Container fluid className="relative">
+        <Row className="mb-6">
           <div className="col-10 col-sm-10">
-          <h1>Planning</h1>
-          <p>Welcome, {user.user}!</p>
+            <h1 className="text-2xl font-bold text-gray-800">Planning</h1>
+            <p className="text-gray-600">Welcome, {user.user}!</p>
           </div>
-          <div className="col-2 col-sm-2">
-          <Dropdown>
-      <Dropdown.Toggle variant="success" id="dropdown-basic">
-        Actions
-      </Dropdown.Toggle>
+         
+        </Row>
 
-      <Dropdown.Menu>
-        {user && user.role !=="SP2" && user.role !=="SP1" &&<Dropdown.Item href="/profile">Add</Dropdown.Item>}
-         {user && user.role !=="SP2" &&<Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>   }
-         {user && user.role !=="SP2" &&<Dropdown.Item href="#" onClick={batchHandle}>Create batch</Dropdown.Item>}
-        {user && user.role ==="admin" &&<Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item> }
-      </Dropdown.Menu>
-    </Dropdown>
-          
-            </div>
-       </Row>
-        <Row style={{float:"right",marginRight:"81px",marginBottom:"10px"}}>
-        <Form.Select
-        className="form-control tsearch"
+        <div className="flex justify-end mb-4">
+           <div className="col-2 col-sm-2">
+            <Dropdown className="">
+              <Dropdown.Toggle variant="primary" id="dropdown-basic" 
+                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                Actions
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu className="mt-2">
+                {user && user.role !=="SP2" && user.role !=="SP1" &&<Dropdown.Item href="/profile">Add</Dropdown.Item>}
+                 {user && user.role !=="SP2" &&<Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>   }
+                 {user && user.role !=="SP2" &&<Dropdown.Item href="#" onClick={batchHandle}>Create batch</Dropdown.Item>}
+                {user && user.role ==="admin" &&<Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item> }
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+          <div className="ml-auto w-1/5"> {/* This creates 20% width and right alignment */}
+            <Form.Select
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 tsearch"
               value={searchState}
-              onChange={handleColumnChange} 
-             style={{width:"150px",fontSize:"14px"}}
+              onChange={handleColumnChange}
             >
-              <option  value="greyid">Grey Entry No</option>
-              <option  value="customer">Customer</option>
-   
-        </Form.Select> 
-    </Row>
-    <DataTable onSelect={rowClick} ref={table} 
-    options={{
-                order: [[0, 'desc']],
-            fixedColumns: {
-              start: 2
-          },
-            paging: true,
-            scrollCollapse: true,
-            scrollX: true,
-            scrollY: 400,
-            processing: true,
-      serverSide: true,
-            select: {
-                style: 'multi'
-            },
-            ajax: {
+              <option value="greyid">Grey Entry No</option>
+              <option value="customer">Customer</option>
+            </Form.Select>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
+          <DataTable 
+            onSelect={rowClick} 
+            ref={table}
+            options={{
+              scrollX: true,
+              scrollY: '60vh',
+              scrollCollapse: true,
+              fixedColumns: {
+                left: 2
+              },
+              order: [[0, 'desc']],
+              paging: true,
+              processing: true,
+              serverSide: true,
+              select: { style: 'multi' },
+              ajax: {
         url: `${API_URL}/plans1`,
         type: 'POST',
         data: function (d) {
@@ -287,7 +287,7 @@ function Planning() {
         },
       },
        pageLength: 25,
-            columns: [
+              columns: [
                 {
                     className: "", // Add a class for the toggle button                    
                     data: "0",
@@ -310,51 +310,81 @@ function Planning() {
                 { data: "15" },
                 
             ],
-              
-            } }  className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
-            <thead>
-                <tr>                   
-                    <th>Plan.No</th>
-                    <th>Inward.No</th>
-                    <th>Cust Dc</th>
-                    <th>Date</th>
-                    <th>Machine</th>
-                    <th>Customer</th>
-                    <th>Fabric</th>
-                    <th>Shade</th>
-                    <th>Construction</th>
-                    <th>Width</th>
-                    <th>Weight</th>
-                    <th>GMeter</th>                   
-                    <th>GLM</th>
-                    <th>AGLM</th>
-                    <th>Process</th>
-                    <th>Finishing</th>
-                </tr>
+              // Add custom styling
+              dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
+              language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                paginate: {
+                  first: "First",
+                  last: "Last",
+                  next: "Next",
+                  previous: "Previous"
+                }
+              },
+              // Add custom classes
+              className: "w-full text-sm text-left text-gray-500",
+              // Add container class
+              containerClassName: "relative z-10"
+            }}
+          >
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th className="px-6 py-3">Plan.No</th>
+                <th className="px-6 py-3">Inward.No</th>
+                <th className="px-6 py-3">Cust Dc</th>
+                <th className="px-6 py-3">Date</th>
+                <th className="px-6 py-3">Machine</th>
+                <th className="px-6 py-3">Customer</th>
+                <th className="px-6 py-3">Fabric</th>
+                <th className="px-6 py-3">Shade</th>
+                <th className="px-6 py-3">Construction</th>
+                <th className="px-6 py-3">Width</th>
+                <th className="px-6 py-3">Weight</th>
+                <th className="px-6 py-3">GMeter</th>                   
+                <th className="px-6 py-3">GLM</th>
+                <th className="px-6 py-3">AGLM</th>
+                <th className="px-6 py-3">Process</th>
+                <th className="px-6 py-3">Finishing</th>
+              </tr>
             </thead>
-        </DataTable>  
-        <Modal size="xl" show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Create Batch</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>       
-          {formData.map((row) => ( 
-          <Row >
-          <Form.Group className="col-6 col-sm-1 mb-3" controlId="formBasicWeight">           
-          <Form.Label>{row.planid} </Form.Label>
-          </Form.Group>
-          <Form.Group className="col-6 col-sm-1 mb-3" controlId="formBasicWeight">           
-            <Form.Label>{row.inwardno} </Form.Label>     
-          </Form.Group>        
+          </DataTable>
+        </div>
+
+        {/* Modal with updated styling */}
+        <Modal size="xl" show={show} onHide={handleClose} className="rounded-lg">
+          <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
+            <Modal.Title className="text-xl font-semibold text-gray-800">
+              Create Batch
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-6">
+            <Form className="space-y-4">
+              {formData.map((row, index) => (
+                <Row key={index} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                  <Form.Group className="flex-1">
+                    <Form.Label className="block text-sm font-medium text-gray-700">
+                      {row.planid}
+                    </Form.Label>
+                  </Form.Group>
+                  <Form.Group className="flex-1">
+                    <Form.Label className="block text-sm font-medium text-gray-700">
+                      {row.inwardno}
+                    </Form.Label>     
+                  </Form.Group>        
          
-           <Form.Group className="col-6 col-sm-2 mb-3" controlId="formBasicGmeter">           
-           <Form.Label>{row.construction} </Form.Label>       
+           <Form.Group className="flex-1">
+           <Form.Label className="block text-sm font-medium text-gray-700">
+             {row.construction}
+           </Form.Label>       
           </Form.Group>
-          <Form.Group className="col-6 col-sm-1 mb-3" controlId="formBasicGmeter">  
-          <Form.Label>{row.planned_weight} </Form.Label>                 
+          <Form.Group className="flex-1">  
+          <Form.Label className="block text-sm font-medium text-gray-700">
+            {row.planned_weight}
+          </Form.Label>                 
           </Form.Group>
-           <Form.Group className="col-6 col-sm-2 mb-3" controlId="formBasicGmeter">           
+           <Form.Group className="flex-1">
             <Form.Control
               type="text"
               placeholder="Batch Weight"
@@ -370,11 +400,13 @@ function Planning() {
               
             />       
           </Form.Group>
-          <Form.Group className="col-6 col-sm-1 mb-3" controlId="formBasicGmeter">   
-           <Form.Label>{row.planned_gmeter} </Form.Label>
+          <Form.Group className="flex-1">   
+           <Form.Label className="block text-sm font-medium text-gray-700">
+             {row.planned_gmeter}
+           </Form.Label>
           </Form.Group>
          
-          <Form.Group className="col-6 col-sm-2 mb-3" controlId="formBasicGmeter">           
+          <Form.Group className="flex-1">
             <Form.Control
               type="text"
               placeholder="Batch Gmeter"
@@ -389,7 +421,7 @@ function Planning() {
               required
             />       
           </Form.Group>
-          <Form.Group className="col-6 col-sm-2 mb-3" controlId="formBasicGmeter">           
+          <Form.Group className="flex-1">
             <Form.Control
               type="text"
              name="noofpcs"    
@@ -409,21 +441,26 @@ function Planning() {
 
           </Form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
+        <Modal.Footer className="bg-gray-50 border-t border-gray-200">
+          <Button 
+            variant="secondary" 
+            onClick={handleClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
             Close
           </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Save 
+          <Button 
+            variant="primary" 
+            onClick={handleSubmit}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          >
+            Save
           </Button>
         </Modal.Footer>
-      </Modal> 
-        </Container> 
-           
-        </div>
-        
-       
-  );
+      </Modal>
+    </Container>
+  </div>
+);
 }
 
 export default Planning;

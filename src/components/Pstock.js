@@ -270,19 +270,27 @@ function Pstock() {
       };
      
   return (
-    <div className="data-wrapper">
+    <div className="main-content" >
    
-        <Container>
-        <Row>
-          <div class="col-10 col-sm-10">
-          <h1>Planning Stock Entry</h1>
-          <p>Welcome, {user.email}!</p>
-          </div>
-          <div class="col-2 col-sm-2">
+        <Container fluid className="relative">
+          <Row className="mb-6">
+                    <div className="col-10 col-sm-10">
+                      <h1 className="text-2xl font-bold text-gray-800">Planning Stock Entry</h1>
+                      <p className="text-gray-600">Welcome, {user.email}!</p>
+                    </div>
+                  </Row>
+       
+          
+          <div className="flex justify-end mb-4">
+          <div className="col-2 col-sm-2">
           <Dropdown>
-      <Dropdown.Toggle variant="success" id="dropdown-basic">
-        Actions
-      </Dropdown.Toggle>
+      <Dropdown.Toggle 
+                            variant="primary" 
+                            id="dropdown-basic" 
+                            className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+                          >
+              Actions
+            </Dropdown.Toggle>
 
       <Dropdown.Menu>         
          {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={edithandle}>Create Plan</Dropdown.Item>  }
@@ -290,8 +298,8 @@ function Pstock() {
       </Dropdown.Menu>
     </Dropdown>
            
-            </div>
-       </Row>
+            </div></div>
+          <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
     <DataTable onSelect={rowClick} ref={table} data={tableData} options={{
                  order: [[0, 'desc']],
                  fixedColumns: {
@@ -321,7 +329,7 @@ function Pstock() {
                                   
                 </tr>
             </thead>
-        </DataTable>
+        </DataTable></div>
         <Modal show={show} onHide={handleClose} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>{"Create Plan"}</Modal.Title>

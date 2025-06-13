@@ -131,12 +131,14 @@ function Profile() {
    }
   return (
     
-    <div className="data-wrapper">
-    <div className="data-form-container">
-        <Container>
-        <h1>Add Planning</h1>
-        <p>Welcome, {user.email}!</p>
-        </Container>
+    <div className="main-content" >
+          <Container fluid className="relative">
+         <Row className="mb-6">
+                  <div className="col-10 col-sm-10">
+                    <h1 className="text-2xl font-bold text-gray-800"> Add Planning</h1>
+                    <p className="text-gray-600">Welcome, {user.email}!</p>
+                  </div>
+                </Row>
        
         <Form className="tooltip-label-right mb-4" onSubmit={handleSubmit}>
         <Row>
@@ -414,8 +416,8 @@ function Profile() {
           </Row>
         </Form>
         
-     </div>
-  </div>
+       </Container>
+         </div>
   );
 }
 

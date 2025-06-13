@@ -29,6 +29,7 @@ import Pstock from './components/Pstock'
 import Bstock from './components/Bstock'
 import Batchfinishing from './components/Bathchfinishing';
 import Delivery from './components/Delivery';
+import PO from './components/PurchaseOrder';
 
 function App() {
 
@@ -44,12 +45,10 @@ function App() {
    
     <AuthProvider>
       <Router>
-    <div className="App">
-      
-      <Navigation />
-      
-    </div>
-    <Routes>
+        <div className="flex h-screen overflow-hidden">
+          <Navigation />
+          <main className="flex-1 overflow-x-hidden">
+            <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
@@ -149,6 +148,13 @@ function App() {
               <Delivery />
               </Role>
               } />
+              
+              <Route path="/purchaseOrder" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <PO />
+              </Role>
+              } />
+              
             <Route path="/mrs/:batchid" element={
               
               <Mrs />
@@ -161,6 +167,8 @@ function App() {
               } />
   
           </Routes>
+          </main>
+        </div>
     </Router>
   </AuthProvider>
     
