@@ -87,8 +87,44 @@ function Mrs() {
  }
 
  const PrintHandle =  (event) => {
-    event.preventDefault();  
-    window.print();       
+    const printContent = document.querySelector('.main-content');
+  const originalContent = document.body.innerHTML;
+  
+  // Add print-specific styles
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @page {
+      size: auto;
+      margin: 20mm;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    }
+    
+    thead {
+      display: table-header-group;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Only print the main content
+  document.body.innerHTML = printContent.innerHTML;
+  
+  window.print();
+  
+  // Restore original content
+  document.body.innerHTML = originalContent;
+  document.head.removeChild(style);
+  
+  // Reattach event listeners if needed
+  window.location.reload();      
   };
 
   const ExportHandle =  (event) => {
@@ -442,8 +478,8 @@ function Mrs() {
     
     return (
     
-    <div className="data-wrapper">
-        <Container>
+   <div className="main-content" >
+         <Container fluid className="relative">
         <Row className="header-top d-print-none">
           <div className="col-10 col-sm-10">
           <h3>BATCH - {batchid}</h3>
@@ -540,7 +576,7 @@ function Mrs() {
        <Col xs={10}><h3>Material Request Slip</h3></Col>
        <Col xs={2} className='d-print-none'>
           <Dropdown>
-            <Dropdown.Toggle variant="success" id="dropdown-basic">
+            <Dropdown.Toggle variant="success" id="dropdown-basic" className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
               Actions
             </Dropdown.Toggle>
             <Dropdown.Menu>

@@ -171,3 +171,33 @@ table.dataTable{margin-top: 1rem !important;width: 99% !important;margin: auto}
 .vertical-nav {
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
 }
+
+@media print {
+  /* Ensure all content is printed */
+  html, body {
+    height: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Hide navigation and unnecessary elements */
+  .vertical-nav,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Table specific print styles */
+  table {
+    page-break-inside: auto !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+}
