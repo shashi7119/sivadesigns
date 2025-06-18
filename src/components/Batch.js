@@ -154,7 +154,7 @@ function Batch() {
       dataArr.push(value)
     ));
     
-    const match = dataArr[0][3].match(/data-pide="([^"]*)"/);
+    const match = dataArr[0][4].match(/data-pide="([^"]*)"/);
       const value = match ? match[1] : null;
       dataArr1.push(value);
     
