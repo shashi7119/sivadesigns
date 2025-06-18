@@ -268,6 +268,7 @@ function Batch() {
                 { data: "13" },
                 { data: "14" },
                 { data: "15" },
+                { data: "16" },
                 
             ],            
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
@@ -290,6 +291,7 @@ function Batch() {
               <tr>
                 <th className="px-6 py-3">Batch.No</th>
                 <th className="px-6 py-3">Batch Date</th>
+                <th className="px-6 py-3">Sale Order.No</th>
                 <th className="px-6 py-3">Inward No</th>
                 <th className="px-6 py-3">Cust Dc</th>
                 <th className="px-6 py-3">Machine</th>

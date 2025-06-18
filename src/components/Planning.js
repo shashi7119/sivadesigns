@@ -20,7 +20,7 @@ function Planning() {
   const [show, setShow] = useState(false);
   const [formData, setFormData] = useState([{
     planid: '', customer:'', width:'',construction:'',inwardno:'',
-    planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',noofpcs:''
+    planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',noofpcs:'',sono:''
   }]);
   const [searchState, setSearchState] = useState('');
   const [selData, setSelData] = useState([]); // Changed from setselData to setSelData
@@ -430,6 +430,21 @@ function Planning() {
               onChange={(e) =>  setFormData((prevRows) =>
                 prevRows.map((row1) =>
                   row1.planid === row.planid ? { ...row1, noofpcs:e.target.value} : row1
+                )
+              )
+            } 
+              required
+            />       
+          </Form.Group>
+           <Form.Group className="flex-1">
+            <Form.Control
+              type="text"
+             name="sono"    
+             placeholder="Sale Order"
+              value={row.sono}               
+              onChange={(e) =>  setFormData((prevRows) =>
+                prevRows.map((row1) =>
+                  row1.planid === row.planid ? { ...row1, sono:e.target.value} : row1
                 )
               )
             } 
