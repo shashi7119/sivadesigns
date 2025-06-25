@@ -401,7 +401,7 @@ function Batchfinishing() {
           <Modal.Body className="p-6">
             <Form className="space-y-4">
               <Row className="flex items-center space-x-4">
-                <Form.Group className="col-6 mb-3">
+                <Form.Group className="col-5 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     Batch Weight
                   </Form.Label>
@@ -413,7 +413,7 @@ function Batchfinishing() {
                     disabled
                   />
                 </Form.Group>
-                <Form.Group className="col-6 mb-3">
+                <Form.Group className="col-5 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     Batch Gmeter
                   </Form.Label>
@@ -427,7 +427,7 @@ function Batchfinishing() {
                 </Form.Group>
               </Row>
               <Row className="flex items-center space-x-4">
-                <Form.Group className="col-6 mb-3">
+                <Form.Group className="col-5 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     Final Weight
                   </Form.Label>
@@ -446,7 +446,7 @@ function Batchfinishing() {
                   } 
                   />
                 </Form.Group>
-                <Form.Group className="col-6 mb-3">
+                <Form.Group className="col-5 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     Final Meter
                   </Form.Label>
@@ -467,7 +467,7 @@ function Batchfinishing() {
                 </Form.Group>
               </Row>
               <Row className="flex items-center space-x-4">
-                <Form.Group className="col-6 mb-3">
+                <Form.Group className="col-5 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     Final Width
                   </Form.Label>
@@ -485,7 +485,7 @@ function Batchfinishing() {
                       
                   />
                 </Form.Group>
-                <Form.Group className="col-6 mb-3">
+                <Form.Group className="col-5 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     No of pcs
                   </Form.Label>
@@ -505,7 +505,7 @@ function Batchfinishing() {
                 </Form.Group>
               </Row>
               <Row className="flex items-center space-x-4">
-                <Form.Group className="col-6 mb-3">
+                <Form.Group className="col-5 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     Pining
                   </Form.Label>
@@ -527,7 +527,7 @@ function Batchfinishing() {
     ))}
                </Form.Select>       
                 </Form.Group>
-                <Form.Group className="col-6 mb-3">
+                <Form.Group className="col-5 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     Partial Delivery
                   </Form.Label>

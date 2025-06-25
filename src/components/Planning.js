@@ -475,7 +475,7 @@ function Planning() {
           <Button 
             variant="secondary" 
             onClick={handleClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
           >
             Close
           </Button>
