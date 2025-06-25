@@ -10,6 +10,7 @@ import Login from './components/Login';
 import Planning from './components/Planning';
 import Machine from './components/Machine';
 import Customer from './components/Customer';
+import Vendor from './components/Vendor';
 import Fabric from './components/Fabric';
 import Construction from './components/Construction';
 import Process from './components/Process';
@@ -79,6 +80,11 @@ function App() {
             <Route path="/customer" element={
               <Role allowedRoles={["admin"]} userRole={userRole}>
               <Customer />
+              </Role>
+              } />
+              <Route path="/vendor" element={
+              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Vendor />
               </Role>
               } />
             <Route path="/fabric" element={

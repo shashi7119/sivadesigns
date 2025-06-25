@@ -53,6 +53,19 @@ function Batchfinishing() {
     user && fetchData();
   }, [user,fetch]);
 
+    // Reload DataTable when tab becomes active (user returns after idle)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setFetch(f => !f); // Toggle fetch to reload data
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
       
       if (!isAuthenticated) {
         return null;

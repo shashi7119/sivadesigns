@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Container, Button, Row, Modal, Form, Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
@@ -25,6 +25,21 @@ function Planning() {
   const [searchState, setSearchState] = useState('');
   const [selData, setSelData] = useState([]); // Changed from setselData to setSelData
   const { user, isAuthenticated } = useAuth();
+
+  // Reload DataTable when tab becomes active (user returns after idle)
+    useEffect(() => {
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible' && table.current) {
+          // Reload DataTable data
+          const api = table.current.dt();
+          api.ajax.reload();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }, []);
 
   if (!isAuthenticated) {
      console.log("not logged in")

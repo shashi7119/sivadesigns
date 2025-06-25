@@ -285,7 +285,7 @@ white-space: normal !important;
                
                
                 <tr>
-        <td scope="row" width="35%">Grey Fabric</th>				 
+        <td scope="row" width="35%">Grey Fabric</td>				 
 				  <td width="15%">${selectedRows[0][12]}</td>
 				  <td width="10%">${selectedRows[0][13]}</td>
 				  <td width="10%">${response.data['gpining']}</td>
@@ -318,7 +318,7 @@ white-space: normal !important;
                
                
                 <tr>
-        <td scope="row" width="35%">Finished Fabric</th>				 
+        <td scope="row" width="35%">Finished Fabric</td>				 
 				  <td width="15%">${selectedRows[0][15]}</td>
 				  <td width="10%">${selectedRows[0][16]}</td>
 				  <td width="20%">${response.data['pining']}</td>
@@ -332,6 +332,38 @@ white-space: normal !important;
             </table>
             
 			</div>
+      ${(response.data['partial_weight'] !== '') ?`<div class="row mb-3">
+		
+		 <table class="table" style="margin-top:0px">
+              <thead>
+                <tr>
+                    <th scope="col" width="35%">Type.</th>                   
+                    <th scope="col" width="15%">Weight</th>				  
+                    <th scope="col" width="10%">Meter</th>
+                    <th scope="col" width="10%">Pining</th>
+                    <th scope="col" width="10%">GLM</th>                  
+                    <th scope="col" width="10%">Width</th>
+                    <th scope="col" width="10%">No Of Pcs</th>          
+                </tr>
+              </thead>
+              <tbody>
+               
+               
+                <tr>
+        <td scope="row" width="35%">Sample Fabric</td>				 
+				  <td width="15%">${response.data['partial_weight']}</td>
+				  <td width="10%">${response.data['partial_gmeter']}</td>
+				  <td width="20%">${response.data['partial_pining']}</td>
+          <td width="20%">${response.data['partial_glm']}</td>
+				  <td width="20%">${response.data['partial_fwidth']}</td>	
+          <td width="20%">${response.data['partial_noofpcs']}</td>
+        
+				</tr>
+
+              </tbody>
+            </table>
+            
+			</div>`:``}
         <div class="row mb-2">
         <div class="col-12 col-md-12" style="text-align:left">             
            <div class="row">

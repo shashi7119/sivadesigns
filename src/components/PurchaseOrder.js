@@ -21,8 +21,8 @@ const PurchaseOrder = () => {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const response = await axios.get(`${API_URL}/getAllMasters`);    // Replace with your actual API endpoint
-        setVendors(response.data['customer']);
+        const response = await axios.get(`${API_URL}/getVendors`);    // Replace with your actual API endpoint
+        setVendors(response.data['vendor']);
       } catch (error) {
         setError('Failed to fetch vendors.');
         console.error('Error fetching vendors:', error);

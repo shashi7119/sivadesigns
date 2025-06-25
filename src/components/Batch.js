@@ -1,4 +1,4 @@
-import React, { useState, useRef} from 'react';
+import React, { useState, useRef,useEffect} from 'react';
 import { Container, Row, Dropdown, Form } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
@@ -18,7 +18,21 @@ DataTable.use(FixedHeader);DataTable.use(DT);
 function Batch() {
   const table = useRef();
   const { user , isAuthenticated } = useAuth();
-     // Fetch data from backend API
+
+// Reload DataTable when tab becomes active (user returns after idle)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && table.current) {
+        // Reload DataTable data
+        const api = table.current.dt();
+        api.ajax.reload();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
       const [searchState, setSearchState] = useState('');
       if (!isAuthenticated) {
@@ -66,7 +80,8 @@ function Batch() {
               <tr>
                 <th>Batch.No</th>
                       <th>Date</th>
-                      <th>Inward No</th>
+                      <th>Sale Order No</th>
+                      <th>Inward No</th>                      
                       <th>Cust Dc</th>
                       <th>Machine</th>
                       <th>Customer</th>
@@ -103,6 +118,7 @@ function Batch() {
                       <td>${row[13]}</td>
                       <td>${row[14]}</td>
                       <td>${row[15]}</td>
+                      <td>${row[16]}</td>
                     </tr>
                   `
                 )
