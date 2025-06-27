@@ -214,9 +214,9 @@ function Labentry() {
       }
       } 
 
-      const  handleRemove = (event,material) => { 
+      const  handleRemove = (event,id) => { 
         event.preventDefault();
-        let srows = rows.map((data,index) =>  (data.material === material ? rows.splice(index, 1) : "" ));
+        let srows = rows.map((data,index) =>  (data.id === id ? rows.splice(index, 1) : "" ));
         console.log('removed Data:', srows);
         
         setRows((prevRows) =>
@@ -357,6 +357,7 @@ function Labentry() {
             <Button onClick={addRow}>Add Chemical</Button>
             </Form.Group></Row>
             {rows.map((row) => (
+           
             <Row className="mt-2">
                     
     <Form.Group className="col-4 col-sm-4 px-1 " >
@@ -598,7 +599,7 @@ function Labentry() {
             required
             />
             </Form.Group>
-            <Form.Group className="col-1 col-sm-1 px-1" onClick={(e) => handleRemove(e,row.material)}>x</Form.Group>
+            <Form.Group className="col-1 col-sm-1 px-1" onClick={(e) => handleRemove(e,row.id)}>x</Form.Group>
     </Row>    
 ))}
           </Form>
