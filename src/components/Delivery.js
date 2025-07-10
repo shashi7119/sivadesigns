@@ -500,8 +500,6 @@ white-space: normal !important;
       const newWindow = window.open("", "_blank");
       newWindow.document.write(`<pre>${printableContent}</pre>`);
       newWindow.print();
-      //setSelectedData(dataArr);
-      //console.log(dataArr);  
          
     };
 
