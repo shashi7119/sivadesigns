@@ -31,6 +31,8 @@ import Bstock from './components/Bstock'
 import Batchfinishing from './components/Bathchfinishing';
 import Delivery from './components/Delivery';
 import PO from './components/PurchaseOrder';
+import EditPO from './components/EditPurchaeOrder';
+import PrintPO from './components/PrintPurchaseOrder';
 
 function App() {
 
@@ -169,6 +171,16 @@ function App() {
             <Route path="/process/:pid" element={
               
               <Processroute />
+              
+              } />
+              <Route path="/editpo/:id" element={
+              
+              <EditPO />
+              
+              } />
+              <Route path="/printpo/:id" element={
+              
+              <PrintPO />
               
               } />
   

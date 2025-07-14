@@ -106,7 +106,7 @@ function Batchfinishing() {
           </style>
         </head>
         <body>
-          <h1>Plans</h1>
+          <h1>Finishing</h1>
           <table>
             <thead>
               <tr>

@@ -266,6 +266,7 @@ white-space: normal !important;
         <div class="row"><div class="col-md-4"><p>Fabric </p></div> <div class="col-md-6"><p>: ${selectedRows[0][8]}</p></div></div>
         <div class="row"><div class="col-md-4"><p>Process </p></div> <div class="col-md-6"><p>: ${selectedRows[0][19]}</p></div></div>
         <div class="row"><div class="col-md-4"><p>Sale Order </p></div> <div class="col-md-6"><p>: ${response.data['sale_order_no']}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Type</p></div> <div class="col-md-6"><p>: ${response.data['ptype']}</p></div></div>
         </div>
 </div>
        ${(response.data['partial'] === 'N') ? `<div class="row mb-2">

@@ -74,7 +74,7 @@ function Batch() {
           </style>
         </head>
         <body>
-          <h1>Plans</h1>
+          <h1>Batches</h1>
           <table>
             <thead>
               <tr>

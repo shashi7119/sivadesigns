@@ -1,5 +1,6 @@
-import React, { useState, useEffect ,useCallback} from 'react';
-import { Container, Row, Col, Form, Button, Table, Dropdown } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Container, Row, Col, Form, Button, Table } from 'react-bootstrap';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -7,72 +8,68 @@ import axios from 'axios';
 
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
-const PurchaseOrder = () => {
-  
+const EditPurchaseOrder = () => {
+  const { id } = useParams(); // purchase order id from route
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
   const [vendors, setVendors] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [selectedVendorId, setSelectedVendorId] = useState('');
-  const [items, setItems] = useState([{ itemId: '', name: '', quantity: 1,unit: '',tax: 5, price: 0 }]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-    const { user , isAuthenticated } = useAuth();
 
-     const handleAddItem = useCallback(() => {
-    setItems((prevItems) => [
-      ...prevItems,
-      { itemId: '', quantity: 1, unit: "", tax: 0, price: 0 }
-    ]);
-  }, []);
-
-  // Shortcut: Ctrl+Enter to trigger Add Item
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-        event.preventDefault();
-        handleAddItem();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleAddItem]);
-
+  // Fetch vendors, items, and the purchase order to edit
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const response = await axios.get(`${API_URL}/getVendors`);    // Replace with your actual API endpoint
+        const response = await axios.get(`${API_URL}/getVendors`);
         setVendors(response.data);
-       
       } catch (error) {
         setError('Failed to fetch vendors.');
-        console.error('Error fetching vendors:', error);
       }
     };
 
     const fetchItems = async () => {
       try {
-        const response = await axios.get(`${API_URL}/getMasters?type=store`);   // Replace with your actual API endpoint
+        const response = await axios.get(`${API_URL}/getMasters?type=store`);
         setAvailableItems(response.data);
       } catch (error) {
         setError('Failed to fetch items.');
-        console.error('Error fetching items:', error);
-      } finally {
-        setLoading(false);
+      }
+    };
+
+    const fetchPurchaseOrder = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/getPurchaseOrder?id=${id}`);
+        const po = response.data;
+        setSelectedVendorId(po.vendorId);
+        setItems(po.items.map(item => ({
+          itemId: item.itemId,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          tax: item.tax,
+          price: item.price
+        })));
+      } catch (error) {
+        setError('Failed to fetch purchase order.');
       }
     };
 
     fetchVendors();
     fetchItems();
-  }, [user]); // Empty dependency array means this runs once after the initial render
-  if (!isAuthenticated) {
-        return null;
-      // navigate('/login');  // Avoid rendering profile if the user is not authenticated
-     }
-  const handleVendorChange = (event) => {
-     
-    setSelectedVendorId(event.target.value);
-    console.log(selectedVendorId);
-  };
+    fetchPurchaseOrder();
+    setLoading(false);
+  }, [id]);
 
+  const handleAddItem = useCallback(() => {
+    setItems((prevItems) => [
+      ...prevItems,
+      { itemId: '', name: '', quantity: 1, unit: '', tax: 0, price: 0 }
+    ]);
+  }, []);
 
   const handleRemoveItem = (id) => {
     setItems(items.filter((item) => item.itemId !== id));
@@ -80,25 +77,22 @@ const PurchaseOrder = () => {
 
   const handleItemSelectChange = (id, event) => {
     const selectedItemId = event.target.value;
-     // Prevent duplicate selection
-  if (items.some(item => item.itemId === selectedItemId && item.itemId !== id)) {
-    alert('This item is already selected in another row.');
-    return;
-  }
+    if (items.some(item => item.itemId === selectedItemId && item.itemId !== id)) {
+      alert('This item is already selected in another row.');
+      return;
+    }
     const selectedItem = availableItems.find((item) => item[0] === selectedItemId);
-   
     const updatedItems = items.map((item) =>
       item.itemId === id
         ? {
             ...item,
             itemId: selectedItem ? selectedItem[0] : '',
             name: selectedItem ? selectedItem[1] : '',
-            price: selectedItem ? selectedItem[2] : 0, // Assuming your item object has 'defaultPrice'
+            price: selectedItem ? selectedItem[2] : 0,
             unit: selectedItem ? selectedItem[3] : "",
           }
         : item
     );
-     console.log(updatedItems);
     setItems(updatedItems);
   };
 
@@ -117,8 +111,8 @@ const PurchaseOrder = () => {
     );
     setItems(updatedItems);
   };
-  
-   const handleTaxChange = (id, event) => {
+
+  const handleTaxChange = (id, event) => {
     const { value } = event.target;
     const updatedItems = items.map((item) =>
       item.itemId === id ? { ...item, tax: parseFloat(value) || 0 } : item
@@ -127,86 +121,52 @@ const PurchaseOrder = () => {
   };
 
   const calculateTotal = () => {
-    return items.reduce((total, item) => total + ((item.quantity * item.price)*((100+(item.tax))/100)), 0);
+    return items.reduce((total, item) => total + ((item.quantity * item.price) * ((100 + (item.tax)) / 100)), 0);
   };
 
   const handleSubmit = async (event) => {
-  event.preventDefault();
-  const purchaseOrderData = {
-    vendorId: selectedVendorId,
-    items: items.map((item) => ({
-      itemId: item.itemId,
-      quantity: item.quantity,
-      tax: item.tax,
-      price: item.price
-    })),
-    totalAmount: calculateTotal(),
-  };
- console.log(purchaseOrderData);
-  try {
-    const response = await axios.post(
-       `${API_URL}/createPO`,
-      purchaseOrderData,
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-    if (response.data.status === 'success') {
-      alert('Purchase Order Submitted!');
-    } else {
-      alert('Error submitting order.');
+    event.preventDefault();
+    const purchaseOrderData = {
+      vendorId: selectedVendorId,
+      items: items.map((item) => ({
+        itemId: item.itemId,
+        quantity: item.quantity,
+        tax: item.tax,
+        price: item.price
+      })),
+      totalAmount: calculateTotal(),
+    };
+    try {
+      const response = await axios.post(
+        `${API_URL}/updatePO?id=${id}`,
+        purchaseOrderData,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      if (response.data.status === 'success') {
+        alert('Purchase Order Updated!');
+        navigate('/purchaseorders'); // or wherever your list page is
+      } else {
+        alert('Error updating order.');
+      }
+    } catch (error) {
+      alert('Error updating order.');
+      console.error(error);
     }
-  } catch (error) {
-    alert('Error submitting order.');
-    console.error(error);
-  }
-};
-
-  const handleNewOrder = () => {
-    // Handle creating new order
-    setSelectedVendorId('');
-    setItems([{ itemId: '', name: '', quantity: 1, unit: '', tax: 5, price: 0 }]);
   };
 
-  const handlePrint = () => {
-    // Handle print functionality
-    window.print();
-  };
-
-  if (loading) {
-    return <div>Loading vendors and items...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  if (!isAuthenticated) return null;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="main-content" >
+    <div className="main-content">
       <Container fluid className="relative">
         <Row className="mb-6">
           <div className="col-10 col-sm-10">
-            <h1 className="text-2xl font-bold text-gray-800">Purchase Order</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Edit Purchase Order</h1>
             <p className="text-gray-600">Welcome, {user.email}!</p>
           </div>
         </Row>
-
-        <div className="flex justify-end mb-4">
-          <div className="col-2 col-sm-2">
-            <Dropdown>
-              <Dropdown.Toggle 
-                variant="primary" 
-                id="dropdown-basic"
-                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
-              >
-                Actions
-              </Dropdown.Toggle>
-              <Dropdown.Menu className="mt-2">
-                <Dropdown.Item onClick={() => handleNewOrder()}>New Order</Dropdown.Item>
-                <Dropdown.Item onClick={() => handlePrint()}>Print</Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
-          </div>
-        </div>
-
         <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white p-6">
           <Form onSubmit={handleSubmit} className="space-y-6">
             <Form.Group as={Row} className="mb-4">
@@ -216,7 +176,7 @@ const PurchaseOrder = () => {
               <Col sm="6">
                 <Form.Select
                   value={selectedVendorId}
-                  onChange={handleVendorChange}
+                  onChange={e => setSelectedVendorId(e.target.value)}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
                   <option value="">Select a vendor</option>
@@ -226,19 +186,18 @@ const PurchaseOrder = () => {
                 </Form.Select>
               </Col>
             </Form.Group>
-
             <div className="mt-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Order Items</h3>
-                <Button 
-                  variant="primary" 
+                <Button
+                  variant="primary"
                   onClick={handleAddItem}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  type="button"
                 >
                   Add Item
                 </Button>
               </div>
-
               <div className="overflow-x-auto">
                 <Table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -263,13 +222,12 @@ const PurchaseOrder = () => {
                           >
                             <option value="">Select an item</option>
                             {availableItems.map((availableItem) => (
-                              <option key={availableItem[0]} value={availableItem[0]} 
-                              disabled={
-        // Disable if this item is already selected in another row
-        items.some(
-          (i) => i.itemId === availableItem[0] && i.itemId !== item.itemId
-        )
-      }>
+                              <option key={availableItem[0]} value={availableItem[0]}
+                                disabled={
+                                  items.some(
+                                    (i) => i.itemId === availableItem[0] && i.itemId !== item.itemId
+                                  )
+                                }>
                                 {availableItem[1]}
                               </option>
                             ))}
@@ -313,13 +271,14 @@ const PurchaseOrder = () => {
                           />
                         </td>
                         <td className="px-6 py-4 font-medium">
-                          Rs.{((item.quantity * item.price)*((100+(item.tax))/100)).toFixed(2)}
+                          Rs.{((item.quantity * item.price) * ((100 + (item.tax)) / 100)).toFixed(2)}
                         </td>
                         <td className="px-6 py-4">
-                          <Button 
-                            variant="danger" 
+                          <Button
+                            variant="danger"
                             onClick={() => handleRemoveItem(item.itemId)}
                             className="px-3 py-1 text-sm text-white bg-red-600 rounded hover:bg-red-700"
+                            type="button"
                           >
                             Remove
                           </Button>
@@ -329,18 +288,17 @@ const PurchaseOrder = () => {
                   </tbody>
                 </Table>
               </div>
-
               <div className="mt-6 flex justify-between items-center">
                 <div className="text-lg font-bold text-gray-900">
                   Total: Rs.{calculateTotal().toFixed(2)}
                 </div>
-                <Button 
-                  variant="success" 
-                  type="submit" 
+                <Button
+                  variant="success"
+                  type="submit"
                   disabled={!selectedVendorId || items.length === 0}
                   className="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50"
                 >
-                  Submit Order
+                  Update Order
                 </Button>
               </div>
             </div>
@@ -351,4 +309,4 @@ const PurchaseOrder = () => {
   );
 };
 
-export default PurchaseOrder;
+export default EditPurchaseOrder;
