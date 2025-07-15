@@ -46,6 +46,7 @@ const EditPurchaseOrder = () => {
         const po = response.data;
         setSelectedVendorId(po.vendorId);
         setItems(po.items.map(item => ({
+          id:item.id,
           itemId: item.itemId,
           name: item.name,
           quantity: item.quantity,
@@ -67,12 +68,12 @@ const EditPurchaseOrder = () => {
   const handleAddItem = useCallback(() => {
     setItems((prevItems) => [
       ...prevItems,
-      { itemId: '', name: '', quantity: 1, unit: '', tax: 0, price: 0 }
+      { id:Date.now(),itemId: '', name: '', quantity: 1, unit: '', tax: 0, price: 0 }
     ]);
   }, []);
 
   const handleRemoveItem = (id) => {
-    setItems(items.filter((item) => item.itemId !== id));
+    setItems(items.filter((item) => item.id !== id));
   };
 
   const handleItemSelectChange = (id, event) => {
@@ -83,7 +84,7 @@ const EditPurchaseOrder = () => {
     }
     const selectedItem = availableItems.find((item) => item[0] === selectedItemId);
     const updatedItems = items.map((item) =>
-      item.itemId === id
+      item.id === id
         ? {
             ...item,
             itemId: selectedItem ? selectedItem[0] : '',
@@ -144,7 +145,7 @@ const EditPurchaseOrder = () => {
       );
       if (response.data.status === 'success') {
         alert('Purchase Order Updated!');
-        navigate('/purchaseorders'); // or wherever your list page is
+        navigate('/polist'); // or wherever your list page is
       } else {
         alert('Error updating order.');
       }
@@ -213,11 +214,11 @@ const EditPurchaseOrder = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {items.map((item) => (
-                      <tr key={item.itemId}>
+                      <tr key={item.id}>
                         <td className="px-6 py-4">
                           <Form.Select
                             value={item.itemId}
-                            onChange={(event) => handleItemSelectChange(item.itemId, event)}
+                            onChange={(event) => handleItemSelectChange(item.id, event)}
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                           >
                             <option value="">Select an item</option>
@@ -276,7 +277,7 @@ const EditPurchaseOrder = () => {
                         <td className="px-6 py-4">
                           <Button
                             variant="danger"
-                            onClick={() => handleRemoveItem(item.itemId)}
+                            onClick={() => handleRemoveItem(item.id)}
                             className="px-3 py-1 text-sm text-white bg-red-600 rounded hover:bg-red-700"
                             type="button"
                           >

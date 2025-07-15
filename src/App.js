@@ -33,6 +33,7 @@ import Delivery from './components/Delivery';
 import PO from './components/PurchaseOrder';
 import EditPO from './components/EditPurchaeOrder';
 import PrintPO from './components/PrintPurchaseOrder';
+import POList from './components/PurchaseOrderList';
 
 function App() {
 
@@ -158,9 +159,9 @@ function App() {
               } />
               
               <Route path="/purchaseOrder" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+             
               <PO />
-              </Role>
+            
               } />
               
             <Route path="/mrs/:batchid" element={
@@ -182,6 +183,11 @@ function App() {
               
               <PrintPO />
               
+              } />
+              <Route path="/polist" element={
+               <Role allowedRoles={["admin"]} userRole={userRole}>
+              <POList />
+              </Role>
               } />
   
           </Routes>

@@ -204,7 +204,7 @@ function Navigation() {
 
             {/* Add other menu items similarly */}
             {user && (user.role === "admin") && (
-              <Link to="/purchaseorder" className="nav-item">
+              <Link to="/polist" className="nav-item">
                 <ShoppingCartIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3" style={{textDecoration:'none'}}>Purchase Order</span>}
               </Link>

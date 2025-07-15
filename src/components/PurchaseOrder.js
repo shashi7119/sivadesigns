@@ -1,5 +1,6 @@
 import React, { useState, useEffect ,useCallback} from 'react';
-import { Container, Row, Col, Form, Button, Table, Dropdown } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Table } from 'react-bootstrap';
+import {  useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -8,11 +9,11 @@ import axios from 'axios';
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
 const PurchaseOrder = () => {
-  
+    const navigate = useNavigate();
   const [vendors, setVendors] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [selectedVendorId, setSelectedVendorId] = useState('');
-  const [items, setItems] = useState([{ itemId: '', name: '', quantity: 1,unit: '',tax: 5, price: 0 }]);
+  const [items, setItems] = useState([{ id: Date.now(),itemId: '', name: '', quantity: 1,unit: '',tax: 5, price: 0 }]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
     const { user , isAuthenticated } = useAuth();
@@ -20,7 +21,7 @@ const PurchaseOrder = () => {
      const handleAddItem = useCallback(() => {
     setItems((prevItems) => [
       ...prevItems,
-      { itemId: '', quantity: 1, unit: "", tax: 0, price: 0 }
+      { id:Date.now(),itemId: '', quantity: 1, unit: "", tax: 0, price: 0 }
     ]);
   }, []);
 
@@ -75,7 +76,7 @@ const PurchaseOrder = () => {
 
 
   const handleRemoveItem = (id) => {
-    setItems(items.filter((item) => item.itemId !== id));
+    setItems(items.filter((item) => item.id !== id));
   };
 
   const handleItemSelectChange = (id, event) => {
@@ -88,7 +89,7 @@ const PurchaseOrder = () => {
     const selectedItem = availableItems.find((item) => item[0] === selectedItemId);
    
     const updatedItems = items.map((item) =>
-      item.itemId === id
+      item.id === id
         ? {
             ...item,
             itemId: selectedItem ? selectedItem[0] : '',
@@ -98,7 +99,7 @@ const PurchaseOrder = () => {
           }
         : item
     );
-     console.log(updatedItems);
+     console.log(selectedItemId);
     setItems(updatedItems);
   };
 
@@ -150,6 +151,7 @@ const PurchaseOrder = () => {
       { headers: { 'Content-Type': 'application/json' } }
     );
     if (response.data.status === 'success') {
+      navigate('/polist'); 
       alert('Purchase Order Submitted!');
     } else {
       alert('Error submitting order.');
@@ -160,17 +162,7 @@ const PurchaseOrder = () => {
   }
 };
 
-  const handleNewOrder = () => {
-    // Handle creating new order
-    setSelectedVendorId('');
-    setItems([{ itemId: '', name: '', quantity: 1, unit: '', tax: 5, price: 0 }]);
-  };
-
-  const handlePrint = () => {
-    // Handle print functionality
-    window.print();
-  };
-
+ 
   if (loading) {
     return <div>Loading vendors and items...</div>;
   }
@@ -189,23 +181,6 @@ const PurchaseOrder = () => {
           </div>
         </Row>
 
-        <div className="flex justify-end mb-4">
-          <div className="col-2 col-sm-2">
-            <Dropdown>
-              <Dropdown.Toggle 
-                variant="primary" 
-                id="dropdown-basic"
-                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
-              >
-                Actions
-              </Dropdown.Toggle>
-              <Dropdown.Menu className="mt-2">
-                <Dropdown.Item onClick={() => handleNewOrder()}>New Order</Dropdown.Item>
-                <Dropdown.Item onClick={() => handlePrint()}>Print</Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
-          </div>
-        </div>
 
         <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white p-6">
           <Form onSubmit={handleSubmit} className="space-y-6">
@@ -254,11 +229,11 @@ const PurchaseOrder = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {items.map((item) => (
-                      <tr key={item.itemId}>
+                      <tr key={item.id}>
                         <td className="px-6 py-4">
                           <Form.Select
                             value={item.itemId}
-                            onChange={(event) => handleItemSelectChange(item.itemId, event)}
+                            onChange={(event) => handleItemSelectChange(item.id, event)}
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                           >
                             <option value="">Select an item</option>
@@ -318,7 +293,7 @@ const PurchaseOrder = () => {
                         <td className="px-6 py-4">
                           <Button 
                             variant="danger" 
-                            onClick={() => handleRemoveItem(item.itemId)}
+                            onClick={() => handleRemoveItem(item.id)}
                             className="px-3 py-1 text-sm text-white bg-red-600 rounded hover:bg-red-700"
                           >
                             Remove
