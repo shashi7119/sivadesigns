@@ -94,7 +94,7 @@ const table = useRef();
         console.log(error);
       });
   } else {
-       axios.post(`https://www.wynstarcreations.com/seyal/api/updateCustomer`, formData)
+       axios.post(`https://www.wynstarcreations.com/seyal/api/updateVendor`, formData)
         .then(function (response) {        
           setShow(false);
         setFormData('');

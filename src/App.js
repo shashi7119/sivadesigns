@@ -86,7 +86,7 @@ function App() {
               </Role>
               } />
               <Route path="/vendor" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","purchase"]} userRole={userRole}>
               <Vendor />
               </Role>
               } />
@@ -185,7 +185,7 @@ function App() {
               
               } />
               <Route path="/polist" element={
-               <Role allowedRoles={["admin"]} userRole={userRole}>
+               <Role allowedRoles={["admin","purchase"]} userRole={userRole}>
               <POList />
               </Role>
               } />

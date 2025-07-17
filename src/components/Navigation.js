@@ -87,7 +87,7 @@ function Navigation() {
               {isExpanded && <span className="ml-3">Home</span>}
             </Link>
 
-            {user && (user.role === "admin" || user.role === "production") && (
+            {user && (user.role === "admin" || user.role === "production" || user.role === "purchase") && (
               <Menu as="div" className="relative">
                 <Menu.Button className="nav-item w-full">
                   <Cog6ToothIcon className="h-6 w-6" />
@@ -129,17 +129,7 @@ function Navigation() {
                                 Customer
                               </Link>
                             )}
-                          </Menu.Item>
-                          <Menu.Item>
-                            {({ active }) => (
-                              <Link to="/vendor" className={classNames(
-                                active ? 'bg-gray-100' : '',
-                                'block px-4 py-2 text-sm text-gray-700'
-                              )}>
-                                Vendor
-                              </Link>
-                            )}
-                          </Menu.Item>
+                          </Menu.Item>                         
                           <Menu.Item>
                             {({ active }) => (
                               <Link to="/fabric" className={classNames(
@@ -162,6 +152,20 @@ function Navigation() {
                           </Menu.Item>
                         </>
                       )}
+                       {user && (user.role === "admin" || user.role === "purchase") && (
+
+                         <Menu.Item>
+                            {({ active }) => (
+                              <Link to="/vendor" className={classNames(
+                                active ? 'bg-gray-100' : '',
+                                'block px-4 py-2 text-sm text-gray-700'
+                              )}>
+                                Vendor
+                              </Link>
+                            )}
+                          </Menu.Item>
+
+                        )}
                       {user && (user.role === "admin" || user.role === "production") && (
                         <>
                           <Menu.Item>
@@ -203,7 +207,7 @@ function Navigation() {
             )}
 
             {/* Add other menu items similarly */}
-            {user && (user.role === "admin") && (
+            {user && (user.role === "admin" || user.role === "purchase")  && (
               <Link to="/polist" className="nav-item">
                 <ShoppingCartIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3" style={{textDecoration:'none'}}>Purchase Order</span>}
