@@ -11,6 +11,7 @@ import {
   ClipboardDocumentListIcon,
   DocumentCheckIcon,
   TruckIcon,
+  ReceiptRefundIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon
 } from '@heroicons/react/24/outline';
@@ -305,6 +306,13 @@ function Navigation() {
               <Link to="/delivery" className="nav-item">
                 <TruckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Delivery</span>}
+              </Link>
+            )}
+
+            {user && (user.role === "admin" || user.role === "delivery" || user.role === "SP1" || user.role === "SP2") && (
+              <Link to="/return" className="nav-item">
+                <ReceiptRefundIcon className="h-6 w-6" />
+                {isExpanded && <span className="ml-3">Grey Return</span>}
               </Link>
             )}
           </div>

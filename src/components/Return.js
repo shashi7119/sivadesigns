@@ -9,20 +9,19 @@ import DT from 'datatables.net-dt';
 import $ from 'jquery';
 import 'react-datepicker/dist/react-datepicker.css'
 import logo from '../img/slogo.png'
-const API_URL = 'https://www.wynstarcreations.com/seyal/api/';
+const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
 
 DataTable.use(DT);
-function Greyentry() {
+function Return() {
   const table = useRef();
     const [formData, setFormData] = useState({
-        ide:"",customer:"",fabric: '',construction:'',width:'',
-        weight:'',gmeter:'',customerdc:'',remarks:'',noofpcs:'',ftype:'',ptype:'',pining:'',rweight:'',rmeter:''
+        ide:"",greyid:"",customer:"",fabric: '',construction:'',width:'',
+        weight:'',gmeter:'',customerdc:'',remarks:'',noofpcs:'',ftype:'',ptype:'',pining:''
       });
 
       const [searchState, setSearchState] = useState('');
       const [isEdit, setIsEdit] = useState(false);
-      const [isReturn, setIsReturn] = useState(false);
      // const [fetch, setFetch] = useState(false);
       const [customerData, setCusotmerData] = useState([ ]);
       const [widthData, setWidthData] = useState([ ]);
@@ -36,7 +35,7 @@ function Greyentry() {
       const regexPatterns = {
         weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/  
         ,customerdc: /^[A-Za-z0-9_@./#&+\-, "]*$/ ,remarks: /^[A-Za-z0-9_@./#&+\-, "]*$/,
-        noofpcs: /^[0-9."]*$/,rweight: /^[0-9."]*$/,rmeter: /^[0-9."]*$/   
+        noofpcs: /^[0-9."]*$/  
          };
 
          const { user , isAuthenticated } = useAuth();
@@ -65,10 +64,7 @@ function Greyentry() {
   const handleClose = (e) =>  {
     setFormData("");
     setShow(false);}
-  const handleShow = (e) => { 
-    setIsEdit(false); setIsReturn(false);
-    setShow(true);    
-  };
+
 
 const handleColumnChange = (e) => {
     setSearchState(e.target.value);
@@ -106,28 +102,9 @@ const handleColumnChange = (e) => {
      const handleSubmit = async (event) => {
          setIsSaving(true); 
         event.preventDefault();
-        if(!isEdit && !isReturn) {               
-        axios.post(`${API_URL}/addInventry`, formData)
-      .then(function (response) {    
-        setShow(false); setIsSaving(false); 
-        table.current.dt().ajax.reload(null, false);
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-    } else if(isEdit) {
+       if(isEdit) {
         console.log(formData);    
-        axios.post(`${API_URL}/updateInventry`, formData)
-        .then(function (response) {        
-          setShow(false); setIsSaving(false); 
-         table.current.dt().ajax.reload(null, false);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });    
-    }else if(isReturn) {
-        console.log(formData);    
-        axios.post(`${API_URL}/addReturn`, formData)
+        axios.post(`${API_URL}/updateReturn`, formData)
         .then(function (response) {        
           setShow(false); setIsSaving(false); 
          table.current.dt().ajax.reload(null, false);
@@ -143,7 +120,7 @@ const handleColumnChange = (e) => {
 
      
       const edithandle =  (event) => {
-        setIsEdit(true);setIsReturn(false);
+        setIsEdit(true);
         event.preventDefault();       
         let api = table.current.dt();
         let rows = api.rows({ selected: true }).data().toArray();
@@ -158,47 +135,19 @@ const handleColumnChange = (e) => {
           alert('Not allowed multiple entries for edit');
         } else {
           console.log(dataArr); 
-          const [eweight] = dataArr[0][7].split("/");
-          const [egmeter] = dataArr[0][8].split("/");
+          const [eweight] = dataArr[0][8].split("/");
+          const [egmeter] = dataArr[0][9].split("/");
           
-           setFormData({ customer:dataArr[0][3],ide:dataArr[0][0],
-            fabric:dataArr[0][4],construction:dataArr[0][5],
-            weight: eweight,width:dataArr[0][6],
-            gmeter: egmeter, customerdc: dataArr[0][2], remarks: dataArr[0][9]
-            , noofpcs: dataArr[0][10], ftype: dataArr[0][11], ptype: dataArr[0][13], pining: dataArr[0][12] });   
+           setFormData({ greyid:dataArr[0][1],customer:dataArr[0][4],ide:dataArr[0][0],
+            fabric:dataArr[0][5],construction:dataArr[0][6],
+            weight: eweight,width:dataArr[0][7],
+            gmeter: egmeter, customerdc: dataArr[0][3], remarks: dataArr[0][10]
+            , noofpcs: dataArr[0][11], ftype: dataArr[0][12], ptype: dataArr[0][14], pining: dataArr[0][13] });   
              
           setShow(true);
         }
       };
 
-      const returnhandle =  (event) => {
-        setIsReturn(true); setIsEdit(false);
-        event.preventDefault();       
-        let api = table.current.dt();
-        let rows = api.rows({ selected: true }).data().toArray();
-        let dataArr = [];
-        rows.map(value => (
-          dataArr.push(value)
-        ));    
-
-        if(dataArr.length === 0) {
-          alert('Select entry for edit');
-        }else if(dataArr.length > 1) {
-          alert('Not allowed multiple entries for edit');
-        } else {
-          console.log(dataArr); 
-          const [eweight] = dataArr[0][7].split("/");
-          const [egmeter] = dataArr[0][8].split("/");
-          
-           setFormData({ customer:dataArr[0][3],ide:dataArr[0][0],
-            fabric:dataArr[0][4],construction:dataArr[0][5],
-            weight: eweight,width:dataArr[0][6],
-            gmeter: egmeter, customerdc: dataArr[0][2], remarks: dataArr[0][9]
-            , noofpcs: dataArr[0][10], ftype: dataArr[0][11], ptype: dataArr[0][13], pining: dataArr[0][12],rweight:'',rmeter:'' });   
-             
-          setShow(true);
-        }
-      };
           
       const deleteHandle =  (event) => {
 
@@ -214,7 +163,7 @@ const handleColumnChange = (e) => {
             alert('Select entry for delete');
           } else {
             
-          axios.post(`${API_URL}/deleteInventory`, dataArr)
+          axios.post(`${API_URL}/deleteReturn`, dataArr)
           .then(function (response) {      
             console.log(response);
           })
@@ -372,31 +321,32 @@ white-space: normal !important;
               <div class="col-4 col-sm-4" style="text-align: center;font-size: 12px;">Mobile No: 9443029027</div><div class="col-4 col-sm-4" style="text-align: center;font-size: 12px;">GSTIN: 33AMEPP2435Q2ZP</div></div>
              </div></div><div class="hr mt-1 mb-2"></div>
 <div class="row">
-<div class="col-12 col-md-12" style="text-align:center"> <h3 class="px-2">INWARD RECEIPT</h3></div>
+<div class="col-12 col-md-12" style="text-align:center"> <h3 class="px-2">RETURN RECEIPT</h3></div>
 </div>
         <div class="hr mt-1 mb-0"></div>
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
-        <p><strong>Customer    :${selectedRows[0][3]}</strong></p>
-        <p><strong>PARTY DC NO :${selectedRows[0][2]}</strong></p>
+        <p><strong>Customer    :${selectedRows[0][4]}</strong></p>
+        <p><strong>PARTY DC NO :${selectedRows[0][3]}</strong></p>
+        <p><strong>INWARD NO :${selectedRows[0][1]}</strong></p>
        
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
-        <div class="row"><div class="col-md-4"><p>INWARD NO </p></div> <div class="col-md-6"><p>: ${selectedRows[0][0]}</p></div></div>
-        <div class="row"><div class="col-md-4"><p>INWARD DATE </p></div> <div class="col-md-6"><p>: ${selectedRows[0][1]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>RETURN DC NO </p></div> <div class="col-md-6"><p>: ${selectedRows[0][0]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>RETURN DATE </p></div> <div class="col-md-6"><p>: ${selectedRows[0][2]}</p></div></div>
 
         </div>
 </div>
         <div class="hr mt-0 mb-0"></div>
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
-         <div class="row"><div class="col-md-4"><p>Construction </p></div> <div class="col-md-6"><p>: ${selectedRows[0][5]}</p></div></div>
-        <div class="row"><div class="col-md-4"><p>G Width </p></div> <div class="col-md-6"><p>: ${selectedRows[0][6]}</p></div></div>
+         <div class="row"><div class="col-md-4"><p>Construction </p></div> <div class="col-md-6"><p>: ${selectedRows[0][6]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>G Width </p></div> <div class="col-md-6"><p>: ${selectedRows[0][7]}</p></div></div>
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
        
-        <div class="row"><div class="col-md-4"><p>Fabric </p></div> <div class="col-md-6"><p>: ${selectedRows[0][4]}</p></div></div>
-        <div class="row"><div class="col-md-4"><p>Process </p></div> <div class="col-md-6"><p>: ${selectedRows[0][13]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Fabric </p></div> <div class="col-md-6"><p>: ${selectedRows[0][5]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Process </p></div> <div class="col-md-6"><p>: ${selectedRows[0][14]}</p></div></div>
         </div>
 </div>
         
@@ -417,12 +367,12 @@ white-space: normal !important;
                
                
                 <tr>
-        <td scope="row" width="35%">${selectedRows[0][11]}</th>				 
-				  <td width="15%">${selectedRows[0][7]}</td>
-				  <td width="10%">${selectedRows[0][8]}</td>
-				  <td width="20%">${selectedRows[0][12]}</td>
-				  <td width="20%">${selectedRows[0][10]}</td>
-                                  <td width="20%">${selectedRows[0][9]}</td>
+        <td scope="row" width="35%">${selectedRows[0][12]}</th>				 
+				  <td width="15%">${selectedRows[0][8]}</td>
+				  <td width="10%">${selectedRows[0][9]}</td>
+				  <td width="20%">${selectedRows[0][13]}</td>
+				  <td width="20%">${selectedRows[0][11]}</td>
+                                  <td width="20%">${selectedRows[0][10]}</td>
         
 				</tr>
 
@@ -453,7 +403,7 @@ white-space: normal !important;
       <Container fluid className="relative">
         <Row className="mb-6">
           <div className="col-10 col-sm-10">
-            <h1 className="text-2xl font-bold text-gray-800">Grey Fabric Entry</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Return Grey Fabric Entry</h1>
             <p className="text-gray-600">Welcome, {user.user}!</p>
           </div>
         </Row>
@@ -466,11 +416,9 @@ white-space: normal !important;
                 Actions
               </Dropdown.Toggle>
 
-              <Dropdown.Menu className="mt-2">
-                {user && user.role !=="SP2" && <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>}
+              <Dropdown.Menu className="mt-2">             
                 {user && user.role !=="SP2" && user.role !=="SP1" && <Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item>}
-                {user && user.role==="admin" && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-                 {user && user.role==="admin" && <Dropdown.Item href="#" onClick={returnhandle}>Return</Dropdown.Item>}
+                {user && user.role==="admin" && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}   
                 <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
@@ -481,6 +429,7 @@ white-space: normal !important;
               value={searchState}
               onChange={handleColumnChange}
             >
+                <option value="ide" >Return DC No</option>
               <option value="greyid">Grey Entry No</option>
               <option value="customer">Customer</option>
             </Form.Select>
@@ -503,7 +452,7 @@ white-space: normal !important;
               serverSide: true,
               select: { style: 'multi' },
               ajax: {
-                url: `${API_URL}/inventry1`,
+                url: `${API_URL}/greyreturn`,
                 type: 'POST',
                 data: function (d) {
                   d.searchcol = $(".tsearch").val();
@@ -533,12 +482,14 @@ white-space: normal !important;
                 { data: "10" },
                 { data: "11" },
                 { data: "12" },
-                { data: "13" }          
+                { data: "13" },
+                { data: "14" }              
                 
             ],
             }} className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
+                <th className="px-6 py-3">Return DC No</th>
                 <th className="px-6 py-3">Inward No</th>
                 <th className="px-6 py-3">Date</th>
                 <th className="px-6 py-3">Party Dc No</th>
@@ -563,8 +514,8 @@ white-space: normal !important;
         <Modal size="xl" show={show} onHide={handleClose} className="rounded-lg">
           <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
             <Modal.Title className="text-xl font-semibold text-gray-800">
-              {isEdit && !isReturn? "Edit Grey Fabric" : "Add Grey Fabric"}
-              {isReturn && !isEdit? "Return Grey Fabric" : ""}
+              {isEdit ? "Edit Return Grey Fabric" : "c"}
+            
             </Modal.Title>
           </Modal.Header>
           <Modal.Body>
@@ -792,39 +743,7 @@ white-space: normal !important;
            </Form.Select> 
           </Form.Group>
           </Row>
-          
-         {isReturn && <Row>
-            
-   <Form.Group className="col-6 col-sm-6 mb-3" controlId="returnWeight">
-            <Form.Label>Return Weight </Form.Label>
-            <Form.Control
-              type="text"
-              name="rweight"             
-              value={formData.rweight}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
-              required 
-            />       
-          </Form.Group>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="returnMeter">
-            <Form.Label>Return Meter</Form.Label>
-            <Form.Control
-              type="text"
-              name="rmeter"             
-              value={formData.rmeter}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
-              required 
-            />       
-          </Form.Group>
-
-          </Row>}
+       
           <Row>
           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicaglm">
                                <Button variant="secondary" onClick={handleClose}>Close</Button>
@@ -850,4 +769,4 @@ white-space: normal !important;
 }
 
 
-export default Greyentry;
+export default Return;

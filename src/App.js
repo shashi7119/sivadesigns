@@ -34,6 +34,7 @@ import PO from './components/PurchaseOrder';
 import EditPO from './components/EditPurchaeOrder';
 import PrintPO from './components/PrintPurchaseOrder';
 import POList from './components/PurchaseOrderList';
+import Return from './components/Return';
 
 function App() {
 
@@ -155,6 +156,12 @@ function App() {
 <Route path="/delivery" element={
               <Role allowedRoles={["admin","delivery","SP1","SP2","SP3"]} userRole={userRole}>
               <Delivery />
+              </Role>
+              } />
+
+              <Route path="/return" element={
+              <Role allowedRoles={["admin","delivery","SP1","SP2","SP3"]} userRole={userRole}>
+              <Return />
               </Role>
               } />
               
