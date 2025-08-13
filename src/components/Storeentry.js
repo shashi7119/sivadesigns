@@ -17,21 +17,22 @@ function Storeentry() {
 
   const table = useRef();
     const [formData, setFormData] = useState({
-        mname: '',unit:''
+        mname: '',unit:'',price:''
       });
 
       const [formData1, setFormData1] = useState({
-        mname: '',stock:''
+        mname: '',unit:'',price:'',ide:''
       });
 
       const regexPatterns = {
-        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,stock: /^[0-9.]*$/,unit: /^[a-zA-Z ]*$/
+        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,price: /^[0-9.]*$/,unit: /^[a-zA-Z ]*$/
       };
 
     const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
     const [show1, setShow1] = useState(false);
     const [fetch, setFetch] = useState(false);
+     const [unitData] = useState([ 'KG','ML','LITRE','BOX','GRAM','METER','PIECE','BOTTLE','CUP','PACKET','ROLL','SET','BAG','TONNE']);
     const { user , isAuthenticated } = useAuth();
   const handleClose = () => {
     setShow(false);
@@ -110,12 +111,25 @@ function Storeentry() {
         e.preventDefault();
         let api = table.current.dt();
     let rows = api.rows({ selected: true }).data().toArray();
-    console.log('Row Data:', rows);
+    let dataArr = [];
     rows.map(value => (
-      formData1.mname =  value[1]    
+      dataArr.push(value)
     )); 
-    setFormData1(formData1);
+
+    if(dataArr.length === 0) {
+      alert('Select material for update');
+    }else if(dataArr.length > 1) {
+      alert('Not allowed multiple material for edit');
+    } else {
+
+       formData1.ide = dataArr[0][0];
+      formData1.mname = dataArr[0][1];
+      formData1.price = dataArr[0][2];
+      formData1.unit = dataArr[0][3];
+
+       setFormData1(formData1);
         setShow1(true);
+    }
          
       }
 
@@ -181,7 +195,7 @@ function Storeentry() {
                 <tr>
                     <th>S.No</th>
                     <th>Chemical</th> 
-                    <th>Quantity</th> 
+                    <th>Price</th> 
                     <th>Unit</th>
                     <th>Actions</th>                                                     
                 </tr>
@@ -206,13 +220,13 @@ function Storeentry() {
               }))}    
              required
             />
-            </Form.Group>             
-            <Form.Group className="col-3 col-sm-3" >
+            </Form.Group>   
+             <Form.Group className="col-3 col-sm-3" >
               <Form.Control
               type="text"
-              placeholder='Stock Unit'
-              name="unit"              
-              value={formData.unit}
+              placeholder='Price'
+              name="price"              
+              value={formData.price}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
@@ -220,6 +234,25 @@ function Storeentry() {
               }))}    
              required
             />
+            </Form.Group>          
+            <Form.Group className="col-3 col-sm-3" >
+             <Form.Select             
+                            name="unit"              
+                            value={formData.unit}
+                            onChange={(e) =>  setFormData((prevData) => ({
+                              ...prevData,
+                              [e.target.name]: e.target.value // Update the value of the specific input field
+                            }))}    
+                           required
+                          >
+                            <option  value="">Unit</option>
+                       {unitData.map(unittype => (
+                        
+                <option  value={unittype}>
+                  {unittype}
+                </option>
+              ))}
+                         </Form.Select> 
             </Form.Group>
          </Row>
 
@@ -236,8 +269,8 @@ function Storeentry() {
       </Modal>
 
       <Modal size="lg" show={show1} onHide={handleClose1}>
-        <Modal.Header closeButton1>
-          <Modal.Title>Add Stock</Modal.Title>
+        <Modal.Header >
+          <Modal.Title>Edit Material</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form><Row>
@@ -254,9 +287,9 @@ function Storeentry() {
             <Form.Group className="col-3 col-sm-3" >
               <Form.Control
               type="text"
-              placeholder='Stock Value'
-              name="stock"              
-              value={formData1.stock}
+              placeholder='Price'
+              name="price"              
+              value={formData1.price}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData1((prevData) => ({
                 ...prevData,
@@ -264,6 +297,26 @@ function Storeentry() {
               }))}    
              required
             />
+            </Form.Group>
+            <Form.Group className="col-3 col-sm-3" >
+
+               <Form.Select             
+                            name="unit"              
+                            value={formData1.unit}
+                            onChange={(e) =>  setFormData1((prevData) => ({
+                              ...prevData,
+                              [e.target.name]: e.target.value // Update the value of the specific input field
+                            }))}    
+                           required
+                          >
+                            <option  value="">Unit</option>
+                       {unitData.map(unittype => (
+                        
+                <option  value={unittype}>
+                  {unittype}
+                </option>
+              ))}
+                         </Form.Select> 
             </Form.Group>
          </Row>
 
