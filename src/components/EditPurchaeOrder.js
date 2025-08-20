@@ -133,7 +133,7 @@ const EditPurchaseOrder = () => {
         itemId: item.itemId,
         quantity: item.quantity,
         tax: item.tax,
-        price: item.price
+        price: item.price,unit: item.unit
       })),
       totalAmount: calculateTotal(),
     };
