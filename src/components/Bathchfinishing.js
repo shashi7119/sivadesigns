@@ -22,7 +22,7 @@ function Batchfinishing() {
   const [formData, setFormData] = useState({
       bid: '', batch_weight: '0', batch_gmeter: '0', 
       final_weight: '',final_gmeter: '',finishing: '',final_width: '',partial:''
-      ,pide:'',pining:'',noofpcs:''
+      ,pide:'',pining:'',noofpcs:'',  partial_weight: '',  partial_gmeter: '' 
     });  
     const [fetch, setFetch] = useState(false);
      const [show, setShow] = useState(false);
@@ -276,7 +276,12 @@ function Batchfinishing() {
   const handleCheckboxChange = (event) => {
     const target = event.target;
     const checked = target.checked;
-    formData.partial = checked;   
+    setFormData(prevData => ({
+    ...prevData,
+    partial: checked,
+    partial_weight: '', // Reset values when toggling
+    partial_gmeter: ''  // Reset values when toggling
+  }));
   }
   
     const deleteHandle =  (event) => {
@@ -539,6 +544,65 @@ function Batchfinishing() {
                   />       
                 </Form.Group>
               </Row>
+              
+
+{!formData.partial && (
+  <Row>
+    <Form.Group className="col-5 mb-3">
+      <Form.Label className="block text-sm font-medium text-gray-700">
+        Partial Weight
+      </Form.Label>
+      <Form.Control
+        type="text"
+        name="partial_weight"
+        value={formData.partial_weight}
+       disabled
+      />
+    </Form.Group>
+
+    <Form.Group className="col-5 mb-3">
+      <Form.Label className="block text-sm font-medium text-gray-700">
+        Partial Meter
+      </Form.Label>
+      <Form.Control
+        type="text"
+        name="partial_gmeter"
+        value={formData.partial_gmeter}
+        disabled
+      />
+    </Form.Group>
+  </Row>
+  
+)}
+
+{!formData.partial && (
+  <Row>
+    <Form.Group className="col-5 mb-3">
+      <Form.Label className="block text-sm font-medium text-gray-700">
+        Loss (%)
+      </Form.Label>
+      <Form.Control
+        type="text"
+        name="loss"
+        value={formData.partial_weight}
+       disabled
+      />
+    </Form.Group>
+
+    <Form.Group className="col-5 mb-3">
+      <Form.Label className="block text-sm font-medium text-gray-700">
+        Shrinkage (%)
+      </Form.Label>
+      <Form.Control
+        type="text"
+        name="shrinkage"
+        value={formData.partial_gmeter}
+        disabled
+      />
+    </Form.Group>
+  </Row>
+  
+)}
             </Form>
           </Modal.Body>
           <Modal.Footer className="bg-gray-50 border-t border-gray-200">
