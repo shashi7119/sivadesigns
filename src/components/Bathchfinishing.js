@@ -330,7 +330,7 @@ function Batchfinishing() {
 
               <Dropdown.Menu className="mt-2">
                 <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>
-                {user && ((user.role==="admin") || (user.role==="SP1")) && 
+                {user && ((user.role==="admin") || (user.role==="SP1")|| (user.role==="PA" )) && 
                   <Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item>}
                 {user && (user.role==="admin") && 
                   <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}

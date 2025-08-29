@@ -160,7 +160,7 @@ function App() {
               } />
 
               <Route path="/return" element={
-              <Role allowedRoles={["admin","delivery","SP1","SP2","SP3"]} userRole={userRole}>
+              <Role allowedRoles={["admin","delivery","SP1","SP2","SP3","PA"]} userRole={userRole}>
               <Return />
               </Role>
               } />
@@ -192,7 +192,7 @@ function App() {
               
               } />
               <Route path="/polist" element={
-               <Role allowedRoles={["admin","purchase"]} userRole={userRole}>
+               <Role allowedRoles={["admin","purchase","PA"]} userRole={userRole}>
               <POList />
               </Role>
               } />
