@@ -691,9 +691,9 @@ white-space: normal !important;
                 <Dropdown.Item href="#" onClick={PrintIndvHandle}>Print</Dropdown.Item>    
                 {user && (user.role === "admin") && 
                   <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-                {user && ((user.role === "admin") || (user.role === "SP1") || (user.role === "delivery")) && 
+                {user && ((user.role === "admin") || (user.role === "SP1") || (user.role === "delivery") || (user.role==="PA" )) && 
                   <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
-                {user && ((user.role === "admin") || (user.role === "SP1") || (user.role === "delivery")) && 
+                {user && ((user.role === "admin") || (user.role === "SP1") || (user.role === "delivery") || (user.role==="PA" )) && 
                   <Dropdown.Item href="#" onClick={InvExport}>Invoice Export</Dropdown.Item>}
               </Dropdown.Menu>
             </Dropdown>

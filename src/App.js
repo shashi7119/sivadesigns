@@ -62,12 +62,12 @@ function App() {
               
               } />
             <Route path="/planning" element={
-              <Role allowedRoles={["admin","batch","SP1","SP2"]} userRole={userRole}>
+              <Role allowedRoles={["admin","batch","SP1","SP2","PA"]} userRole={userRole}>
               <Planning />
                </Role>              
               } />
               <Route path="/finishing" element={
-              <Role allowedRoles={["admin","finishing","SP1","SP2"]} userRole={userRole}>
+              <Role allowedRoles={["admin","finishing","SP1","SP2","PA"]} userRole={userRole}>
               <Batchfinishing />
                </Role>              
               } />
@@ -77,62 +77,62 @@ function App() {
               
               } />
             <Route path="/machine" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","PA"]} userRole={userRole}>
               <Machine />
               </Role>
               } />
             <Route path="/customer" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","PA"]} userRole={userRole}>
               <Customer />
               </Role>
               } />
               <Route path="/vendor" element={
-              <Role allowedRoles={["admin","purchase"]} userRole={userRole}>
+              <Role allowedRoles={["admin","purchase","PA"]} userRole={userRole}>
               <Vendor />
               </Role>
               } />
             <Route path="/fabric" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","PA"]} userRole={userRole}>
               <Fabric />
               </Role>
               } />
             <Route path="/construction" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","PA"]} userRole={userRole}>
               <Construction />
               </Role>
               } />
             <Route path="/process" element={
-              <Role allowedRoles={["admin","production"]} userRole={userRole}>
+              <Role allowedRoles={["admin","production","PA"]} userRole={userRole}>
               <Process />
               </Role>
               } />
             <Route path="/width" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","PA"]} userRole={userRole}>
               <Width />
               </Role>
               } />
             <Route path="/sfinishing" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","PA"]} userRole={userRole}>
               <Finishing />
               </Role>
               } />
             <Route path="/greyentry" element={
-              <Role allowedRoles={["admin","grey","SP1","SP2"]} userRole={userRole}>
+              <Role allowedRoles={["admin","grey","SP1","SP2","PA"]} userRole={userRole}>
               <Greyentry />
               </Role>
               } />
             <Route path="/batch" element={
-              <Role allowedRoles={["admin","production","batch","batchcomplete","SP1","SP2","SP3"]} userRole={userRole}>
+              <Role allowedRoles={["admin","production","batch","batchcomplete","SP1","SP2","SP3","PA"]} userRole={userRole}>
               <Batch />
               </Role>
               } />
               <Route path="/pstock" element={
-              <Role allowedRoles={["admin","SP1","SP2"]} userRole={userRole}>
+              <Role allowedRoles={["admin","SP1","SP2","PA"]} userRole={userRole}>
               <Pstock />
               </Role>
               } />
               <Route path="/bstock" element={
-              <Role allowedRoles={["admin"]} userRole={userRole}>
+              <Role allowedRoles={["admin","PA"]} userRole={userRole}>
               <Bstock />
               </Role>
               } />
@@ -142,19 +142,19 @@ function App() {
              
               } />
             <Route path="/labentry" element={
-              <Role allowedRoles={["admin","production"]} userRole={userRole}>
+              <Role allowedRoles={["admin","production","PA"]} userRole={userRole}>
               <Labentry />
               </Role>
               } />
 
             <Route path="/storeentry" element={
-              <Role allowedRoles={["admin","store"]} userRole={userRole}>
+              <Role allowedRoles={["admin","store","PA"]} userRole={userRole}>
               <Storeentry />
               </Role>
               } />
 
 <Route path="/delivery" element={
-              <Role allowedRoles={["admin","delivery","SP1","SP2","SP3"]} userRole={userRole}>
+              <Role allowedRoles={["admin","delivery","SP1","SP2","SP3","PA"]} userRole={userRole}>
               <Delivery />
               </Role>
               } />

@@ -293,7 +293,7 @@ function Pstock() {
             </Dropdown.Toggle>
 
       <Dropdown.Menu>         
-         {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={edithandle}>Create Plan</Dropdown.Item>  }
+         {user && (user.role==="admin" || user.role === "PA") && <Dropdown.Item href="#" onClick={edithandle}>Create Plan</Dropdown.Item>  }
           <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>           
       </Dropdown.Menu>
     </Dropdown>
