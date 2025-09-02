@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo} from 'react';
 import { Container, Row, Col, Form, Button, Table } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -51,7 +51,7 @@ const EditPurchaseOrder = () => {
           name: item.name,
           quantity: item.quantity,
           unit: item.unit,
-          tax: item.tax,
+          tax: parseFloat(item.tax) || 0,
           price: item.price
         })));
       } catch (error) {
@@ -120,10 +120,14 @@ const EditPurchaseOrder = () => {
     );
     setItems(updatedItems);
   };
-
-  const calculateTotal = () => {
-    return items.reduce((total, item) => total + ((item.quantity * item.price) * ((100 + (item.tax)) / 100)), 0);
-  };
+const total = useMemo(() => {
+    console.log('Calculating total...'); // Debug log to see when calculation happens
+    return items.reduce(
+      (total, item) => 
+        total + ((item.quantity * item.price) * ((100 + (item.tax)) / 100)), 
+      0
+    );
+  }, [items]); // Only recalculate when items change
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -135,7 +139,7 @@ const EditPurchaseOrder = () => {
         tax: item.tax,
         price: item.price,unit: item.unit
       })),
-      totalAmount: calculateTotal(),
+      totalAmount: total,
     };
     try {
       const response = await axios.post(
@@ -272,7 +276,7 @@ const EditPurchaseOrder = () => {
                           />
                         </td>
                         <td className="px-6 py-4 font-medium">
-                          Rs.{((item.quantity * item.price) * ((100 + (item.tax)) / 100)).toFixed(2)}
+                          Rs.{((item.quantity * item.price) * ((100 + (item.tax)) / 100))}
                         </td>
                         <td className="px-6 py-4">
                           <Button
@@ -291,7 +295,7 @@ const EditPurchaseOrder = () => {
               </div>
               <div className="mt-6 flex justify-between items-center">
                 <div className="text-lg font-bold text-gray-900">
-                  Total: Rs.{calculateTotal().toFixed(2)}
+                  Total: Rs.{total.toFixed(2)}
                 </div>
                 <Button
                   variant="success"
