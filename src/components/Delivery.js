@@ -1,4 +1,4 @@
-import React, { useState,  useRef } from 'react';
+import React, { useState,  useRef ,useEffect} from 'react';
 import { Container, Button, Row, Dropdown, Modal, Form, } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
@@ -20,9 +20,27 @@ DataTable.use(FixedHeader); DataTable.use(DT);
 function Delivery() {
   const table = useRef();
   const { user, isAuthenticated } = useAuth();
+    // Reload DataTable when tab becomes active (user returns after idle)
+    useEffect(() => {
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible' && table.current) {
+          // Reload DataTable data
+          const api = table.current.dt();
+          api.ajax.reload();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }, []);
   const [formData, setFormData] = useState({ dcno: '', vchno: '' });
   const [show, setShow] = useState(false);
    const [searchState, setSearchState] = useState('');
+   // At the top with other state declarations
+const [showDeleteModal, setShowDeleteModal] = useState(false);
+const [deleteReason, setDeleteReason] = useState('');
+const [selectedDC, setSelectedDC] = useState(null);
   const handleClose = () => setShow(false);
   const handleShow = (e) => {
     setShow(true);
@@ -65,6 +83,8 @@ function Delivery() {
 
     if (selectedRows.length === 0) {
       alert('Select DC for print');
+    } else if (selectedRows[0][21] !== "") {
+      alert('This is deleted DC , you cannot take a print');
     } else {
 
       const match = selectedRows[0][6].match(/data-vchno="([^"]*)"/);
@@ -78,8 +98,6 @@ function Delivery() {
       } else {
         DCPrint(selectedRows);
       }
-
-
 
     }
 
@@ -460,6 +478,7 @@ white-space: normal !important;
                       <th>AGLM</th>
                       <th>Process</th>
                       <th>Finishing</th>
+                       <th>Reason</th>
               </tr>
             </thead>
             <tbody>
@@ -488,6 +507,7 @@ white-space: normal !important;
                       <td>${row[18]}</td>
                       <td>${row[19]}</td>
                       <td>${row[20]}</td>
+                       <td>${row[21]}</td>
                     </tr>
                   `
                 )
@@ -504,34 +524,46 @@ white-space: normal !important;
          
     };
 
-  const deleteHandle = (event) => {
+ const deleteHandle = (event) => {
+  event.preventDefault();
+  let api = table.current.dt();
+  let rows = api.rows({ selected: true }).data().toArray();
+  
+  if (rows.length === 0) {
+    alert('Select DC for delete');
+    return;
+  }
 
-    event.preventDefault();
-    if (window.confirm("Delete this item?")) {
+  
+  
+  setSelectedDC(rows[0][1]); // Store the DC number
+  setShowDeleteModal(true); // Show delete confirmation modal
+};
+
+const handleDeleteConfirm = async () => {
+  if (!deleteReason.trim()) {
+    alert('Please enter a reason for deletion');
+    return;
+  }
+
+  try {
+    const response = await axios.post(`${API_URL}/deleteDC`, {
+      dcNo: selectedDC,
+      reason: deleteReason
+    });
+
+    if (response.data.status === 'success') {
       let api = table.current.dt();
-      let rows = api.rows({ selected: true }).data().toArray();
-      let dataArr = []; let dataArr1 = [];
-      rows.map(value => (
-        dataArr.push(value)
-      ));
-      if (dataArr.length === 0) {
-        alert('Select DC for delete');
-      } else {
-
-        const value = dataArr[0][1];
-        dataArr1.push(value);
-        axios.post(`${API_URL}/deleteDC`, dataArr1)
-          .then(function (response) {
-            console.log(response);
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
-        console.log(dataArr);
-        api.rows({ selected: true }).remove().draw();
-      }
+      api.rows({ selected: true }).remove().draw();
+      setShowDeleteModal(false);
+      setDeleteReason('');
+      setSelectedDC(null);
     }
-  };
+  } catch (error) {
+    console.error('Delete failed:', error);
+    alert('Failed to delete DC');
+  }
+};
 
   const ExportHandle = (event) => {
     event.preventDefault();
@@ -553,7 +585,7 @@ white-space: normal !important;
     bdata.push("Grey Meter"); bdata.push("Final Width");
     bdata.push("Final Weight"); bdata.push("Final Meter");
     bdata.push("GLM"); bdata.push("AGLM");
-    bdata.push("Process"); bdata.push("Finishing");
+    bdata.push("Process"); bdata.push("Finishing");bdata.push("Reason");
 
     csv.push(bdata.join(","));
 
@@ -567,7 +599,7 @@ white-space: normal !important;
       rowData.push(row[10]); rowData.push(row[11]); rowData.push(row[12]);
       rowData.push(row[13]); rowData.push(row[14]); rowData.push(row[15]);
       rowData.push(row[16]); rowData.push(row[17]); rowData.push(row[18]);
-      rowData.push(row[19]); rowData.push(row[20]);
+      rowData.push(row[19]); rowData.push(row[20]);rowData.push(row[21]);
       csv.push(rowData.join(","));
       return true;
     })
@@ -741,26 +773,147 @@ white-space: normal !important;
               pageLength: 25,
               columns: [
                 { data: "0" }, // Date
-                { data: "1" }, // DC.No
-                { data: "2" }, // Partial
-                { data: "3" }, // Batch No
-                { data: "4" }, // Inward No
-                { data: "5" }, // Cust Dc
-                { data: "6" }, // Machine
-                { data: "7" }, // Customer
-                { data: "8" }, // Fabric
-                { data: "9" }, // Shade
-                { data: "10" }, // Construction
-                { data: "11" }, // Grey Width
-                { data: "12" }, // Grey Weight
-                { data: "13" }, // Grey Meter
-                { data: "14" }, // Final Width
-                { data: "15" }, // Final Weight
-                { data: "16" }, // Final Meter
-                { data: "17" }, // GLM
-                { data: "18" }, // AGLM
-                { data: "19" }, // Process
-                { data: "20" }  // Finishing
+                { data: "1" ,
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  }}, // DC.No
+                { data: "2",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // Partial
+                { data: "3",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // Batch No
+                { data: "4",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // Inward No
+                { data: "5",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // Cust Dc
+                { data: "6" ,
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  }}, // Machine
+                { data: "7" ,
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  }}, // Customer
+                { data: "8" ,
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  }}, // Fabric
+                { data: "9" ,
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  }}, // Shade
+                { data: "10" ,
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  }}, // Construction
+                { data: "11" ,
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  }}, // Grey Width
+                { data: "12" ,
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  }}, // Grey Weight
+                { data: "13",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // Grey Meter
+                { data: "14",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // Final Width
+                { data: "15",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // Final Weight
+                { data: "16",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // Final Meter
+                { data: "17",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // GLM
+                { data: "18",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // AGLM
+                { data: "19",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // Process
+                { data: "20",
+                  render: function(data, type, row) {
+                    // If reason exists (row[21]), apply strike-through
+                    return (row[21] !=="") ? 
+                      `<span style="text-decoration: line-through;">${data}</span>` : 
+                      data;
+                  } }, // Finishing
+                { data: "21" }  // Reason
               ],
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
               language: {
@@ -800,6 +953,7 @@ white-space: normal !important;
               <th className="px-6 py-3">AGLM</th>
               <th className="px-6 py-3">Process</th>
               <th className="px-6 py-3">Finishing</th>
+              <th className="px-6 py-3">Reason</th>
             </tr>
           </thead>
         </DataTable>
@@ -867,6 +1021,46 @@ white-space: normal !important;
             </Button>
           </Modal.Footer>
         </Modal>
+
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} className="rounded-lg">
+  <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
+    <Modal.Title className="text-xl font-semibold text-gray-800">
+      Confirm Delete
+    </Modal.Title>
+  </Modal.Header>
+  <Modal.Body className="p-6">
+    <Form.Group className="mb-3">
+      <Form.Label className="block text-sm font-medium text-gray-700">
+        Please enter reason for deletion
+      </Form.Label>
+      <Form.Control
+        as="textarea"
+        rows={3}
+        value={deleteReason}
+        onChange={(e) => setDeleteReason(e.target.value)}
+        placeholder="Enter deletion reason"
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        required
+      />
+    </Form.Group>
+  </Modal.Body>
+  <Modal.Footer className="bg-gray-50 border-t border-gray-200">
+    <Button 
+      variant="secondary" 
+      onClick={() => setShowDeleteModal(false)}
+      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+    >
+      Cancel
+    </Button>
+    <Button 
+      variant="danger" 
+      onClick={handleDeleteConfirm}
+      className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+    >
+      Delete
+    </Button>
+  </Modal.Footer>
+</Modal>
       </Container>
     </div>
 
