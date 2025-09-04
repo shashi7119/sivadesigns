@@ -554,7 +554,7 @@ const handleDeleteConfirm = async () => {
 
     if (response.data.status === 'success') {
       let api = table.current.dt();
-      api.rows({ selected: true }).remove().draw();
+      api.ajax.reload();
       setShowDeleteModal(false);
       setDeleteReason('');
       setSelectedDC(null);
