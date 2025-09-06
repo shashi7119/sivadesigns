@@ -142,12 +142,16 @@ function Edit() {
    }
   return (
     
-    <div className="data-wrapper">
-    <div className="data-form-container">
-        <Container>
-        <h1>Edit Planning on - {planid}</h1>
-        <p>Welcome, {user.email}!</p>
-        </Container>
+   <div className="main-content" >
+         <Container fluid className="relative">
+        <Row className="mb-6">
+          <div className="col-10 col-sm-10">
+            <h1 className="text-2xl font-bold text-gray-800">Edit Planning on - {planid}</h1>
+            <p className="text-gray-600">Welcome, {user.user}!</p>
+          </div>
+        </Row>
+        
+        
        
         <Form className="tooltip-label-right mb-4" onSubmit={handleSubmit}>
         <Row>
@@ -409,7 +413,7 @@ function Edit() {
           </Row>
         </Form>
         
-     </div>
+     </Container>
   </div>
   );
 }
