@@ -26,7 +26,16 @@ function Batchfinishing() {
     });  
     const [fetch, setFetch] = useState(false);
      const [show, setShow] = useState(false);
-     const handleClose = () => setShow(false);
+    const handleClose = () => {
+  // Reset switch and related fields
+  setFormData(prevData => ({
+    ...prevData,
+    partial: false,
+    partial_weight: '',
+    partial_gmeter: ''
+  }));
+  setShow(false);
+};
     const handleShow = (e) => { 
       setShow(true);    
     }
@@ -246,6 +255,7 @@ function Batchfinishing() {
       formData.pide    = '';
       formData.final_weight = "";
       formData.final_gmeter = "";
+      formData.partial = false;
       setFormData(formData);      
      if(fetch){setFetch(false);} else {setFetch(true);}
     alert("DC Created!!");   
