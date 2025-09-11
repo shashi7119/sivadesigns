@@ -269,6 +269,7 @@ function Planning() {
             >
               <option value="greyid">Grey Entry No</option>
               <option value="customer">Customer</option>
+              <option value="machine">Machine</option>
             </Form.Select>
           </div>
         </div>
@@ -294,11 +295,12 @@ function Planning() {
         type: 'POST',
         data: function (d) {
              d.searchcol = $(".tsearch").val();
+             d.user = user.user; // send email
             if (d.length === -1) {
                 d.length = 25; // Set default page length
               }
               return d;
-         // d.customSearch = searchText; // send custom filter to server
+           
         },
       },
        pageLength: 25,
