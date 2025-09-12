@@ -13,7 +13,8 @@ import {
   TruckIcon,
   ReceiptRefundIcon,
   ArrowRightOnRectangleIcon,
-  Bars3Icon
+  Bars3Icon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 
@@ -313,6 +314,13 @@ function Navigation() {
               <Link to="/return" className="nav-item">
                 <ReceiptRefundIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Grey Return</span>}
+              </Link>
+            )}
+
+            {user && (user.role === "admin" || user.role === "delivery" || user.role === "SP1" || user.role === "SP2" || user.role === "PA") && (
+              <Link to="/reports" className="nav-item">
+                <ChartBarIcon className="h-6 w-6" />
+                {isExpanded && <span className="ml-3">Reports</span>}
               </Link>
             )}
           </div>
