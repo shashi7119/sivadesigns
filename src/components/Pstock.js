@@ -16,16 +16,18 @@ function Pstock() {
   const [machineData, setMachineData] = useState([]);
   const [processData, setProcessData] = useState([ ]);
   const [finishingData, setFinishingData] = useState([ ]);
+      const [isReturn, setIsReturn] = useState(false);
+       const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
         ide:"",date:'',customer:"",fabric: '',construction:'',width:'',
-        weight:'',gmeter:'', glm: '',aglm: '',customerdc:'',remarks:'',machine:'',process:'',finishing:'',shade:'',pining:''
+        weight:'',gmeter:'', glm: '',aglm: '',customerdc:'',remarks:'',machine:'',process:'',finishing:'',shade:'',pining:'',ftype:'',noofpcs:'',ptype:'',rweight:'',rmeter:''
       });
      
       const [fetch, setFetch] = useState(false);  
       let [selData, setselData] = useState([ ]);
 
       const regexPatterns = {
-        weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/  
+        weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/ ,rweight: /^[0-9."]*$/,rmeter: /^[0-9."]*$/   
         ,customerdc: /^[A-Za-z0-9_@./#&+\-, "]*$/ ,
         remarks: /^[A-Za-z0-9_@./#&+\-, "]*$/,
         shade: /^[A-Za-z0-9_@./#&+\-, ]*$/,
@@ -53,11 +55,16 @@ function Pstock() {
 
     const [tableData, setTableData] = useState([ ]);
     const [show, setShow] = useState(false);
+     const [show1, setShow1] = useState(false);
 
 
   const handleClose = (e) =>  {
     setFormData("");
     setShow(false);}
+
+     const handleClose1 = (e) =>  {
+    setFormData("");
+    setShow1(false);}
  
      // Fetch data from backend API
   useEffect(() => {
@@ -187,6 +194,68 @@ function Pstock() {
         setselData(selData);  
       }
 
+        const returnhandle =  (event) => {
+        setIsReturn(true); 
+        event.preventDefault();       
+        let api = table.current.dt();
+        let rows = api.rows({ selected: true }).data().toArray();
+        let dataArr = [];
+        rows.map(value => (
+          dataArr.push(value)
+        ));    
+
+        if(dataArr.length === 0) {
+          alert('Select entry for edit');
+        }else if(dataArr.length > 1) {
+          alert('Not allowed multiple entries for edit');
+        } else {
+          console.log(dataArr); 
+ 
+          
+           setFormData({ customer:dataArr[0][3],ide:dataArr[0][0],
+            fabric:dataArr[0][4],construction:dataArr[0][5],
+            weight: dataArr[0][7],width:dataArr[0][6],
+            gmeter: dataArr[0][8], customerdc: dataArr[0][2], remarks: dataArr[0][10]
+            , pining: dataArr[0][9], ftype: dataArr[0][12], ptype: dataArr[0][13], noofpcs: dataArr[0][11],rweight:'',rmeter:'' });   
+             
+          setShow1(true);
+        }
+      };
+
+            const checkStock = (event) => {
+    const { name, value } = event.target;
+    let stock = 0;    
+    if(name ==="rweight"){
+      stock = formData.weight;      
+    }else if(name ==="rmeter"){
+      stock = formData.gmeter;       
+    }
+   
+    if(parseFloat(stock) < parseFloat(value)){
+      alert("Final value should be lesser than stock value");
+      event.target.value=0;
+    }
+  }
+
+  const handleReturnSubmit = async (event) => {
+         setIsSaving(true); 
+        event.preventDefault();
+      
+        console.log(formData);    
+        axios.post(`${API_URL}/addReturn`, formData)
+        .then(function (response) {        
+          setShow1(false); setIsSaving(false); 
+         table.current.dt().ajax.reload(null, false);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });    
+    
+        
+    setFormData('');    
+    
+      };
+
       const PrintHandle =  (event) => {
         event.preventDefault();  
         let api = table.current.dt();
@@ -235,6 +304,9 @@ function Pstock() {
                         <th>GMeter</th>    
                         <th>Pining</th>
                         <th>Remarks</th>
+                        <th>Noofpcs</th>
+                        <th>Fabric Tpye</th>
+                        <th>Process</th>
                                         </tr>
               </thead>
               <tbody>
@@ -253,6 +325,9 @@ function Pstock() {
                         <td>${row[8]}</td>
                         <td>${row[9]}</td>  
                         <td>${row[10]}</td>  
+                         <td>${row[11]}</td>  
+                          <td>${row[12]}</td>  
+                           <td>${row[13]}</td>  
                       </tr>
                     `
                   )
@@ -293,7 +368,8 @@ function Pstock() {
             </Dropdown.Toggle>
 
       <Dropdown.Menu>         
-         {user && (user.role==="admin" || user.role === "PA") && <Dropdown.Item href="#" onClick={edithandle}>Create Plan</Dropdown.Item>  }
+         {user && (user.role==="admin") && <Dropdown.Item href="#" onClick={edithandle}>Create Plan</Dropdown.Item>  }
+          {user && user.role==="admin" && <Dropdown.Item href="#" onClick={returnhandle}>Return</Dropdown.Item>}
           <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>           
       </Dropdown.Menu>
     </Dropdown>
@@ -325,7 +401,10 @@ function Pstock() {
                     <th>Weight</th>
                     <th>GMeter</th>  
                     <th>Pining</th> 
-                    <th>Remarks</th>                
+                    <th>Remarks</th>   
+                    <th>Noofpcs</th>   
+                    <th>Fabric Tpye</th>   
+                    <th>Process</th>                
                                   
                 </tr>
             </thead>
@@ -589,6 +668,257 @@ function Pstock() {
          
         </Modal.Footer>
       </Modal>
+       <Modal size="xl" show={show1} onHide={handleClose1} className="rounded-lg">
+                <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
+                  <Modal.Title className="text-xl font-semibold text-gray-800">
+                    Return Grey Fabric
+                  </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                <Form onSubmit={handleReturnSubmit}>  
+                  <Row>        
+                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicCustomer">
+             <Form.Label>Customer </Form.Label>
+            <Form.Control  as="textarea" rows={1} 
+             type="text"
+              name="customer" 
+              disabled="disabled"
+              value={formData.customer}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            />
+           </Form.Group>
+                 <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicFabric">
+            <Form.Label>Fabric </Form.Label>
+             <Form.Control   as="textarea" rows={1} 
+              type="text"
+              name="fabric"      
+              disabled="disabled"
+              value={formData.fabric}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            />
+         
+          </Form.Group>
+          </Row>
+                <Row>
+                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicConstruction">
+            <Form.Label>Construction </Form.Label>
+            <Form.Control  as="textarea" rows={1} 
+              type="text"
+              name="construction"   
+              disabled="disabled"
+              value={formData.construction}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            />      
+          </Form.Group>
+                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWidth">
+                  <Form.Label>Width </Form.Label>
+                   <Form.Control  as="textarea" rows={1} 
+              type="text"
+              name="width"   
+              disabled="disabled"
+              value={formData.width}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            />          
+                </Form.Group>
+                </Row>
+                                
+                <Row>
+                      <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicFabric">
+                                  <Form.Label>Party DC No </Form.Label>
+                                  <Form.Control
+                                    type="text"
+                                    name="customerdc"      
+                                    disabled="disabled"
+                                    value={formData.customerdc}                                   
+                                    onChange={(e) =>  setFormData((prevData) => ({
+                                      ...prevData,
+                                      [e.target.name]: e.target.value // Update the value of the specific input field
+                                    }))}   
+                                      
+                                  />       
+                                </Form.Group>
+                                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicFabric">
+                                  <Form.Label>Pining </Form.Label>
+                                  <Form.Control
+                                    type="text"
+                                    name="pining"   
+                                    disabled="disabled"
+                                    value={formData.pining}                                  
+                                    onChange={(e) =>  setFormData((prevData) => ({
+                                      ...prevData,
+                                      [e.target.name]: e.target.value // Update the value of the specific input field
+                                    }))}   
+                                      
+                                  />       
+                                </Form.Group>
+       
+                    </Row>
+                <Row>         
+                
+                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formNoOfPcs">
+                  <Form.Label>Process Type</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="ptype"             
+                    value={formData.ptype}                   
+                    onChange={(e) =>  setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }))} 
+                    disabled 
+                  />       
+                </Form.Group>
+                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formFabricType">
+                <Form.Label>Fabric Type </Form.Label>
+               <Form.Control
+                    type="text"
+                    name="ftype"             
+                    value={formData.ftype}                   
+                    onChange={(e) =>  setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }))                   
+                   }
+                      disabled 
+                  />   
+                </Form.Group>
+                </Row>
+                <Row>         
+                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formNoOfPcs">
+                  <Form.Label>No of pcs </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="noofpcs"             
+                    value={formData.noofpcs}
+                    onKeyUp={handleKeyUp}
+                    onChange={(e) =>  setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }))} 
+                    required 
+                  />       
+                </Form.Group>
+                 <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicRemarks">
+                  <Form.Label>Remarks </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="remarks"                   
+                    value={formData.remarks}
+                    onKeyUp={handleKeyUp}
+                    onChange={(e) =>  setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }))}  
+                      
+                  />       
+                </Form.Group>
+                
+                </Row>
+                <Row>
+                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
+                  <Form.Label>Weight </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="weight"
+                   
+                    value={formData.weight}
+                    onKeyUp={handleKeyUp}
+                    onChange={(e) =>  setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }))} 
+                    required 
+                  />       
+                </Form.Group>
+               
+                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicGmeter">
+                  <Form.Label>Gmeter </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="gmeter"
+                   
+                    value={formData.gmeter}
+                    onKeyUp={handleKeyUp}
+                    onChange={(e) =>  setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }))}  
+                      
+                  />       
+                </Form.Group>
+                </Row>
+                
+               {isReturn && <Row>
+                  
+         <Form.Group className="col-6 col-sm-6 mb-3" controlId="returnWeight">
+                  <Form.Label>Return Weight </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="rweight"             
+                    value={formData.rweight}
+                    onKeyUp={handleKeyUp}
+                    onChange={(e) =>  {setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    }))
+                    checkStock(e);
+                  } }
+                     
+                    required 
+                  />       
+                </Form.Group>
+                <Form.Group className="col-6 col-sm-6 mb-3" controlId="returnMeter">
+                  <Form.Label>Return Meter</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="rmeter"             
+                    value={formData.rmeter}
+                    onKeyUp={handleKeyUp}
+                    onChange={(e) =>  {setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value // Update the value of the specific input field
+                    })) 
+                    checkStock(e);
+                  } }
+                    required 
+                  />       
+                </Form.Group>
+      
+                </Row>}
+                <Row>
+                <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicaglm">
+                                     <Button variant="secondary" onClick={handleClose1}>Close</Button>
+                                               </Form.Group>
+                                               <Form.Group style={{textAlign:"right"}} className="col-6 col-sm-6 mb-3" controlId="formBasicaglm">
+                                                 <Button disabled={isSaving} variant="primary" type="submit" >
+                                                 Save
+                                                 </Button>
+                                                 </Form.Group>
+                                           
+                                              
+                </Row>
+                </Form>
+              </Modal.Body>
+              <Modal.Footer>
+                
+              </Modal.Footer>
+            </Modal>
       </Container>
         </div>
         

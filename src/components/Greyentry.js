@@ -240,6 +240,21 @@ const handleColumnChange = (e) => {
       }
          
     };
+
+      const checkStock = (event) => {
+    const { name, value } = event.target;
+    let stock = 0;    
+    if(name ==="rweight"){
+      stock = formData.weight;      
+    }else if(name ==="rmeter"){
+      stock = formData.gmeter;       
+    }
+   
+    if(parseFloat(stock) < parseFloat(value)){
+      alert("Final value should be lesser than stock value");
+      event.target.value=0;
+    }
+  }
     
      const EntryPrint = (selectedRows)=>{
         
@@ -470,7 +485,7 @@ white-space: normal !important;
                 {user && user.role !=="SP2" && <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>}
                 {user && user.role !=="SP2" && user.role !=="SP1" && <Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item>}
                 {user && user.role==="admin" && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-                 {user && user.role==="admin" && <Dropdown.Item href="#" onClick={returnhandle}>Return</Dropdown.Item>}
+                 {user && user.role==="admin1" && <Dropdown.Item href="#" onClick={returnhandle}>Return</Dropdown.Item>}
                 <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
@@ -802,10 +817,13 @@ white-space: normal !important;
               name="rweight"             
               value={formData.rweight}
               onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
+              onChange={(e) =>  {setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
+              }))
+              checkStock(e);
+            } }
+               
               required 
             />       
           </Form.Group>
@@ -816,10 +834,12 @@ white-space: normal !important;
               name="rmeter"             
               value={formData.rmeter}
               onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
+              onChange={(e) =>  {setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
+              })) 
+              checkStock(e);
+            } }
               required 
             />       
           </Form.Group>
