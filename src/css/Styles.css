@@ -201,3 +201,13 @@ table.dataTable{margin-top: 1rem !important;width: 99% !important;margin: auto}
     display: table-header-group !important;
   }
 }
+
+@keyframes blink {
+  0% { background-color: transparent; }
+  50% { background-color: #00ffd5; }
+  100% { background-color: transparent; }
+}
+
+.blink-animation {
+  animation: blink 1s ease-in-out;
+}

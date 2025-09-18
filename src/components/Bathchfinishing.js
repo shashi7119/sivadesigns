@@ -18,12 +18,15 @@ DataTable.use(FixedHeader);DataTable.use(DT);
 function Batchfinishing() {
   const table = useRef();
   const [tableData, setTableData] = useState([ ]);
+  const [isBlinking, setIsBlinking] = useState(false);
+   const [isBlinking1, setIsBlinking1] = useState(false);
+  
   const { user , isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
-      bid: '', batch_weight: '0', batch_gmeter: '0', 
+      bid: '', batch_weight: '0', batch_gmeter: '0',  batch_width: '0', 
       final_weight: '',final_gmeter: '',finishing: '',final_width: '',partial:''
-      ,pide:'',pining:'',noofpcs:'',  partial_weight: '',  partial_gmeter: '' ,  loss: '' 
-      ,  shrinkage: '' 
+      ,pide:'',pining:'',noofpcs:'',  partial_weight: '',  partial_gmeter: '' 
+      ,partial_noofpcs: '' ,  loss: ''  ,  shrinkage: '' 
     });  
     const [fetch, setFetch] = useState(false);
      const [show, setShow] = useState(false);
@@ -33,7 +36,8 @@ function Batchfinishing() {
     ...prevData,
     partial: false,
     partial_weight: '',
-    partial_gmeter: ''
+    partial_gmeter: '',
+    loss: '', shrinkage: ''
   }));
   setShow(false);
 };
@@ -200,8 +204,12 @@ function Batchfinishing() {
 
       const match2 = dataArr[0][0].match(/data-meter="([^"]*)"/);
       const value2 = match2 ? match2[1] : null;
+
+       const match3 = dataArr[0][0].match(/data-noofpcs="([^"]*)"/);
+      const value3 = match3 ? match3[1] : null;
       
       formData.bid = dataArr[0][0];
+      formData.batch_width = dataArr[0][9];
       formData.batch_weight = dataArr[0][10];
       formData.batch_gmeter = dataArr[0][11];
       formData.finishing    = dataArr[0][15];
@@ -210,6 +218,7 @@ function Batchfinishing() {
       formData.final_gmeter = "";
       formData.partial_weight = value1;
       formData.partial_gmeter = value2;
+      formData.partial_noofpcs = value3;
       setFormData(formData);
           handleShow();           
   }    
@@ -285,6 +294,10 @@ function Batchfinishing() {
       totweight = parseFloat(value ) + parseFloat(formData.partial_weight ); 
       diff= parseFloat(formData.batch_weight) - parseFloat(totweight);
       formData.loss = diff > 0 ? ((diff / parseFloat(formData.batch_weight)) * 100).toFixed(2) : '0';
+
+      // Trigger blink animation
+    setIsBlinking(true);
+    setTimeout(() => setIsBlinking(false), 1000); // Reset after 1 second
       
      // setFormData(formData);
     }else if(name ==="final_gmeter"){
@@ -293,6 +306,11 @@ function Batchfinishing() {
       diff= parseFloat(formData.batch_gmeter) - parseFloat(totweight);
       formData.shrinkage = diff > 0 ? ((diff / parseFloat(formData.batch_gmeter)) * 100).toFixed(2) : '0';      
       //setFormData(formData);
+
+       // Trigger blink animation
+    setIsBlinking1(true);
+    setTimeout(() => setIsBlinking1(false), 1000); // Reset after 1 second
+
     }
    
     if((parseFloat(stock) < parseFloat(value)) && (formData.finishing !== "Hydro+stenter")){
@@ -433,62 +451,47 @@ function Batchfinishing() {
           </Modal.Header>
           <Modal.Body className="p-6">
             <Form className="space-y-4">
-              <Row className="flex items-center space-x-4">
-                <Form.Group className="col-5 mb-3">
+              <Row className="flex items-center">
+                <Form.Group className="col-3 ">
                   <Form.Label className="block text-sm font-medium text-gray-700">
-                    Batch Weight
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="batch_weight"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    value={formData.batch_weight}
-                    disabled
-                  />
+                   Batch Weight : <strong>{formData.batch_weight}</strong>
+                  </Form.Label>                  
                 </Form.Group>
-                <Form.Group className="col-5 mb-3">
+                <Form.Group className="col-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
-                    Batch Meter
+                   Batch Meter : <strong>{formData.batch_gmeter}</strong>
                   </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="batch_gmeter"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    value={formData.batch_gmeter}
-                    disabled
-                  />
-                </Form.Group>
+                  </Form.Group>
+                
+                   <Form.Group className="col-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                   Batch Width : <strong>{formData.batch_width}</strong>
+                  </Form.Label>
+                  </Form.Group>
               </Row>
               {!formData.partial && (
   <Row>
-    <Form.Group className="col-5 mb-3">
+    <Form.Group className="col-3">
       <Form.Label className="block text-sm font-medium text-gray-700">
-        Partial Weight
-      </Form.Label>
-      <Form.Control
-        type="text"
-        name="partial_weight"
-        value={formData.partial_weight}
-       disabled
-      />
+        Partial Weight : <strong>{formData.partial_weight}</strong>
+      </Form.Label>     
     </Form.Group>
 
-    <Form.Group className="col-5 mb-3">
+    <Form.Group className="col-3">
       <Form.Label className="block text-sm font-medium text-gray-700">
-        Partial Meter
-      </Form.Label>
-      <Form.Control
-        type="text"
-        name="partial_gmeter"
-        value={formData.partial_gmeter}
-        disabled
-      />
+        Partial Meter :  <strong>{formData.partial_gmeter}</strong>
+      </Form.Label>     
+    </Form.Group>
+    <Form.Group className="col-3">
+      <Form.Label className="block text-sm font-medium text-gray-700">
+        Partial Noofpcs :  <strong>{formData.partial_noofpcs}</strong>
+      </Form.Label>     
     </Form.Group>
   </Row>
   
 )}
               <Row className="flex items-center space-x-4">
-                <Form.Group className="col-5 mb-3">
+                <Form.Group className="col-5 ">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     Final Weight
                   </Form.Label>
@@ -507,7 +510,7 @@ function Batchfinishing() {
                   } 
                   />
                 </Form.Group>
-                <Form.Group className="col-5 mb-3">
+                <Form.Group className="col-5 ">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     Final Meter
                   </Form.Label>
@@ -614,6 +617,7 @@ function Batchfinishing() {
         type="text"
         name="loss"
         value={formData.loss}
+        className={`${isBlinking ? 'blink-animation' : ''}`}
        disabled
       />
     </Form.Group>
@@ -626,6 +630,7 @@ function Batchfinishing() {
         type="text"
         name="shrinkage"
         value={formData.shrinkage}
+         className={`${isBlinking1 ? 'blink-animation' : ''}`}
         disabled
       />
     </Form.Group>
