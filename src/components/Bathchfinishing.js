@@ -23,7 +23,7 @@ function Batchfinishing() {
   
   const { user , isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
-      bid: '', batch_weight: '0', batch_gmeter: '0',  batch_width: '0', 
+      bid: '', batch_weight: '0', batch_gmeter: '0',  batch_width: '0', batch_noofpcs: '0', 
       final_weight: '',final_gmeter: '',finishing: '',final_width: '',partial:''
       ,pide:'',pining:'',noofpcs:'',  partial_weight: '',  partial_gmeter: '' 
       ,partial_noofpcs: '' ,  loss: ''  ,  shrinkage: '' 
@@ -205,8 +205,11 @@ function Batchfinishing() {
       const match2 = dataArr[0][0].match(/data-meter="([^"]*)"/);
       const value2 = match2 ? match2[1] : null;
 
-       const match3 = dataArr[0][0].match(/data-noofpcs="([^"]*)"/);
+      const match3 = dataArr[0][0].match(/data-noofpcs="([^"]*)"/);
       const value3 = match3 ? match3[1] : null;
+
+      const match4 = dataArr[0][0].match(/data-bnoofpcs="([^"]*)"/);
+      const value4 = match4 ? match4[1] : null;
       
       formData.bid = dataArr[0][0];
       formData.batch_width = dataArr[0][9];
@@ -219,6 +222,7 @@ function Batchfinishing() {
       formData.partial_weight = value1;
       formData.partial_gmeter = value2;
       formData.partial_noofpcs = value3;
+      formData.batch_noofpcs = value4;
       setFormData(formData);
           handleShow();           
   }    
@@ -466,6 +470,11 @@ function Batchfinishing() {
                    <Form.Group className="col-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
                    Batch Width : <strong>{formData.batch_width}</strong>
+                  </Form.Label>
+                  </Form.Group>
+                  <Form.Group className="col-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                   Batch No Of Pcs : <strong>{formData.batch_noofpcs}</strong>
                   </Form.Label>
                   </Form.Group>
               </Row>
