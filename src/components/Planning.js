@@ -218,6 +218,30 @@ function Planning() {
 
   };
 
+  const checkStock = (event) => {
+    
+    const { name, value } = event.target;
+    const planid = event.target.dataset.planid;
+    let stock = 0; 
+    formData.forEach((row, index) => {
+      if(row.planid === planid){
+        if (name === "actual_weight") {
+          stock = row.planned_weight;
+        } else if (name === "actual_gmeter")  {
+          stock = row.planned_gmeter;
+        }
+
+        if (parseFloat(stock) < parseFloat(value)) {
+          alert("Final value should be lesser than stock value");
+          event.target.value = 0;
+        }
+      }
+
+      
+    });
+  }
+  
+
 
   const rowClick = (e) => {
     e.preventDefault();
@@ -405,13 +429,16 @@ function Planning() {
             <Form.Control
               type="text"
               placeholder="Batch Weight"
-              name="actual_weight"               
-              value={row.actual_weight}               
-              onChange={(e) =>  setFormData((prevRows) =>
+              name="actual_weight"   
+              data-planid={row.planid}              
+              value={row.actual_weight}
+              onChange={(e) => { setFormData((prevRows) =>
                 prevRows.map((row1) =>
                   row1.planid === row.planid ? { ...row1, actual_weight:e.target.value} : row1
                 )
               )
+              checkStock(e);
+            }
             } 
               required 
               
@@ -427,13 +454,16 @@ function Planning() {
             <Form.Control
               type="text"
               placeholder="Batch Gmeter"
-             name="actual_gmeter"               
+             name="actual_gmeter" 
+             data-planid={row.planid}  
               value={row.actual_gmeter}               
-              onChange={(e) =>  setFormData((prevRows) =>
+              onChange={(e) =>  {setFormData((prevRows) =>
                 prevRows.map((row1) =>
                   row1.planid === row.planid ? { ...row1, actual_gmeter:e.target.value} : row1
                 )
               )
+              checkStock(e);
+            }
             } 
               required
             />       
