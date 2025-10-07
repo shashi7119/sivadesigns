@@ -1,8 +1,6 @@
-import React, { useState, useRef,useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Container, Row, Dropdown, Form } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
-import '../css/Styles.css';
-import '../css/DataTable.css';
 import axios from 'axios';
 import DataTable from 'datatables.net-react';
 import Select from 'datatables.net-select-dt';
@@ -10,6 +8,23 @@ import FixedHeader from 'datatables.net-fixedcolumns-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import DT from 'datatables.net-dt';
 import $ from 'jquery';
+import '../css/Styles.css';
+import '../css/DataTable.css';
+
+// Add styles for editable cells
+const editableCellStyles = document.createElement('style');
+editableCellStyles.innerHTML = `
+  .editable-cell { cursor: pointer; }
+  .editable-cell:hover { background-color: #e9ecef !important; }
+  .editing { padding: 0 !important; }
+  .editing input { width: 100%; height: 100%; padding: 8px; box-sizing: border-box; }
+  .not-authorized .editable-cell { cursor: not-allowed; }
+  .not-authorized .editable-cell:hover { background-color: transparent !important; }
+  td:not(.editable-cell) { cursor: default; }
+  .not-authorized .editable-cell { cursor: not-allowed; background-color: transparent !important; }
+  .not-authorized .editable-cell:hover { background-color: transparent !important; }
+`;
+document.head.appendChild(editableCellStyles);
 
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
@@ -21,18 +36,26 @@ function Batch() {
 
 // Reload DataTable when tab becomes active (user returns after idle)
   useEffect(() => {
+    const currentTable = table.current;
+    
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && table.current) {
-        // Reload DataTable data
-        const api = table.current.dt();
+      if (document.visibilityState === 'visible' && currentTable) {
+        const api = currentTable.dt();
         api.ajax.reload();
       }
     };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      // Clean up any existing cell edit states
+      $('.editing input').remove();
+      $('.editing').removeClass('editing');
+      $(document).off('mousedown.cellEdit');
     };
   }, []);
+
 
       const [searchState, setSearchState] = useState('');
       if (!isAuthenticated) {
@@ -191,9 +214,194 @@ function Batch() {
   }
   };
   
-    const handleColumnChange = (e) => {
+      const handleColumnChange = (e) => {
     setSearchState(e.target.value);
-   
+  };
+
+  const handleCellEdit = (cell) => {
+    // Check if user has permission to edit
+    const allowedRoles = ['admin', 'PA', 'editor'];
+    if (!allowedRoles.includes(user.role)) {
+      alert('You do not have permission to edit this data');
+      return;
+    }
+
+    // Clear any existing edit state
+    $('.editing input').trigger('blur');
+    $('.editing').removeClass('editing');
+
+    const $cell = $(cell);
+    const api = table.current.dt();
+    
+    // Get cell data and position
+    const cellData = api.cell(cell).data();
+    const currentValue = cellData || $cell.text();
+    const cellIndex = api.cell(cell).index();
+    
+    if (!cellIndex) return;
+    const columnIdx = cellIndex.column;
+    const rowIdx = cellIndex.row;
+    
+    // Only allow editing for Weight (11) and GMeter (12) columns
+    if (columnIdx !== 11 && columnIdx !== 12) return;
+
+    // Get the row data before editing
+    const rowData = api.row(rowIdx).data();
+    if (!rowData || !rowData[0]) return;
+    //const batchId = rowData[4];
+    const match =  rowData[4].match(/data-pide="([^"]*)"/);
+      const batchId = match ? match[1] : null;
+
+    // Store original content
+    const originalContent = $cell.html();
+    
+    // Create input element
+    const $input = $('<input type="text">')
+      .val(currentValue)
+      .addClass('form-control')
+      .css({
+        width: '100%',
+        height: '100%',
+        padding: '5px',
+        boxSizing: 'border-box',
+        border: '1px solid #007bff'
+      });
+
+    // Replace cell content with input
+    $cell.html($input).addClass('editing');
+    $input.focus().select();
+
+    // Function to restore original state
+    const restoreOriginal = () => {
+      // Remove all event handlers first
+      $input.off('keydown mousedown blur');
+      $(document).off('mousedown.cellEdit');
+      
+      // Remove editing class and restore original content
+      $cell.removeClass('editing');
+      $cell.empty().html(originalContent);
+      
+      // Cleanup any floating input elements
+      $('.editing input').remove();
+      $('.editing').removeClass('editing');
+    };
+
+    // Function to save changes
+    const saveChanges = async () => {
+      const newValue = $input.val().trim();
+      
+      if (newValue === currentValue) {
+        restoreOriginal();
+        return;
+      }
+
+      try {
+        await axios.post(`${API_URL}/updateBatch`, {
+          batchId: batchId,
+          columnIndex: columnIdx,
+          oldValue: currentValue,
+          newValue: newValue,
+          columnName: api.settings()[0].aoColumns[columnIdx].data
+        });
+
+        // Update DataTable
+        const updatedData = [...rowData];
+        updatedData[columnIdx] = newValue;
+        api.row(rowIdx).data(updatedData);
+        api.draw(false);
+
+        // Cleanup
+        restoreOriginal();
+      } catch (error) {
+        console.error('Update failed:', error);
+        alert('Failed to update data');
+        restoreOriginal();
+      }
+    };
+
+    // Handle clicks outside the editing cell
+    const handleOutsideClick = function(e) {
+      if (!$(e.target).closest($cell).length && !$(e.target).is($input)) {
+        e.preventDefault();
+        e.stopPropagation();
+        restoreOriginal();
+      }
+    };
+
+    // Delay binding the document click handler
+    setTimeout(() => {
+      $(document).on('mousedown.cellEdit', handleOutsideClick);
+    }, 0);
+
+    // Handle input events
+    $input
+      .on('keydown.cellEdit', function(e) {
+        e.stopPropagation();
+        
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveChanges();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          restoreOriginal();
+        }
+      })
+      .on('mousedown.cellEdit', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+      })
+      .on('dblclick.cellEdit', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+      })
+      .on('click.cellEdit', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+      })
+      .on('blur.cellEdit', function(e) {
+        // Only handle blur if we're not clicking inside the cell
+        if (!$(e.relatedTarget).closest($cell).length) {
+          // Small delay to allow other events to process
+          setTimeout(() => {
+            if ($cell.hasClass('editing')) {
+              restoreOriginal();
+            }
+          }, 50);
+        }
+      });
+  };
+
+
+
+
+  const updateBatchData = (rowData, columnIndex, newValue) => {
+    console.log('Updating batch data:', rowData, columnIndex, newValue);
+    //const batchId = rowData[4]; // Assuming first column is batch ID
+    const match =  rowData[4].match(/data-pide="([^"]*)"/);
+    const batchId = match ? match[1] : null;
+    const oldValue = rowData[columnIndex]; // Get the current value before update
+    const api = table.current.dt();
+    const columnName = api.settings()[0].aoColumns[columnIndex].data;
+    
+    const updateData = {
+      batchId: batchId,
+      columnIndex: columnIndex,
+      oldValue: oldValue,
+      newValue: newValue,
+      columnName: columnName
+    };
+
+    axios.post(`${API_URL}/updateBatch`, updateData)
+      .then(function (response) {
+        console.log('Update successful:', response);
+        // Refresh the table data
+        const api = table.current.dt();
+        api.ajax.reload(null, false);
+      })
+      .catch(function (error) {
+        console.error('Update failed:', error);
+        alert('Failed to update data. Please try again.');
+      });
   };
 
   return (
@@ -239,17 +447,94 @@ function Batch() {
           <DataTable 
             ref={table}
             options={{
+              drawCallback: function(settings) {
+                const api = this.api();
+                const $body = $(api.table().body());
+                
+                // Remove any existing handlers
+                $body.off('dblclick mousedown');
+                
+                // Prevent single clicks from interfering
+                $body.on('mousedown', 'td', function(e) {
+                  if (e.detail === 1) {
+                    e.stopPropagation();
+                  }
+                });
+
+                // Handle double-click only for Weight and GMeter columns
+                $body.on('dblclick', 'td', function(e) {
+                  const allowedRoles = ['admin', 'PA', 'editor'];
+                  if (!allowedRoles.includes(user.role)) {
+                    return; // Silently ignore if user doesn't have permission
+                  }
+                  
+                  const cell = api.cell(this);
+                  const columnIdx = cell.index().column;
+                  if (columnIdx !== 11 && columnIdx !== 12) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!$(this).hasClass('editing')) {
+                    handleCellEdit(this);
+                  }
+                });
+              },
               scrollX: true,
               scrollY: '60vh',
               scrollCollapse: true,
               fixedColumns: {
                 left: 2
               },
+              altEditor: true,
+              onEditRow: function(datatable, rowdata, success, error) {
+                const api = datatable.dt();                
+                //const batchId = rowdata[4];
+                const match =  rowdata[4].match(/data-pide="([^"]*)"/);
+                const batchId = match ? match[1] : null;
+                console.log('Editing row:', rowdata);
+                
+                axios.post(`${API_URL}/updateBatch`, {
+                  batchId: batchId,
+                  rowData: rowdata
+                })
+                .then(function (response) {
+                  success(response);
+                  api.ajax.reload();
+                })
+                .catch(function (error) {
+                  error(error);
+                  alert('Failed to update data');
+                });
+              },
+              editable: {
+                enable: true,
+                mode: 'inline',
+                submit: 'blur',
+                onBlur: true
+              },
               order: [[0, 'desc']],
               paging: true,
               processing: true,
               serverSide: true,
               select: { style: 'multi' },
+              keys: true,
+              editor: true,
+              cellEdit: {
+                enable: true,
+                mode: 'click',
+                blurToSave: true,
+                beforeSave: (oldValue, newValue, row, column) => {
+                  // Don't update if value hasn't changed
+                  if (oldValue === newValue) return;
+                  
+                  // Don't allow empty values
+                  if (newValue.trim() === '') {
+                    alert('Empty values are not allowed');
+                    return false;
+                  }
+                  
+                  updateBatchData(row.data(), column.index(), newValue);
+                }
+              },
               ajax: {
                 url: `${API_URL}/batches1`,
                 type: 'POST',
@@ -265,9 +550,10 @@ function Batch() {
               lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
               columns: [
                 {
-                    className: "", // Add a class for the toggle button                    
+                    className: "",                   
                     data: "0",
-                    defaultContent: ""
+                    defaultContent: "",
+                    editable: false // Batch ID should not be editable
                 },
                 { data: "1" },
                 { data: "2" },
@@ -279,8 +565,20 @@ function Batch() {
                 { data: "8" },
                 { data: "9" },
                 { data: "10" },
-                { data: "11" },
-                { data: "12" },
+                { 
+                  data: "11",
+                  className: "editable-cell",
+                  createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).css('background-color', '#f8f9fa');
+                  }
+                },
+                { 
+                  data: "12",
+                  className: "editable-cell",
+                  createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).css('background-color', '#f8f9fa');
+                  }
+                },
                 { data: "13" },
                 { data: "14" },
                 { data: "15" },
