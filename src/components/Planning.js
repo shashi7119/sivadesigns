@@ -219,27 +219,56 @@ function Planning() {
   };
 
   const checkStock = (event) => {
-    
     const { name, value } = event.target;
     const planid = event.target.dataset.planid;
-    let stock = 0; 
-    formData.forEach((row, index) => {
-      if(row.planid === planid){
-        if (name === "actual_weight") {
-          stock = row.planned_weight;
-        } else if (name === "actual_gmeter")  {
-          stock = row.planned_gmeter;
-        }
+    let stock = 0;
 
-        if (parseFloat(stock) < parseFloat(value)) {
-          alert("Final value should be lesser than stock value");
-          event.target.value = 0;
-        }
-      }
+    // If value is empty, don't validate
+    if (!value || value.trim() === '') {
+      return;
+    }
 
-      
-    });
-  }
+    const row = formData.find(r => r.planid === planid);
+    if (!row) return;
+
+    if (name === "actual_weight") {
+      stock = parseFloat(row.planned_weight);
+    } else if (name === "actual_gmeter") {
+      stock = parseFloat(row.planned_gmeter);
+    }
+
+    if (!stock) {
+      alert("No stock value available for validation");
+      return;
+    }
+
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      alert("Please enter a valid number");
+      setFormData(prevRows =>
+        prevRows.map(row1 =>
+          row1.planid === planid ? { ...row1, [name]: "" } : row1
+        )
+      );
+      event.target.value = "";
+      return;
+    }
+
+    const cstock = stock * 0.05;
+    const lstock = stock - cstock;
+    const hstock = stock + cstock;
+
+    if (numValue < lstock || numValue > hstock) {
+      alert(`Value must be between ${lstock.toFixed(2)} and ${hstock.toFixed(2)}`);
+      setFormData(prevRows =>
+        prevRows.map(row1 =>
+          row1.planid === planid ? { ...row1, [name]: "" } : row1
+        )
+      );
+      event.target.value = "";
+      return;
+    }
+  };
   
 
 
@@ -432,14 +461,14 @@ function Planning() {
               name="actual_weight"   
               data-planid={row.planid}              
               value={row.actual_weight}
-              onChange={(e) => { setFormData((prevRows) =>
-                prevRows.map((row1) =>
-                  row1.planid === row.planid ? { ...row1, actual_weight:e.target.value} : row1
+              onChange={(e) => {
+                setFormData((prevRows) =>
+                  prevRows.map((row1) =>
+                    row1.planid === row.planid ? { ...row1, actual_weight: e.target.value} : row1
+                  )
                 )
-              )
-              checkStock(e);
-            }
-            } 
+              }}
+              onBlur={(e) => checkStock(e)} 
               required 
               
             />       
@@ -457,14 +486,14 @@ function Planning() {
              name="actual_gmeter" 
              data-planid={row.planid}  
               value={row.actual_gmeter}               
-              onChange={(e) =>  {setFormData((prevRows) =>
-                prevRows.map((row1) =>
-                  row1.planid === row.planid ? { ...row1, actual_gmeter:e.target.value} : row1
+              onChange={(e) => {
+                setFormData((prevRows) =>
+                  prevRows.map((row1) =>
+                    row1.planid === row.planid ? { ...row1, actual_gmeter: e.target.value} : row1
+                  )
                 )
-              )
-              checkStock(e);
-            }
-            } 
+              }}
+              onBlur={(e) => checkStock(e)} 
               required
             />       
           </Form.Group>
