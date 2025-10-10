@@ -540,6 +540,7 @@ function Batch() {
                 type: 'POST',
                 data: function (d) {
                   d.searchcol = $(".tsearch").val();
+                   d.user = user.user; 
                   if (d.length === -1) {
                     d.length = 25;
                   }

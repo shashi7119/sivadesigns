@@ -55,15 +55,32 @@ function Batchfinishing() {
      // Fetch data from backend API
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/finishing`);
-        setTableData(response.data);
+        axios.get(`${API_URL}/finishing`, {
+  params: {
+    user: user.role
+  }
+})
+.then(response => {
+ setTableData(response.data);
          setShow(false);
           setIsSaving(false);
-      } catch (error) {
-        console.log(error);
-      } 
+})
+.catch(error => {
+  // Handle error
+  if (error.response) {
+    // Server responded with error
+    console.log(error.response.data);
+  } else if (error.request) {
+    // Request made but no response
+    console.log('No response received');
+  } else {
+    // Error setting up request
+    console.log('Error:', error.message);
+  }
+});
     };
+
+  
     user && fetchData();
   }, [user,fetch]);
 

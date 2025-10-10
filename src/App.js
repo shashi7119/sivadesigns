@@ -36,6 +36,7 @@ import PrintPO from './components/PrintPurchaseOrder';
 import POList from './components/PurchaseOrderList';
 import Return from './components/Return';
 import Reports from './components/Reports';
+import BatchEdit from './components/BatchEdit';
 
 function App() {
 
@@ -202,6 +203,12 @@ function App() {
                <Role allowedRoles={["admin","purchase","PA"]} userRole={userRole}>
               <POList />
               </Role>
+              } />
+
+              <Route path="/batchedit/:planid" element={
+             
+              <BatchEdit />
+              
               } />
   
           </Routes>
