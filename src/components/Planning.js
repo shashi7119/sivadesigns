@@ -18,6 +18,7 @@ DataTable.use(FixedHeader);DataTable.use(DT);
 function Planning() {
   const table = useRef();
   const [show, setShow] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState([{
     planid: '', customer:'', width:'',construction:'',inwardno:'',
     planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',noofpcs:'',sono:''
@@ -199,21 +200,29 @@ function Planning() {
 
    const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log('Form Submitted with Data:', formData);
-    //table.current.dt().ajax.reload(null, false);
- 
-    axios.post(`${API_URL}/addBatch1`, formData)
-  .then(function (response) {
+    
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      console.log('Form Submitted with Data:', formData);
+      
+      const response = await axios.post(`${API_URL}/addBatch1`, formData);
       console.log(response);   
-    setShow(false);
-    setFormData([]);
-    alert("Batch Created!!");
-    let api = table.current.dt();
-    api.rows({ selected: true }).remove().draw();
-  })
-  .catch(function (error) {
-    console.log(error);
-  });
+      setShow(false);
+      setFormData([]);
+      alert("Batch Created!!");
+      let api = table.current.dt();
+      api.rows({ selected: true }).remove().draw();
+    } catch (error) {
+      console.error(error);
+      alert("Error creating batch. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
 
 
   };
@@ -543,9 +552,14 @@ function Planning() {
           <Button 
             variant="primary" 
             onClick={handleSubmit}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            disabled={isSubmitting}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+              isSubmitting 
+                ? 'bg-blue-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
-            Save
+            {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         </Modal.Footer>
       </Modal>
