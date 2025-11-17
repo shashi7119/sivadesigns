@@ -16,10 +16,160 @@ DataTable.use(Responsive);DataTable.use(Select);
 DataTable.use(FixedHeader);DataTable.use(DT);
 function Reports() {
   const table = useRef();
+  const submittedFiltersRef = useRef({});
 
   const [searchState, setSearchState] = useState('');
-  const [selData, setSelData] = useState([]); // Changed from setselData to setSelData
+  const [selData, setSelData] = useState([]);
   const { user, isAuthenticated } = useAuth();
+
+  // Helper to get last 7 days
+  /*function getDefaultDates() {
+    const today = new Date();
+    const prior = new Date();
+    prior.setDate(today.getDate() - 6);
+    const toDate = today.toISOString().slice(0, 10);
+    const fromDate = prior.toISOString().slice(0, 10);
+    return { fromDate, toDate };
+  }*/
+
+  // Filter state
+  const [filters, setFilters] = useState({
+    fromDate: '',
+    toDate: '',
+    customer: '',
+    machine: '',
+    fabric: '',
+    shade: '',
+    construction: ''
+  });
+
+  // Options state
+  const [options, setOptions] = useState({
+    customers: [],
+    machines: [],
+    fabrics: [],
+    shades: [],
+    constructions: []
+  });
+
+  // Fetch customer and machine on mount
+  React.useEffect(() => {
+    const fetchMasters = async () => {
+      try {
+        const [customers, machines,fabrics,constructions] = await Promise.all([
+          fetch(`${API_URL}/getMasters?type=customer`).then(r => r.json()),
+          fetch(`${API_URL}/getMasters?type=machine`).then(r => r.json()),
+          fetch(`${API_URL}/getMasters?type=fabric`).then(r => r.json()),
+          fetch(`${API_URL}/getMasters?type=construction`).then(r => r.json())
+        ]);
+
+       setOptions(o => ({
+  ...o,
+  customers: customers.map(row => ({ id: row[0], name: row[1] })),
+  machines: machines.map(row => ({ id: row[0], name: row[1] })),
+  fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),          
+  constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
+}));
+     
+      } catch (e) { console.error(e); }
+    };
+    fetchMasters();
+  }, []);
+
+  // Function to fetch masters (reusable)
+  const fetchMastersData = async () => {
+    try {
+      const [customers, machines,fabrics,constructions] = await Promise.all([
+        fetch(`${API_URL}/getMasters?type=customer`).then(r => r.json()),
+        fetch(`${API_URL}/getMasters?type=machine`).then(r => r.json()),
+        fetch(`${API_URL}/getMasters?type=fabric`).then(r => r.json()),
+        fetch(`${API_URL}/getMasters?type=construction`).then(r => r.json())
+      ]);
+
+       setOptions(o => ({
+  ...o,
+  customers: customers.map(row => ({ id: row[0], name: row[1] })),
+  machines: machines.map(row => ({ id: row[0], name: row[1] })),
+  fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),          
+  constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
+}));
+     
+    } catch (e) { console.error(e); }
+  };
+
+  // Fetch fabric, shade, construction when customer or date changes
+  React.useEffect(() => {
+    if (!filters.customer) {
+      setOptions(o => ({ ...o, fabrics: [], shades: [], constructions: [] }));
+      setFilters(f => ({ ...f, fabric: '', shade: '', construction: '' }));
+      return;
+    }
+    const fetchDependent = async () => {
+      try {
+        const params = `customer=${encodeURIComponent(filters.customer)}&fromDate=${encodeURIComponent(filters.fromDate)}&toDate=${encodeURIComponent(filters.toDate)}`;
+        const [fabrics, shades, constructions] = await Promise.all([
+          fetch(`${API_URL}/getFilterMasters?type=fabric&${params}`).then(r => r.json()),
+          fetch(`${API_URL}/getFilterMasters?type=shade&${params}`).then(r => r.json()),
+          fetch(`${API_URL}/getFilterMasters?type=construction&${params}`).then(r => r.json())
+        ]);
+        setOptions(o => ({
+          ...o,
+          fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),
+          shades: shades.map(row => ({ id: row[0], name: row[1] })),
+          constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
+        }));
+      } catch (e) { console.error(e); }
+    };
+    fetchDependent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.customer]);
+
+  // Handle filter change (do not reload table)
+  const handleFilterChange = (name, value) => {
+    setFilters(f => ({ ...f, [name]: value }));
+    if (name === 'customer') {
+      setFilters(f => ({ ...f, fabric: '', shade: '', construction: '', customer: value }));
+    }
+
+    
+    // Do NOT reload table here
+  };
+
+  // Handle submit button click
+  const handleSubmitFilters = () => {    
+    submittedFiltersRef.current = filters;
+    if (table.current && table.current.dt) {
+      table.current.dt().ajax.reload();
+    }
+  };
+
+  // Handle reset button click
+  const handleResetFilters = () => {
+    //const defaultDates = getDefaultDates();
+    setFilters({
+      fromDate: '',
+      toDate: '',
+      customer: '',
+      machine: '',
+      fabric: '',
+      shade: '',
+      construction: ''
+    });
+    submittedFiltersRef.current = {
+      fromDate: '',
+      toDate: '',
+      customer: '',
+      machine: '',
+      fabric: '',
+      shade: '',
+      construction: ''
+    };
+    // Call fetchMasters to reload all options
+    fetchMastersData();
+    if (table.current && table.current.dt) {
+      table.current.dt().ajax.reload();
+    }
+  };
 
 
 
@@ -118,10 +268,7 @@ function Reports() {
     newWindow.document.write(`<pre>${printableContent}</pre>`);
     newWindow.print();
     selData.length=0;       
-  };
-
-
- 
+  }; 
 
   
   const handleColumnChange = (e) => {
@@ -156,7 +303,96 @@ function Reports() {
          
         </Row>
 
+        {/* Filter Row */}
+        <div className="row mb-3">
+          <div className="col-md-2">
+            <Form.Group>
+              <Form.Label>From Date</Form.Label>
+              <Form.Control type="date" value={filters.fromDate} onChange={e => handleFilterChange('fromDate', e.target.value)} />
+            </Form.Group>
+          </div>
+          <div className="col-md-2">
+            <Form.Group>
+              <Form.Label>To Date</Form.Label>
+              <Form.Control type="date" value={filters.toDate} onChange={e => handleFilterChange('toDate', e.target.value)} />
+            </Form.Group>
+          </div>
+          </div>
+          <div className="row mb-3">
+          <div className="col-md-2">
+            <Form.Group>
+              <Form.Label>Customer</Form.Label>
+              <Form.Control
+                list="customer-list"
+                value={filters.customer}
+                onChange={e => handleFilterChange('customer', e.target.value)}
+                placeholder="Type to search..."
+              />
+              <datalist id="customer-list">
+                {options.customers.map(opt => (
+                  <option key={opt.id || opt.name} value={opt.name} />
+                ))}
+              </datalist>
+            </Form.Group>
+          </div>
+          <div className="col-md-2">
+            <Form.Group>
+              <Form.Label>Machine</Form.Label>
+              <Form.Select value={filters.machine} onChange={e => handleFilterChange('machine', e.target.value)}>
+                <option value="">All</option>
+                {options.machines.map(opt => (
+                  <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </div>
+          <div className="col-md-2">
+            <Form.Group>
+              <Form.Label>Fabric</Form.Label>
+              <Form.Select value={filters.fabric} onChange={e => handleFilterChange('fabric', e.target.value)} >
+                <option value="">All</option>
+                {options.fabrics.map(opt => (
+                  <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </div>
+          <div className="col-md-2">
+            <Form.Group>
+              <Form.Label>Shade</Form.Label>
+              <Form.Select value={filters.shade} onChange={e => handleFilterChange('shade', e.target.value)} >
+                <option value="">All</option>
+                {options.shades.map(opt => (
+                  <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </div>
+          <div className="col-md-2">
+            <Form.Group>
+              <Form.Label>Construction</Form.Label>
+              <Form.Control
+                list="construction-list"
+                value={filters.construction}
+                onChange={e => handleFilterChange('construction', e.target.value)}
+                placeholder="Type to search..."
+              />
+              <datalist id="construction-list">
+                {options.constructions.map(opt => (
+                  <option key={opt.id || opt.name} value={opt.name} />
+                ))}
+              </datalist>
+            </Form.Group>
+          </div>
+        </div>
+        {/* Submit button and ...existing code for actions/search... */}
         <div className="flex justify-end mb-4">
+          <button className="btn btn-primary mr-3" onClick={handleSubmitFilters}>
+            Submit
+          </button>
+          <button className="btn btn-secondary mr-3" onClick={handleResetFilters}>
+            Reset
+          </button>
            <div className="col-2 col-sm-2">
             <Dropdown className="">
               <Dropdown.Toggle variant="primary" id="dropdown-basic" 
@@ -204,11 +440,19 @@ function Reports() {
         data: function (d) {
              d.searchcol = $(".tsearch").val();
              d.user = user.user; // send email
+             console.log('Data sent to server:', submittedFiltersRef.current);
+             // Use submitted filters from ref
+             d.fromDate = submittedFiltersRef.current.fromDate || '';
+             d.toDate = submittedFiltersRef.current.toDate || '';
+             d.customer = submittedFiltersRef.current.customer || '';
+             d.machine = submittedFiltersRef.current.machine || '';
+             d.fabric = submittedFiltersRef.current.fabric || '';
+             d.shade = submittedFiltersRef.current.shade || '';
+             d.construction = submittedFiltersRef.current.construction || '';
             if (d.length === -1) {
                 d.length = 25; // Set default page length
               }
               return d;
-           
         },
       },
        pageLength: 25,
