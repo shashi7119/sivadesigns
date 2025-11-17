@@ -322,17 +322,12 @@ function Reports() {
           <div className="col-md-2">
             <Form.Group>
               <Form.Label>Customer</Form.Label>
-              <Form.Control
-                list="customer-list"
-                value={filters.customer}
-                onChange={e => handleFilterChange('customer', e.target.value)}
-                placeholder="Type to search..."
-              />
-              <datalist id="customer-list">
+              <Form.Select value={filters.customer} onChange={e => handleFilterChange('customer', e.target.value)}>
+                <option value="">All</option>
                 {options.customers.map(opt => (
-                  <option key={opt.id || opt.name} value={opt.name} />
+                  <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
                 ))}
-              </datalist>
+              </Form.Select>
             </Form.Group>
           </div>
           <div className="col-md-2">
@@ -371,17 +366,12 @@ function Reports() {
           <div className="col-md-2">
             <Form.Group>
               <Form.Label>Construction</Form.Label>
-              <Form.Control
-                list="construction-list"
-                value={filters.construction}
-                onChange={e => handleFilterChange('construction', e.target.value)}
-                placeholder="Type to search..."
-              />
-              <datalist id="construction-list">
+              <Form.Select value={filters.construction} onChange={e => handleFilterChange('construction', e.target.value)}>
+                <option value="">All</option>
                 {options.constructions.map(opt => (
-                  <option key={opt.id || opt.name} value={opt.name} />
+                  <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
                 ))}
-              </datalist>
+              </Form.Select>
             </Form.Group>
           </div>
         </div>
