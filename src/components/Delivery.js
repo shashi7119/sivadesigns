@@ -413,12 +413,12 @@ white-space: normal !important;
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>Delivery To:</strong></p>
-         <p>${response.data['name']}</p>
-        <p>${response.data['address1']}</p>
-           <p>${response.data['address2']}</p>
-        <p>${response.data['pincode']}</p>
-        <p><strong>GSTIN:</strong> ${response.data['gstin']}</p>
-           <p><strong>Contact:</strong> ${response.data['contact_number']}</p>
+        <p>${response.data['name']}</p>
+        <p>${ (response.data['ship_address1'] !== "" ) ? response.data['ship_address1']:response.data['address1']}</p>
+        <p>${ (response.data['ship_address2'] !== "" ) ? response.data['ship_address2']:response.data['address2']}</p>
+        <p>${ (response.data['ship_pincode'] !== "" ) ? response.data['ship_pincode']:response.data['pincode']}</p>
+        <p><strong>GSTIN:</strong> ${(response.data['ship_gstin'] !== "" ) ? response.data['ship_gstin']:response.data['gstin']}</p>
+        <p><strong>Contact:</strong> ${ (response.data['ship_contact_number'] !== "" ) ? response.data['ship_contact_number']:response.data['contact_number']}</p>
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
         <div class="row"><div class="col-md-4"><p>Construction </p></div> <div class="col-md-6"><p>: ${selectedRows[0][10]}</p></div></div>
