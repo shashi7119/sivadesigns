@@ -322,12 +322,19 @@ function Reports() {
           <div className="col-md-2">
             <Form.Group>
               <Form.Label>Customer</Form.Label>
-              <Form.Select value={filters.customer} onChange={e => handleFilterChange('customer', e.target.value)}>
+              <Form.Control
+                list="customer-list"
+                value={filters.customer}
+                onChange={e => handleFilterChange('customer', e.target.value)}
+                placeholder="Type to search..."
+                autoComplete="off"
+              />
+              <datalist id="customer-list">
                 <option value="">All</option>
                 {options.customers.map(opt => (
                   <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
                 ))}
-              </Form.Select>
+              </datalist>
             </Form.Group>
           </div>
           <div className="col-md-2">
@@ -344,12 +351,19 @@ function Reports() {
           <div className="col-md-2">
             <Form.Group>
               <Form.Label>Fabric</Form.Label>
-              <Form.Select value={filters.fabric} onChange={e => handleFilterChange('fabric', e.target.value)} >
+              <Form.Control
+                list="fabric-list"
+                value={filters.fabric}
+                onChange={e => handleFilterChange('fabric', e.target.value)}
+                placeholder="Type to search..."
+                autoComplete="off"
+              />
+              <datalist id="fabric-list">
                 <option value="">All</option>
                 {options.fabrics.map(opt => (
                   <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
                 ))}
-              </Form.Select>
+              </datalist>
             </Form.Group>
           </div>
           <div className="col-md-2">
@@ -366,12 +380,19 @@ function Reports() {
           <div className="col-md-2">
             <Form.Group>
               <Form.Label>Construction</Form.Label>
-              <Form.Select value={filters.construction} onChange={e => handleFilterChange('construction', e.target.value)}>
+              <Form.Control
+                list="construction-list"
+                value={filters.construction}
+                onChange={e => handleFilterChange('construction', e.target.value)}
+                placeholder="Type to search..."
+                autoComplete="off"
+              />
+              <datalist id="construction-list">
                 <option value="">All</option>
                 {options.constructions.map(opt => (
                   <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
                 ))}
-              </Form.Select>
+              </datalist>
             </Form.Group>
           </div>
         </div>
