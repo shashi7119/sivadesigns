@@ -483,7 +483,7 @@ white-space: normal !important;
 
               <Dropdown.Menu className="mt-2">
                 {user && user.role !=="SP2" && <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>}
-                {user && user.role !=="SP2" && user.role !=="SP1" && <Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item>}
+                {user && user.role !=="grey" && user.role !=="SP1" && <Dropdown.Item href="#" onClick={edithandle}>Edit</Dropdown.Item>}
                 {user && user.role==="admin" && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
                  {user && user.role==="admin1" && <Dropdown.Item href="#" onClick={returnhandle}>Return</Dropdown.Item>}
                 <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>
