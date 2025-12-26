@@ -223,7 +223,7 @@ function Navigation() {
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "SP1" || user.role === "SP2" || user.role === "PA")  && (
+            {user && (user.role === "admin" || user.role === "SP1" ||  user.role === "PA")  && (
               <Menu as="div" className="relative">
                 <Menu.Button className="nav-item w-full">
                   <CircleStackIcon className="h-6 w-6" />
@@ -268,56 +268,56 @@ function Navigation() {
               </Menu>
             )}
 
-            {user && (user.role === "admin" || user.role === "grey" || user.role === "SP1" || user.role === "SP2" || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "grey" || user.role === "SP1" || user.role === "PA") && (
               <Link to="/greyentry" className="nav-item">
                 <BeakerIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Grey Entry</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "batch" || user.role === "SP1" || user.role === "SP2" || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "batch" || user.role === "grey" || user.role === "SP2" || user.role === "PA") && (
               <Link to="/planning" className="nav-item">
                 <ClipboardDocumentListIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Planning</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "production" || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "SP2" || user.role === "PA") && (
               <Link to="/labentry" className="nav-item ">
                 <DocumentCheckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Lab Entry</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "batch" || user.role === "production" || user.role === "batchcomplete" || user.role === "SP1" || user.role === "SP2" || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "batch" || user.role === "production" || user.role === "batchcomplete" || user.role === "grey" || user.role === "SP2" || user.role === "PA") && (
               <Link to="/batch" className="nav-item">
                 <TruckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Batch</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "finishing" || user.role === "SP1" || user.role === "SP2" || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "finishing" || user.role === "grey" ||  user.role === "PA") && (
               <Link to="/finishing" className="nav-item">
                 <DocumentCheckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Finishing</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "delivery" || user.role === "SP1" || user.role === "SP2" || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "delivery" || user.role === "grey"  || user.role === "PA") && (
               <Link to="/delivery" className="nav-item">
                 <TruckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Delivery</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "delivery" || user.role === "SP1" || user.role === "SP2" || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "delivery" || user.role === "SP1" ||  user.role === "PA") && (
               <Link to="/return" className="nav-item">
                 <ReceiptRefundIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Grey Return</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "delivery" || user.role === "SP1" || user.role === "SP2" || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "delivery" || user.role === "SP1" ||  user.role === "PA") && (
               <Link to="/reports" className="nav-item">
                 <ChartBarIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Reports</span>}
