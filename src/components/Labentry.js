@@ -305,7 +305,7 @@ function Labentry() {
 
       <Dropdown.Menu>
          <Dropdown.Item href="#" onClick={handleShow}>Add</Dropdown.Item>  
-         <Dropdown.Item href="#" onClick={handleEdit}>Edit</Dropdown.Item>   
+        { user && (user.role ==="admin" ||  user.role==="SP2") &&  <Dropdown.Item href="#" onClick={handleEdit}>Edit</Dropdown.Item>   }
        
       </Dropdown.Menu>
     </Dropdown>
