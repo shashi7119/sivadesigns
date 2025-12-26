@@ -282,7 +282,7 @@ function Navigation() {
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "SP2" || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "SP2" || user.role === "PA" || user.role === "lab") && (
               <Link to="/labentry" className="nav-item ">
                 <DocumentCheckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Lab Entry</span>}

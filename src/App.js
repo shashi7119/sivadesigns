@@ -144,7 +144,7 @@ function App() {
              
               } />
             <Route path="/labentry" element={
-              <Role allowedRoles={["admin","SP2","PA"]} userRole={userRole}>
+              <Role allowedRoles={["admin","SP2","PA",'lab']} userRole={userRole}>
               <Labentry />
               </Role>
               } />
