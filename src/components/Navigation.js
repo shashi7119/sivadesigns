@@ -303,7 +303,7 @@ function Navigation() {
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "delivery" || user.role === "grey"  || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "delivery" || user.role === "grey"  || user.role === "PA" ||  user.role === "finishing") && (
               <Link to="/delivery" className="nav-item">
                 <TruckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Delivery</span>}
@@ -317,7 +317,7 @@ function Navigation() {
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "SP1" ||  user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "SP1" ||  user.role === "PA"||  user.role === "finishing") && (
               <Link to="/reports" className="nav-item">
                 <ChartBarIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Reports</span>}

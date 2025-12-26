@@ -144,7 +144,7 @@ function App() {
              
               } />
             <Route path="/labentry" element={
-              <Role allowedRoles={["admin","SP2","PA",'lab']} userRole={userRole}>
+              <Role allowedRoles={["admin","SP2",'lab']} userRole={userRole}>
               <Labentry />
               </Role>
               } />
@@ -156,19 +156,19 @@ function App() {
               } />
 
 <Route path="/delivery" element={
-              <Role allowedRoles={["admin","delivery","grey","SP2","SP3","PA"]} userRole={userRole}>
+              <Role allowedRoles={["admin","delivery","grey","finishing","PA"]} userRole={userRole}>
               <Delivery />
               </Role>
               } />
 
               <Route path="/return" element={
-              <Role allowedRoles={["admin","delivery","SP1","SP2","SP3","PA"]} userRole={userRole}>
+              <Role allowedRoles={["admin","delivery","SP2","SP3","PA"]} userRole={userRole}>
               <Return />
               </Role>
               } />
               
                <Route path="/reports" element={
-              <Role allowedRoles={["admin","delivery","SP1","SP2","SP3","PA"]} userRole={userRole}>
+              <Role allowedRoles={["admin","delivery","SP1","SP2","finishing","PA"]} userRole={userRole}>
               <Reports />
               </Role>
               } />
