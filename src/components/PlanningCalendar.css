@@ -1,0 +1,27 @@
+/* Mobile-friendly tweaks for FullCalendar */
+@media (max-width: 600px) {
+  .fc {
+    font-size: 14px;
+  }
+  .fc-toolbar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .fc .fc-button {
+    padding: 0.25rem 0.5rem;
+    font-size: 13px;
+  }
+  .fc .fc-col-header-cell {
+    font-size: 12px;
+  }
+  .fc .fc-daygrid-day-number {
+    font-size: 12px;
+  }
+  .fc .fc-event {
+    font-size: 12px;
+    padding: 2px 4px;
+  }
+  .fc .fc-scrollgrid-section-header {
+    min-width: 0;
+  }
+}
