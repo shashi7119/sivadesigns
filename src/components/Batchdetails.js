@@ -63,7 +63,7 @@ function Batchdetails() {
 
       <Dropdown.Menu>       
         <Dropdown.Item href="#" onClick={PrintHandle} >Print</Dropdown.Item> 
-        { user && (user.role==="admin" ||  user.role==="SP2"|| (user.role==="batch" )) && <Dropdown.Item href={`../mrs/${batchid}`}  >MRS</Dropdown.Item>  }   
+        { user && (user.role==="admin" ||  user.role==="SP2"|| (user.role==="batch" ) || (user.role==="PM" )) && <Dropdown.Item href={`../mrs/${batchid}`}  >MRS</Dropdown.Item>  }   
       </Dropdown.Menu>
     </Dropdown>
           

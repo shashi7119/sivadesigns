@@ -316,9 +316,9 @@ function Planning() {
               </Dropdown.Toggle>
 
               <Dropdown.Menu className="mt-2">
-                {user && user.role !=="SP2" && user.role !=="grey" && user.role !=="batch" &&<Dropdown.Item href="/profile">Add</Dropdown.Item>}
+                {user && user.role !=="SP2" && user.role !=="grey" && user.role !=="batch" && user.role !=="PM"  &&<Dropdown.Item href="/profile">Add</Dropdown.Item>}
                  {user && <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>   }
-                 {user && user.role !=="SP2" && user.role !=="batch" &&<Dropdown.Item href="#" onClick={batchHandle}>Create batch</Dropdown.Item>}
+                 {user && user.role !=="SP2" && user.role !=="batch" && user.role !=="PM"  &&<Dropdown.Item href="#" onClick={batchHandle}>Create batch</Dropdown.Item>}
                 {user && user.role ==="admin" &&<Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item> }
               </Dropdown.Menu>
             </Dropdown>

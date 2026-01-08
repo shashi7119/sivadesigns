@@ -425,7 +425,7 @@ function Batch() {
               <Dropdown.Menu className="mt-2">
                 <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>         
                 {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-                {user && ((user.role==="admin" ) || (user.role==="batchcomplete" )|| (user.role==="PA" )) && 
+                {user && ((user.role==="admin" ) || (user.role==="batchcomplete" )|| (user.role==="PA" ) || (user.role==="PM" )) && 
                   <Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item>}
               </Dropdown.Menu>
             </Dropdown>
