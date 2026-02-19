@@ -17,7 +17,8 @@ function Greyentry() {
   const table = useRef();
     const [formData, setFormData] = useState({
         ide:"",customer:"",fabric: '',construction:'',width:'',
-        weight:'',gmeter:'',customerdc:'',remarks:'',noofpcs:'',ftype:'',ptype:'',pining:'',rweight:'',rmeter:''
+        weight:'',gmeter:'',customerdc:'',remarks:'',noofpcs:'',ftype:'',ptype:'',pining:'',rweight:'',rmeter:'',glm:'',
+        f_weight:'',f_meter:'',f_glm:'',s_meter:'',s_weight:'',s_glm:''
       });
 
       const [searchState, setSearchState] = useState('');
@@ -34,7 +35,8 @@ function Greyentry() {
       const [isSaving, setIsSaving] = useState(false);
       
       const regexPatterns = {
-        weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/  
+        weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/ ,glm: /^[0-9."]*$/ , f_weight: /^[0-9."]*$/,f_meter: /^[0-9."]*$/,
+         f_glm: /^[0-9."]*$/,s_weight: /^[0-9."]*$/,s_meter: /^[0-9."]*$/,s_glm: /^[0-9."]*$/  
         ,customerdc: /^[A-Za-z0-9_@./#&+\-, "]*$/ ,remarks: /^[A-Za-z0-9_@./#&+\-, "]*$/,
         noofpcs: /^[0-9."]*$/,rweight: /^[0-9."]*$/,rmeter: /^[0-9."]*$/   
          };
@@ -157,17 +159,44 @@ const handleColumnChange = (e) => {
         }else if(dataArr.length > 1) {
           alert('Not allowed multiple entries for edit');
         } else {
-          console.log(dataArr); 
-          const [eweight] = dataArr[0][7].split("/");
-          const [egmeter] = dataArr[0][8].split("/");
-          
-           setFormData({ customer:dataArr[0][3],ide:dataArr[0][0],
-            fabric:dataArr[0][4],construction:dataArr[0][5],
-            weight: eweight,width:dataArr[0][6],
-            gmeter: egmeter, customerdc: dataArr[0][2], remarks: dataArr[0][9]
-            , noofpcs: dataArr[0][10], ftype: dataArr[0][11], ptype: dataArr[0][13], pining: dataArr[0][12] });   
-             
-          setShow(true);
+          // Fetch entry details from backend using ide
+          const entryId = dataArr[0][0];
+          axios.get(`${API_URL}getInventoryById`, { params: { ide: entryId } })
+            .then(response => {
+              if (response.data) {
+                setFormData({
+                  ide: response.data.ide || '',
+                  customer: response.data.customer || '',
+                  fabric: response.data.fabric || '',
+                  construction: response.data.construction || '',
+                  width: response.data.width || '',
+                  weight: response.data.weight || '',
+                  gmeter: response.data.gmeter || '',
+                  glm: response.data.glm || '',
+                  customerdc: response.data.customerdc || '',
+                  remarks: response.data.remarks || '',
+                  noofpcs: response.data.noofpcs || '',
+                  ftype: response.data.ftype || '',
+                  ptype: response.data.ptype || '',
+                  pining: response.data.pining || '',
+                  rweight: '',
+                  rmeter: '',
+                  f_weight: response.data.f_weight || '',
+                  f_meter: response.data.f_meter || '',
+                  f_glm: response.data.f_glm || '',
+                  s_weight: response.data.s_weight || '',
+                  s_meter: response.data.s_meter || '',
+                  s_glm: response.data.s_glm || ''
+                });
+                setShow(true);
+              } else {
+                alert('No data found for this entry');
+              }
+            })
+            .catch(error => {
+              alert('Failed to fetch entry details');
+              console.log(error);
+            });
         }
       };
 
@@ -667,7 +696,7 @@ white-space: normal !important;
           </Form.Group>
           </Row>
           <Row>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWeight">
+          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicWeight">
             <Form.Label>Weight </Form.Label>
             <Form.Control
               type="text"
@@ -683,13 +712,124 @@ white-space: normal !important;
             />       
           </Form.Group>
          
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicGmeter">
+          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
             <Form.Label>Gmeter </Form.Label>
             <Form.Control
               type="text"
               name="gmeter"
              
               value={formData.gmeter}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}  
+                
+            />       
+          </Form.Group> 
+          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
+            <Form.Label>GLM </Form.Label>
+            <Form.Control
+              type="text"
+              name="glm"
+             
+              value={formData.glm}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}  
+                
+            />       
+          </Form.Group>
+          </Row>
+           <Row>
+          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicWeight">
+            <Form.Label>1st Piece Weight </Form.Label>
+            <Form.Control
+              type="text"
+              name="f_weight"
+             
+              value={formData.f_weight}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))} 
+              required 
+            />       
+          </Form.Group>
+         
+          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
+            <Form.Label>1st Piece meter </Form.Label>
+            <Form.Control
+              type="text"
+              name="f_meter"
+             
+              value={formData.f_meter}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}  
+                
+            />       
+          </Form.Group> 
+          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
+            <Form.Label>1st Piece GLM </Form.Label>
+            <Form.Control
+              type="text"
+              name="f_glm"
+             
+              value={formData.f_glm}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}  
+                
+            />       
+          </Form.Group>
+          </Row>
+           <Row>
+          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicWeight">
+            <Form.Label>2nd Piece Weight </Form.Label>
+            <Form.Control
+              type="text"
+              name="s_weight"
+             
+              value={formData.s_weight}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))} 
+              required 
+            />       
+          </Form.Group>
+         
+          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
+            <Form.Label>2nd Piece meter </Form.Label>
+            <Form.Control
+              type="text"
+              name="s_meter"
+             
+              value={formData.s_meter}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}  
+                
+            />       
+          </Form.Group> 
+          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
+            <Form.Label>2nd Piece GLM </Form.Label>
+            <Form.Control
+              type="text"
+              name="s_glm"
+             
+              value={formData.s_glm}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
