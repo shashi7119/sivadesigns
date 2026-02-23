@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect,useRef} from 'react';
 import { Container,Button, Row,Modal, Form,Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
@@ -18,8 +19,103 @@ function Greyentry() {
     const [formData, setFormData] = useState({
         ide:"",customer:"",fabric: '',construction:'',width:'',
         weight:'',gmeter:'',customerdc:'',remarks:'',noofpcs:'',ftype:'',ptype:'',pining:'',rweight:'',rmeter:'',glm:'',
-        f_weight:'',f_meter:'',f_glm:'',s_meter:'',s_weight:'',s_glm:''
+        f_weight:'',f_meter:'',f_glm:'',f_pinning:'',s_meter:'',s_weight:'',s_glm:'',s_pinning:''
+        ,t_meter:'',t_weight:'',t_glm:'',t_pinning:''
       });
+  // Calculation for pining dropdown
+  const handlePiningChange = (e) => {
+    const piningValue = parseFloat(e.target.value);
+    const gmeter = parseFloat(formData.gmeter);
+    const weight = parseFloat(formData.weight);
+
+    let actual_meter = '';
+    let glm = '';
+
+    if (!isNaN(piningValue) && !isNaN(gmeter) && gmeter > 0) {
+      actual_meter = (piningValue / 100) * gmeter;
+      if (!isNaN(weight) && actual_meter > 0) {
+        glm = weight / actual_meter;
+        glm = glm.toFixed(2);
+      }
+    }
+
+    setFormData((prevData) => ({
+      ...prevData,
+      pining: e.target.value,
+      glm: glm !== '' ? glm : '',
+    }));
+  };
+
+    // Calculation for f_pinning dropdown
+  const handleFPiningChange = (e) => {
+    const f_piningValue = parseFloat(e.target.value);
+    const f_meter = parseFloat(formData.f_meter);
+    const f_weight = parseFloat(formData.f_weight);
+
+    let actual_meter = '';
+    let f_glm = '';
+
+    if (!isNaN(f_piningValue) && !isNaN(f_meter) && f_meter > 0) {
+      actual_meter = (f_piningValue / 100) * f_meter;
+      if (!isNaN(f_weight) && actual_meter > 0) {
+        f_glm = f_weight / actual_meter;
+        f_glm = f_glm.toFixed(2);
+      }
+    }
+
+    setFormData((prevData) => ({
+      ...prevData,
+      f_pining: e.target.value,
+      f_glm: f_glm !== '' ? f_glm : '',
+    }));
+  };
+
+    const handleSPiningChange = (e) => {
+    const s_piningValue = parseFloat(e.target.value);
+    const s_meter = parseFloat(formData.s_meter);
+    const s_weight = parseFloat(formData.s_weight);
+
+    let actual_meter = '';
+    let s_glm = '';
+
+    if (!isNaN(s_piningValue) && !isNaN(s_meter) && s_meter > 0) {
+      actual_meter = (s_piningValue / 100) * s_meter;
+      if (!isNaN(s_weight) && actual_meter > 0) {
+        s_glm = s_weight / actual_meter;
+        s_glm = s_glm.toFixed(2);
+      }
+    }
+
+    setFormData((prevData) => ({
+      ...prevData,
+      s_pining: e.target.value,
+      s_glm: s_glm !== '' ? s_glm : '',
+    }));
+  };
+
+      // Calculation for t_pinning dropdown
+    const handleTPiningChange = (e) => {
+      const t_piningValue = parseFloat(e.target.value);
+      const t_meter = parseFloat(formData.t_meter);
+      const t_weight = parseFloat(formData.t_weight);
+
+      let actual_meter = '';
+      let t_glm = '';
+
+      if (!isNaN(t_piningValue) && !isNaN(t_meter) && t_meter > 0) {
+        actual_meter = (t_piningValue / 100) * t_meter;
+        if (!isNaN(t_weight) && actual_meter > 0) {
+          t_glm = t_weight / actual_meter;
+          t_glm = t_glm.toFixed(2);
+        }
+      }
+
+      setFormData((prevData) => ({
+        ...prevData,
+        t_pinning: e.target.value,
+        t_glm: t_glm !== '' ? t_glm : '',
+      }));
+    };
 
       const [searchState, setSearchState] = useState('');
       const [isEdit, setIsEdit] = useState(false);
@@ -36,7 +132,8 @@ function Greyentry() {
       
       const regexPatterns = {
         weight: /^[0-9."]*$/,gmeter: /^[0-9."]*$/ ,glm: /^[0-9."]*$/ , f_weight: /^[0-9."]*$/,f_meter: /^[0-9."]*$/,
-         f_glm: /^[0-9."]*$/,s_weight: /^[0-9."]*$/,s_meter: /^[0-9."]*$/,s_glm: /^[0-9."]*$/  
+         f_glm: /^[0-9."]*$/,s_weight: /^[0-9."]*$/,s_meter: /^[0-9."]*$/,s_glm: /^[0-9."]*$/,
+         t_weight: /^[0-9."]*$/,t_meter: /^[0-9."]*$/,t_glm: /^[0-9."]*$/
         ,customerdc: /^[A-Za-z0-9_@./#&+\-, "]*$/ ,remarks: /^[A-Za-z0-9_@./#&+\-, "]*$/,
         noofpcs: /^[0-9."]*$/,rweight: /^[0-9."]*$/,rmeter: /^[0-9."]*$/   
          };
@@ -184,9 +281,15 @@ const handleColumnChange = (e) => {
                   f_weight: response.data.f_weight || '',
                   f_meter: response.data.f_meter || '',
                   f_glm: response.data.f_glm || '',
+                  f_pinning: response.data.f_pinning || '',
                   s_weight: response.data.s_weight || '',
                   s_meter: response.data.s_meter || '',
-                  s_glm: response.data.s_glm || ''
+                  s_glm: response.data.s_glm || '',
+                  s_pinning: response.data.s_pinning || '',
+                  t_weight: response.data.t_weight || '',
+                  t_meter: response.data.t_meter || '',
+                  t_glm: response.data.t_glm || '',
+                  t_pinning: response.data.t_pinning || ''
                 });
                 setShow(true);
               } else {
@@ -633,7 +736,8 @@ white-space: normal !important;
 ))}
            </Form.Select>
            </Form.Group>
-           <Form.Group className="col-12 col-sm-12 mb-3" controlId="formBasicFabric">
+            <Row>
+           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicFabric">
            
             <Form.Select             
               name="fabric"              
@@ -653,8 +757,7 @@ white-space: normal !important;
 ))}
            </Form.Select>
           </Form.Group>
-          <Row>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicConstruction">
+           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicConstruction">
             
             <Form.Select             
               name="construction"              
@@ -674,6 +777,9 @@ white-space: normal !important;
 ))}
            </Form.Select>      
           </Form.Group>
+          </Row>
+          <Row>
+         
           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formBasicWidth">
            
             <Form.Select             
@@ -694,9 +800,28 @@ white-space: normal !important;
 ))}
            </Form.Select>       
           </Form.Group>
+           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formFabricType">
+         <Form.Select             
+              name="ftype"              
+              value={formData.ftype}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))}    
+             required
+            >
+              <option  value="">Fabric Type</option>
+         {ftypeData.map(fabric => (
+          
+  <option  value={fabric}>
+    {fabric}
+  </option>
+))}
+           </Form.Select> 
+          </Form.Group>
           </Row>
           <Row>
-          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicWeight">
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicWeight">
             <Form.Label>Weight </Form.Label>
             <Form.Control
               type="text"
@@ -712,8 +837,8 @@ white-space: normal !important;
             />       
           </Form.Group>
          
-          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
-            <Form.Label>Gmeter </Form.Label>
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicGmeter">
+            <Form.Label>Meter </Form.Label>
             <Form.Control
               type="text"
               name="gmeter"
@@ -727,25 +852,36 @@ white-space: normal !important;
                 
             />       
           </Form.Group> 
-          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
+           <Form.Group className="col-3 col-sm-3 mb-3" controlId="formFabricType">
+          <Form.Label>Pining </Form.Label>
+         <Form.Select             
+              name="pining"              
+              value={formData.pining}
+              onChange={handlePiningChange}
+             required
+            >
+              <option  value="">Select</option>
+         {pintypeData.map(pining => (
+          
+  <option  value={pining}>
+    {pining}
+  </option>
+))}
+           </Form.Select> 
+          </Form.Group>
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicGmeter">
             <Form.Label>GLM </Form.Label>
             <Form.Control
               type="text"
               name="glm"
-             
               value={formData.glm}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}  
-                
+              readOnly
             />       
           </Form.Group>
           </Row>
            <Row>
-          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicWeight">
-            <Form.Label>1st Piece Weight </Form.Label>
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicWeight">
+            <Form.Label>1st Pc Weight </Form.Label>
             <Form.Control
               type="text"
               name="f_weight"
@@ -760,8 +896,8 @@ white-space: normal !important;
             />       
           </Form.Group>
          
-          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
-            <Form.Label>1st Piece meter </Form.Label>
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicGmeter">
+            <Form.Label>1st Pc meter </Form.Label>
             <Form.Control
               type="text"
               name="f_meter"
@@ -775,25 +911,36 @@ white-space: normal !important;
                 
             />       
           </Form.Group> 
-          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
-            <Form.Label>1st Piece GLM </Form.Label>
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formFabricType">
+          <Form.Label>1st pc Pining </Form.Label>
+         <Form.Select             
+              name="f_pinning"              
+              value={formData.f_pinning}
+              onChange={handleFPiningChange}
+             required
+            >
+              <option  value="">Select</option>
+         {pintypeData.map(pining => (
+          
+  <option  value={pining}>
+    {pining}
+  </option>
+))}
+           </Form.Select> 
+          </Form.Group>
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicGmeter">
+            <Form.Label>1st Pc GLM </Form.Label>
             <Form.Control
               type="text"
               name="f_glm"
-             
               value={formData.f_glm}
-              onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}  
-                
+              readOnly
             />       
           </Form.Group>
           </Row>
            <Row>
-          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicWeight">
-            <Form.Label>2nd Piece Weight </Form.Label>
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicWeight">
+            <Form.Label>2nd Pc Weight </Form.Label>
             <Form.Control
               type="text"
               name="s_weight"
@@ -808,7 +955,7 @@ white-space: normal !important;
             />       
           </Form.Group>
          
-          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicGmeter">
             <Form.Label>2nd Piece meter </Form.Label>
             <Form.Control
               type="text"
@@ -823,19 +970,89 @@ white-space: normal !important;
                 
             />       
           </Form.Group> 
-          <Form.Group className="col-4 col-sm-4 mb-3" controlId="formBasicGmeter">
+             <Form.Group className="col-3 col-sm-3 mb-3" controlId="formFabricType">
+          <Form.Label>2nd pc Pining </Form.Label>
+         <Form.Select             
+              name="s_pinning"              
+              value={formData.s_pinning}
+              onChange={handleSPiningChange}
+             required
+            >
+              <option  value="">Select</option>
+         {pintypeData.map(pining => (
+          
+  <option  value={pining}>
+    {pining}
+  </option>
+))}
+           </Form.Select> 
+          </Form.Group>
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicGmeter">
             <Form.Label>2nd Piece GLM </Form.Label>
             <Form.Control
               type="text"
               name="s_glm"
-             
               value={formData.s_glm}
+              readOnly
+            />       
+          </Form.Group>
+          </Row>
+            <Row>
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicWeight">
+            <Form.Label>3rd Pc Weight </Form.Label>
+            <Form.Control
+              type="text"
+              name="t_weight"
+             
+              value={formData.t_weight}
+              onKeyUp={handleKeyUp}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))} 
+              required 
+            />       
+          </Form.Group>
+         
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicGmeter">
+            <Form.Label>3rd Piece meter </Form.Label>
+            <Form.Control
+              type="text"
+              name="t_meter"
+             
+              value={formData.t_meter}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
                 [e.target.name]: e.target.value // Update the value of the specific input field
               }))}  
                 
+            />       
+          </Form.Group> 
+             <Form.Group className="col-3 col-sm-3 mb-3" controlId="formFabricType">
+          <Form.Label>3rd pc Pining </Form.Label>
+         <Form.Select             
+              name="t_pinning"              
+              value={formData.t_pinning}
+              onChange={handleTPiningChange}
+             required
+            >
+              <option  value="">Select</option>
+         {pintypeData.map(pining => (
+          
+  <option  value={pining}>
+    {pining}
+  </option>
+))}
+           </Form.Select> 
+          </Form.Group>
+          <Form.Group className="col-3 col-sm-3 mb-3" controlId="formBasicGmeter">
+            <Form.Label>3rd Piece GLM </Form.Label>
+            <Form.Control
+              type="text"
+              name="t_glm"
+              value={formData.t_glm}
+              readOnly
             />       
           </Form.Group>
           </Row>
@@ -873,6 +1090,7 @@ white-space: normal !important;
           </Row>          
           <Row>
           <Form.Group className="col-6 col-sm-6 mb-3" controlId="formProcess">
+            <Form.Label>Process</Form.Label>
          <Form.Select             
               name="ptype"              
               value={formData.ptype}
@@ -882,7 +1100,7 @@ white-space: normal !important;
               }))}    
              required
             >
-              <option  value="">Process</option>
+              <option  value="">Select Process</option>
          {ptypeData.map(ptype => (
           
   <option  value={ptype}>
@@ -891,28 +1109,7 @@ white-space: normal !important;
 ))}
            </Form.Select> 
           </Form.Group>
-         <Form.Group className="col-6 col-sm-6 mb-3" controlId="formFabricType">
-         <Form.Select             
-              name="ftype"              
-              value={formData.ftype}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}    
-             required
-            >
-              <option  value="">Fabric Type</option>
-         {ftypeData.map(fabric => (
-          
-  <option  value={fabric}>
-    {fabric}
-  </option>
-))}
-           </Form.Select> 
-          </Form.Group>
-          </Row>
-          <Row>         
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formNoOfPcs">
+         <Form.Group className="col-6 col-sm-6 mb-3" controlId="formNoOfPcs">
             <Form.Label>No of pcs </Form.Label>
             <Form.Control
               type="text"
@@ -926,28 +1123,8 @@ white-space: normal !important;
               required 
             />       
           </Form.Group>
-          <Form.Group className="col-6 col-sm-6 mb-3" controlId="formFabricType">
-          <Form.Label>Pining </Form.Label>
-         <Form.Select             
-              name="pining"              
-              value={formData.pining}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}    
-             required
-            >
-              <option  value="">Select</option>
-         {pintypeData.map(pining => (
-          
-  <option  value={pining}>
-    {pining}
-  </option>
-))}
-           </Form.Select> 
-          </Form.Group>
           </Row>
-          
+                   
          {isReturn && <Row>
             
    <Form.Group className="col-6 col-sm-6 mb-3" controlId="returnWeight">
