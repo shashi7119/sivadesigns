@@ -65,7 +65,7 @@ function Greyentry() {
 
     setFormData((prevData) => ({
       ...prevData,
-      f_pining: e.target.value,
+      f_pinning: e.target.value,
       f_glm: f_glm !== '' ? f_glm : '',
     }));
   };
@@ -88,7 +88,7 @@ function Greyentry() {
 
     setFormData((prevData) => ({
       ...prevData,
-      s_pining: e.target.value,
+      s_pinning: e.target.value,
       s_glm: s_glm !== '' ? s_glm : '',
     }));
   };
@@ -205,6 +205,7 @@ const handleColumnChange = (e) => {
      const handleSubmit = async (event) => {
          setIsSaving(true); 
         event.preventDefault();
+        console.log(formData);
         if(!isEdit && !isReturn) {               
         axios.post(`${API_URL}/addInventry`, formData)
       .then(function (response) {    
