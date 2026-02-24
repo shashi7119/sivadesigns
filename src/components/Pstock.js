@@ -19,7 +19,7 @@ function Pstock() {
       const [isReturn, setIsReturn] = useState(false);
        const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-        ide:"",date:'',customer:"",fabric: '',construction:'',width:'',
+        ide:"",date:'',customer:"",fabric: '',construction:'',width:'',maxweight:'',maxmeter:'',
         weight:'',gmeter:'', glm: '',aglm: '',customerdc:'',remarks:'',machine:'',process:'',finishing:'',shade:'',pining:'',ftype:'',noofpcs:'',ptype:'',rweight:'',rmeter:''
       });
      
@@ -88,20 +88,37 @@ function Pstock() {
 
      const handleKeyUp = (event) => {
         const { name, value } = event.target; // Destructure name and value from the event
-    
-                // Step 4: Validate the input value based on the regex pattern
-        const isValid = regexPatterns[name].test(value);
+        // Step 4: Validate the input value based on the regex pattern
+        const isValid = regexPatterns[name] ? regexPatterns[name].test(value) : true;
+        // Default values for validation
+        let maxWeight = formData.maxweight;
+        let maxGmeter = formData.maxmeter;
+      
+        // If editing, use the original values as max
+        if (name === "weight" && maxWeight && parseFloat(value) > parseFloat(maxWeight)) {
+          alert("Weight should not exceed the maximum allowed: " + maxWeight);
+          setFormData((prevData) => ({
+            ...prevData,
+            [name]: maxWeight
+          }));
+          return;
+        }
+        if (name === "gmeter" && maxGmeter && parseFloat(value) > parseFloat(maxGmeter)) {
+          alert("Gmeter should not exceed the maximum allowed: " + maxGmeter);
+          setFormData((prevData) => ({
+            ...prevData,
+            [name]: maxGmeter
+          }));
+          return;
+        }
         if((name === "gmeter")&&(formData.weight !==0)&&(formData.weight !=="")){
           formData.aglm = parseFloat(formData.weight/value).toFixed(2);
-       }
-  
-       if(name === "weight" && formData.gmeter !==0 && formData.gmeter !==""){
-        formData.aglm = parseFloat(value/formData.gmeter).toFixed(2);
-      }
-    
+        }
+        if(name === "weight" && formData.gmeter !==0 && formData.gmeter !==""){
+          formData.aglm = parseFloat(value/formData.gmeter).toFixed(2);
+        }
         // Step 5: If valid, update the state, otherwise you can show an error or just keep it unchanged
         if (isValid) {
-        
           setFormData((prevData) => ({
             ...prevData,
             [name]: value // Update the value of the specific input field
@@ -112,8 +129,7 @@ function Pstock() {
             [name]: '' // Reset the field to empty
           }));
         }
-    
-       };
+      };
 
      const handleSubmit = async (event) => {
         event.preventDefault();                    
@@ -175,7 +191,7 @@ function Pstock() {
           let caglm = parseFloat(weight/gmetercal).toFixed(2);
            setFormData({ customer:customer,ide:ide,
             fabric:fabric,construction:construction,aglm:caglm,
-            weight: weight,width:width,date:'',glm:'',
+            weight: weight,width:width,date:'',glm:'',maxmeter:gmeter,maxweight:weight,
             gmeter: gmeter, customerdc: custdc, remarks: dataArr[0][10], pining: dataArr[0][9] });   
              
           setShow(true);
@@ -216,7 +232,8 @@ function Pstock() {
             fabric:dataArr[0][4],construction:dataArr[0][5],
             weight: dataArr[0][7],width:dataArr[0][6],
             gmeter: dataArr[0][8], customerdc: dataArr[0][2], remarks: dataArr[0][10]
-            , pining: dataArr[0][9], ftype: dataArr[0][12], ptype: dataArr[0][13], noofpcs: dataArr[0][11],rweight:'',rmeter:'' });   
+            , pining: dataArr[0][9], ftype: dataArr[0][12], ptype: dataArr[0][13],
+             noofpcs: dataArr[0][11],rweight:'',rmeter:'',maxweight:dataArr[0][7],maxmeter:dataArr[0][8] });   
              
           setShow1(true);
         }
@@ -484,10 +501,21 @@ function Pstock() {
               name="weight"             
               value={formData.weight}
               onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))} 
+              onChange={(e) =>  {
+                const value = e.target.value;
+                if (e.target.name === "weight" && formData.maxweight && parseFloat(value) > parseFloat(formData.maxweight)) {
+                  alert("Weight should not exceed the maximum allowed: " + formData.maxweight);
+                  setFormData((prevData) => ({
+                    ...prevData,
+                    [e.target.name]: formData.maxweight
+                  }));
+                  return;
+                }
+                setFormData((prevData) => ({
+                  ...prevData,
+                  [e.target.name]: value // Update the value of the specific input field
+                }));
+              }} 
               required 
             />       
           </Form.Group>
@@ -500,10 +528,21 @@ function Pstock() {
              
               value={formData.gmeter}
               onKeyUp={handleKeyUp}
-              onChange={(e) =>  setFormData((prevData) => ({
-                ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
-              }))}  
+              onChange={(e) =>  {
+                const value = e.target.value;
+                if (e.target.name === "gmeter" && formData.maxmeter && parseFloat(value) > parseFloat(formData.maxmeter)) {
+                  alert("Gmeter should not exceed the maximum allowed: " + formData.maxmeter);
+                  setFormData((prevData) => ({
+                    ...prevData,
+                    [e.target.name]: formData.maxmeter
+                  }));
+                  return;
+                }
+                setFormData((prevData) => ({
+                  ...prevData,
+                  [e.target.name]: value // Update the value of the specific input field
+                }));
+              }}  
                 
             />       
           </Form.Group>
