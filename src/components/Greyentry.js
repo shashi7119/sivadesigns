@@ -827,12 +827,13 @@ white-space: normal !important;
             <Form.Control
               type="text"
               name="weight"
-             
               value={formData.weight}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
+                [e.target.name]: e.target.value,
+               pining: '', // Reset pining when gmeter changes
+                glm: '' // Reset glm when gmeter changes
               }))} 
               required 
             />       
@@ -843,14 +844,14 @@ white-space: normal !important;
             <Form.Control
               type="text"
               name="gmeter"
-             
               value={formData.gmeter}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
+                [e.target.name]: e.target.value,
+                pining: '', // Reset pining when gmeter changes
+                glm: '' // Reset glm when gmeter changes
               }))}  
-                
             />       
           </Form.Group> 
            <Form.Group className="col-3 col-sm-3 mb-3" controlId="formFabricType">
@@ -886,12 +887,13 @@ white-space: normal !important;
             <Form.Control
               type="text"
               name="f_weight"
-             
               value={formData.f_weight}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
+                [e.target.name]: e.target.value,
+                f_pinning: '', // Reset f_pinning when f_weight changes
+                f_glm: '' // Reset f_glm when f_weight changes
               }))} 
               required 
             />       
@@ -902,14 +904,14 @@ white-space: normal !important;
             <Form.Control
               type="text"
               name="f_meter"
-             
               value={formData.f_meter}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
+                [e.target.name]: e.target.value,
+                f_pinning: '', // Reset f_pinning when f_meter changes
+                f_glm: '' // Reset f_glm when f_meter changes
               }))}  
-                
             />       
           </Form.Group> 
           <Form.Group className="col-3 col-sm-3 mb-3" controlId="formFabricType">
@@ -945,12 +947,13 @@ white-space: normal !important;
             <Form.Control
               type="text"
               name="s_weight"
-             
               value={formData.s_weight}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
+                [e.target.name]: e.target.value,
+                s_pinning: '', // Reset s_pinning when s_weight changes
+                s_glm: '' // Reset s_glm when s_weight changes
               }))} 
               required 
             />       
@@ -961,14 +964,14 @@ white-space: normal !important;
             <Form.Control
               type="text"
               name="s_meter"
-             
               value={formData.s_meter}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
+                [e.target.name]: e.target.value,
+                s_pinning: '', // Reset s_pinning when s_meter changes
+                s_glm: '' // Reset s_glm when s_meter changes
               }))}  
-                
             />       
           </Form.Group> 
              <Form.Group className="col-3 col-sm-3 mb-3" controlId="formFabricType">
@@ -1004,12 +1007,13 @@ white-space: normal !important;
             <Form.Control
               type="text"
               name="t_weight"
-             
               value={formData.t_weight}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
+                [e.target.name]: e.target.value,
+                t_pinning: '', // Reset t_pinning when t_weight changes
+                t_glm: '' // Reset t_glm when t_weight changes
               }))} 
               required 
             />       
@@ -1020,14 +1024,14 @@ white-space: normal !important;
             <Form.Control
               type="text"
               name="t_meter"
-             
               value={formData.t_meter}
               onKeyUp={handleKeyUp}
               onChange={(e) =>  setFormData((prevData) => ({
                 ...prevData,
-                [e.target.name]: e.target.value // Update the value of the specific input field
+                [e.target.name]: e.target.value,
+                t_pinning: '', // Reset t_pinning when t_meter changes
+                t_glm: '' // Reset t_glm when t_meter changes
               }))}  
-                
             />       
           </Form.Group> 
              <Form.Group className="col-3 col-sm-3 mb-3" controlId="formFabricType">
