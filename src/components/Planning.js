@@ -295,6 +295,49 @@ function Planning() {
 
     setSelData(newSelData); // Now this matches the state setter name
   }
+
+    const ExportHandle = (event) => {
+    event.preventDefault();
+    let api = table.current.dt();
+    let selectedRows = api.rows({ selected: true }).data();
+    console.log(selectedRows);
+
+    let csv = [];
+    let bdata = [];
+
+    bdata = [];
+    bdata.push("Plan No");
+    bdata.push("Inward No");
+    bdata.push("Cust Dc"); bdata.push("Date");bdata.push("Machine");
+    bdata.push("Customer"); bdata.push("Fabric");
+    bdata.push("Shade"); bdata.push("Construction");
+    bdata.push("Grey Width"); bdata.push("Grey Weight");
+    bdata.push("Grey Meter"); bdata.push("GLM"); bdata.push("AGLM");
+    bdata.push("Process"); bdata.push("Finishing");
+    csv.push(bdata.join(","));
+
+    const rt = selectedRows.map((row) => {
+      let rowData = [];
+        const match = row[5].match(/>(.*?)</);
+      const customer = match ? match[1] : null;
+      rowData.push(row[0]); rowData.push(row[1]); rowData.push(row[2]);rowData.push(row[3]);
+      rowData.push(row[4]); rowData.push(customer); rowData.push(row[6]);
+      rowData.push(row[7]); rowData.push(row[8]); rowData.push(row[9]);
+      rowData.push(row[10]); rowData.push(row[11]); rowData.push(row[12]);
+      rowData.push(row[13]); rowData.push(row[14]); rowData.push(row[15]); 
+      csv.push(rowData.join(","));
+      return true;
+    })
+
+    console.log(rt);
+
+    let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(csvFile);
+    link.download = `planning_data.csv`;;
+    link.click();
+
+  };
   
   return (
     <div className="main-content" >
@@ -318,6 +361,7 @@ function Planning() {
               <Dropdown.Menu className="mt-2">
                 {user && user.role !=="SP2" && user.role !=="grey" && user.role !=="batch" && user.role !=="PM"  &&<Dropdown.Item href="/profile">Add</Dropdown.Item>}
                  {user && <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>   }
+                 {user && <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item> }
                  {user && user.role !=="SP2" && user.role !=="batch" && user.role !=="PM"  &&<Dropdown.Item href="#" onClick={batchHandle}>Create batch</Dropdown.Item>}
                 {user && user.role ==="admin" &&<Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item> }
               </Dropdown.Menu>
