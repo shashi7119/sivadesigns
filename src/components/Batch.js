@@ -440,7 +440,7 @@ function Batch() {
       rowData.push(custdc); rowData.push(row[5]); rowData.push(customer);
       rowData.push(row[7]); rowData.push(row[8]); rowData.push(row[9]);
       rowData.push(row[10]); rowData.push(row[11]); rowData.push(row[12]);
-      rowData.push(row[13]); rowData.push(row[14]); rowData.push(row[15]); 
+      rowData.push(row[13]); rowData.push(row[14]); rowData.push(row[15]); rowData.push(row[16]); 
       csv.push(rowData.join(","));
       return true;
     })
