@@ -89,7 +89,7 @@ function Navigation() {
               {isExpanded && <span className="ml-3">Home</span>}
             </Link>
 
-            {user && (user.role === "admin" || user.role === "production" || user.role === "purchase"|| (user.role==="PA" ) || (user.role==="PM" )) && (
+            {user && (user.role === "admin" || user.role === "production" || user.role === "purchase"|| (user.role==="PA" ) || (user.role==="PM" ) || (user.role==="SP1" )) && (
               <Menu as="div" className="relative">
                 <Menu.Button className="nav-item w-full">
                   <Cog6ToothIcon className="h-6 w-6" />
@@ -106,7 +106,7 @@ function Navigation() {
                 >
                   <Menu.Items className='absolute z-10 mt-2 w-48 rounded-md bg-white shadow-lg'>
                     <div className="py-1">
-                      {user && (user.role === "admin" || user.role==="PA" ) && (
+                      {user && (user.role === "admin" || user.role==="PA" || user.role==="SP1"  ) && (
                         <>
                           <Menu.Item>
                             {({ active }) => (
@@ -180,7 +180,7 @@ function Navigation() {
                             )}
                           </Menu.Item>
                         )}
-                      {user && (user.role === "admin" || user.role === "production" || user.role === "PA") && (
+                      {user && (user.role === "admin" || user.role === "production" || user.role === "PA"|| user.role === "SP1") && (
                         <>
                          
                           <Menu.Item>
@@ -230,7 +230,7 @@ function Navigation() {
               </Link>
             )}
 
-            {user && (user.role === "admin" ||   user.role === "PA" ||  user.role === "PM")  && (
+            {user && (user.role === "admin" ||   user.role === "PA" ||  user.role === "PM" ||  user.role === "SP1")  && (
               <Menu as="div" className="relative">
                 <Menu.Button className="nav-item w-full">
                   <CircleStackIcon className="h-6 w-6" />
@@ -275,14 +275,14 @@ function Navigation() {
               </Menu>
             )}
 
-            {user && (user.role === "admin" || user.role === "grey" || user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "SP1" || user.role === "PA") && (
               <Link to="/greyentry" className="nav-item">
                 <BeakerIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Grey Entry</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "batch" || user.role === "grey" || user.role === "SP2" || user.role === "PA" ||  user.role === "PM") && (
+            {user && (user.role === "admin" || user.role === "batch" || user.role === "SP1" || user.role === "SP2" || user.role === "PA" ||  user.role === "PM") && (
               <Link to="/planning" className="nav-item">
                 <ClipboardDocumentListIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Planning</span>}
@@ -303,28 +303,28 @@ function Navigation() {
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "finishing" || user.role === "grey" ||  user.role === "PA" ||  user.role === "PM") && (
+            {user && (user.role === "admin" || user.role === "finishing" || user.role === "SP1" ||  user.role === "PA" ||  user.role === "PM") && (
               <Link to="/finishing" className="nav-item">
                 <DocumentCheckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Finishing</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "delivery" || user.role === "grey"  || user.role === "PA" ||  user.role === "finishing") && (
+            {user && (user.role === "admin" || user.role === "delivery" || user.role === "SP1"  || user.role === "PA" ||  user.role === "finishing") && (
               <Link to="/delivery" className="nav-item">
                 <TruckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Delivery</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "delivery" ||  user.role === "PA") && (
+            {user && (user.role === "admin" || user.role === "delivery" ||  user.role === "PA" || user.role === "SP1") && (
               <Link to="/return" className="nav-item">
                 <ReceiptRefundIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Grey Return</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "SP1" ||  user.role === "PA"||  user.role === "finishing") && (
+            {user && (user.role === "admin" || user.role === "SP1" ||  user.role === "PA"||  user.role === "finishing" || user.role === "SP1") && (
               <Link to="/reports" className="nav-item">
                 <ChartBarIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Reports</span>}
