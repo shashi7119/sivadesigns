@@ -15,14 +15,14 @@ const table = useRef();
     const [formData, setFormData] = useState({
         mname: '',type:'customer',email:'',contact_number:'',ide:''
         ,address1:'',address2:'',pincode:'',gstin:'',state:'',ship_contact_number:'',
-        ship_address1:'',ship_address2:'',ship_state:'',ship_pincode:'',ship_gstin:''
+        ship_address1:'',ship_address2:'',ship_state:'',ship_pincode:'',ship_gstin:'',ship_name:''
       });
 
       const regexPatterns = {
         mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,state: /^[a-zA-Z0-9_@./#&+\-, ]*$/,email: /^[a-zA-Z0-9_@./#&+\-, ]*$/,
         address1: /^[a-zA-Z0-9_@./#&+\-, ]*$/,contact_number: /^[0-9 ]*$/,
         address2: /^[a-zA-Z0-9_@./#&+\-, ]*$/,pincode: /^[0-9 ]*$/,
-        gstin: /^[a-zA-Z0-9]*$/,
+        gstin: /^[a-zA-Z0-9]*$/, ship_name: /^[a-zA-Z0-9_@./#&+\-, ]*$/,
         ship_state: /^[a-zA-Z0-9_@./#&+\-, ]*$/,
         ship_address1: /^[a-zA-Z0-9_@./#&+\-, ]*$/,ship_contact_number: /^[0-9 ]*$/,
         ship_address2: /^[a-zA-Z0-9_@./#&+\-, ]*$/,ship_pincode: /^[0-9 ]*$/,
@@ -135,7 +135,7 @@ const table = useRef();
            setFormData({  mname: dataArr[0][1],ide:dataArr[0][0],type:'customer',email:dataArr[0][3],contact_number:dataArr[0][2]
         ,address1:dataArr[0][4],address2:dataArr[0][5],state:dataArr[0][6],pincode:dataArr[0][7],gstin:dataArr[0][8],
         ship_contact_number:dataArr[0][9],ship_address1:dataArr[0][10],ship_address2:dataArr[0][11],
-        ship_state:dataArr[0][12],ship_pincode:dataArr[0][13],ship_gstin:dataArr[0][14]});   
+        ship_state:dataArr[0][12],ship_pincode:dataArr[0][13],ship_gstin:dataArr[0][14],ship_name:dataArr[0][16]});   
              
           setShow(true);
         }
@@ -220,6 +220,7 @@ const table = useRef();
                 <th className="px-6 py-3">Delivery Pincode</th> 
                 <th className="px-6 py-3">Delivery GSTIN</th> 
                 <th className="px-6 py-3">Created_At</th> 
+                <th className="px-6 py-3">Delivery Customer Name</th>
                                 
               </tr>
             </thead>
@@ -378,6 +379,26 @@ const table = useRef();
               <Row className="flex items-center space-x-4">
                 <Form.Group className="col-6 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
+                    Delivery Customer Name
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="ship_name"              
+                    value={formData.ship_name}
+                    onKeyUp={handleKeyUp}
+                    onChange={(e) => setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value
+                    }))}    
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                </Form.Group>
+               
+              </Row>
+              <Row className="flex items-center space-x-4">
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
                     Delivery Contact Number
                   </Form.Label>
                   <Form.Control
@@ -414,7 +435,7 @@ const table = useRef();
               <Row className="flex items-center space-x-4">
                 <Form.Group className="col-6 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
-                     Delivery Address 1
+                     Delivery Address 2
                   </Form.Label>
                   <Form.Control
                     type="text"
@@ -489,7 +510,7 @@ const table = useRef();
             <Button 
               variant="secondary" 
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-grey border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Close
             </Button>
