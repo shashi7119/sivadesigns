@@ -413,7 +413,7 @@ white-space: normal !important;
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>Delivery To:</strong></p>
-        <p>${response.data['name']}</p>
+        <p>${response.data['ship_name'] === ''?response.data['name']:response.data['ship_name']}</p>
         <p>${ (response.data['ship_address1'] !== "" ) ? response.data['ship_address1']:response.data['address1']}</p>
         <p>${ (response.data['ship_address2'] !== "" ) ? response.data['ship_address2']:response.data['address2']}</p>
         <p>${ (response.data['ship_pincode'] !== "" ) ? response.data['ship_pincode']:response.data['pincode']}</p>
