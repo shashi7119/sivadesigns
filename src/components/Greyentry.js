@@ -20,7 +20,7 @@ function Greyentry() {
         ide:"",customer:"",fabric: '',construction:'',width:'',
         weight:'',gmeter:'',customerdc:'',remarks:'',noofpcs:'',ftype:'',ptype:'',pining:'',rweight:'',rmeter:'',glm:'',
         f_weight:'',f_meter:'',f_glm:'',f_pinning:'',s_meter:'',s_weight:'',s_glm:'',s_pinning:''
-        ,t_meter:'',t_weight:'',t_glm:'',t_pinning:''
+        ,t_meter:'',t_weight:'',t_glm:'',t_pinning:'',labdip:''
       });
   // Calculation for pining dropdown
   const handlePiningChange = (e) => {
@@ -290,7 +290,8 @@ const handleColumnChange = (e) => {
                   t_weight: response.data.t_weight || '',
                   t_meter: response.data.t_meter || '',
                   t_glm: response.data.t_glm || '',
-                  t_pinning: response.data.t_pinning || ''
+                  t_pinning: response.data.t_pinning || '',
+                   labdip: response.data.labdip || ''
                 });
                 setShow(true);
               } else {
@@ -538,13 +539,13 @@ white-space: normal !important;
         <div class="hr mt-0 mb-0"></div>
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
-         <div class="row"><div class="col-md-4"><p>Construction </p></div> <div class="col-md-6"><p>: ${selectedRows[0][5]}</p></div></div>
-        <div class="row"><div class="col-md-4"><p>G Width </p></div> <div class="col-md-6"><p>: ${selectedRows[0][6]}</p></div></div>
+         <div class="row"><div class="col-md-4"><p>Construction </p></div> <div class="col-md-6"><p>: ${selectedRows[0][6]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>G Width </p></div> <div class="col-md-6"><p>: ${selectedRows[0][7]}</p></div></div>
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
        
         <div class="row"><div class="col-md-4"><p>Fabric </p></div> <div class="col-md-6"><p>: ${selectedRows[0][4]}</p></div></div>
-        <div class="row"><div class="col-md-4"><p>Process </p></div> <div class="col-md-6"><p>: ${selectedRows[0][13]}</p></div></div>
+        <div class="row"><div class="col-md-4"><p>Process </p></div> <div class="col-md-6"><p>: ${selectedRows[0][14]}</p></div></div>
         </div>
 </div>
         
@@ -565,12 +566,12 @@ white-space: normal !important;
                
                
                 <tr>
-        <td scope="row" width="35%">${selectedRows[0][11]}</th>				 
-				  <td width="15%">${selectedRows[0][7]}</td>
-				  <td width="10%">${selectedRows[0][8]}</td>
-				  <td width="20%">${selectedRows[0][12]}</td>
-				  <td width="20%">${selectedRows[0][10]}</td>
-                                  <td width="20%">${selectedRows[0][9]}</td>
+        <td scope="row" width="35%">${selectedRows[0][12]}</th>				 
+				  <td width="15%">${selectedRows[0][8]}</td>
+				  <td width="10%">${selectedRows[0][9]}</td>
+				  <td width="20%">${selectedRows[0][13]}</td>
+				  <td width="20%">${selectedRows[0][11]}</td>
+                                  <td width="20%">${selectedRows[0][10]}</td>
         
 				</tr>
 
@@ -681,7 +682,8 @@ white-space: normal !important;
                 { data: "10" },
                 { data: "11" },
                 { data: "12" },
-                { data: "13" }          
+                { data: "13" },
+                { data: "14" }            
                 
             ],
             }} className="display table sortable stripe row-border order-column nowrap dataTable" style={{width:"100%"}}>
@@ -691,7 +693,8 @@ white-space: normal !important;
                 <th className="px-6 py-3">Date</th>
                 <th className="px-6 py-3">Party Dc No</th>
                 <th className="px-6 py-3">Customer</th>
-                <th className="px-6 py-3">Fabric</th>
+                <th className="px-6 py-3">Fabric</th>  
+                <th className="px-6 py-3">Labdip Code</th>           
                 <th className="px-6 py-3">Construction</th>
                 <th className="px-6 py-3">Width</th>
                 <th className="px-6 py-3">Weight</th>
@@ -1126,6 +1129,22 @@ white-space: normal !important;
                 [e.target.name]: e.target.value // Update the value of the specific input field
               }))} 
               required 
+            />       
+          </Form.Group>
+          </Row>
+           <Row>
+         
+         <Form.Group className="col-6 col-sm-6 mb-3" controlId="formlabdip">
+            <Form.Label>Lab Dip Code </Form.Label>
+            <Form.Control
+              type="text"
+              name="labdip"             
+              value={formData.labdip}              
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value // Update the value of the specific input field
+              }))} 
+               
             />       
           </Form.Group>
           </Row>
