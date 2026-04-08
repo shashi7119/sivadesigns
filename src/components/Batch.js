@@ -108,12 +108,13 @@ function Batch() {
                       <th>Cust Dc</th>
                       <th>Machine</th>
                       <th>Customer</th>
-                      <th>Fabric</th>
                       <th>Shade</th>
+                      <th>Labdip Code</th>
+                      <th>Fabric</th>                      
                       <th>Construction</th>
-                      <th>Width</th>
                       <th>Weight</th>
-                      <th>GMeter</th>                   
+                      <th>GMeter</th>   
+                      <th>Width</th>                
                       <th>GLM</th>
                       <th>AGLM</th>
                       <th>Process</th>
@@ -142,6 +143,7 @@ function Batch() {
                       <td>${row[14]}</td>
                       <td>${row[15]}</td>
                       <td>${row[16]}</td>
+                      <td>${row[17]}</td>
                     </tr>
                   `
                 )
@@ -418,10 +420,9 @@ function Batch() {
     bdata.push("Sale Order No");
     bdata.push("Inward No");
     bdata.push("Cust Dc"); bdata.push("Machine");
-    bdata.push("Customer"); bdata.push("Fabric");
-    bdata.push("Shade"); bdata.push("Construction");
-    bdata.push("Grey Width"); bdata.push("Grey Weight");
-    bdata.push("Grey Meter"); bdata.push("GLM"); bdata.push("AGLM");
+    bdata.push("Customer");  bdata.push("Shade");bdata.push("Labdip Code");
+    bdata.push("Fabric"); bdata.push("Construction");
+    bdata.push(" Weight"); bdata.push(" Meter"); bdata.push(" Width");bdata.push("GLM"); bdata.push("AGLM");
     bdata.push("Process"); bdata.push("Finishing");
     csv.push(bdata.join(","));
 
@@ -440,7 +441,7 @@ function Batch() {
       rowData.push(custdc); rowData.push(row[5]); rowData.push(customer);
       rowData.push(row[7]); rowData.push(row[8]); rowData.push(row[9]);
       rowData.push(row[10]); rowData.push(row[11]); rowData.push(row[12]);
-      rowData.push(row[13]); rowData.push(row[14]); rowData.push(row[15]); rowData.push(row[16]); 
+      rowData.push(row[13]); rowData.push(row[14]); rowData.push(row[15]); rowData.push(row[16]); rowData.push(row[17]); 
       csv.push(rowData.join(","));
       return true;
     })
@@ -637,6 +638,7 @@ function Batch() {
                 { data: "14" },
                 { data: "15" },
                 { data: "16" },
+                { data: "17" },
                 
             ],            
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
@@ -664,12 +666,13 @@ function Batch() {
                 <th className="px-6 py-3">Cust Dc</th>
                 <th className="px-6 py-3">Machine</th>
                 <th className="px-6 py-3">Customer</th>
-                <th className="px-6 py-3">Fabric</th>
                 <th className="px-6 py-3">Shade</th>
-                <th className="px-6 py-3">Construction</th>
-                <th className="px-6 py-3">Width</th>
+                 <th className="px-6 py-3">Labdip Code</th>
+                <th className="px-6 py-3">Fabric</th>                
+                <th className="px-6 py-3">Construction</th>                
                 <th className="px-6 py-3">Weight</th>
-                <th className="px-6 py-3">GMeter</th>                   
+                <th className="px-6 py-3">GMeter</th>       
+                <th className="px-6 py-3">Width</th>            
                 <th className="px-6 py-3">GLM</th>
                 <th className="px-6 py-3">AGLM</th>
                 <th className="px-6 py-3">Process</th>
