@@ -124,7 +124,7 @@ function App() {
               </Role>
               } />
             <Route path="/batch" element={
-              <Role allowedRoles={["admin","production","batch","batchcomplete","grey","SP2","PA",'PM']} userRole={userRole}>
+              <Role allowedRoles={["admin","production","batch","batchcomplete","grey","SP2","SP1","PA",'PM']} userRole={userRole}>
               <Batch />
               </Role>
               } />

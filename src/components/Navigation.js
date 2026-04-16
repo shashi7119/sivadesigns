@@ -296,7 +296,7 @@ function Navigation() {
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "batch" || user.role === "production" || user.role === "batchcomplete" || user.role === "grey" || user.role === "SP2" || user.role === "PA" ||  user.role === "PM") && (
+            {user && (user.role === "admin" || user.role === "batch" || user.role === "production" || user.role === "batchcomplete" || user.role === "grey" || user.role === "SP2" || user.role === "SP1" || user.role === "PA" ||  user.role === "PM") && (
               <Link to="/batch" className="nav-item">
                 <TruckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Batch</span>}
