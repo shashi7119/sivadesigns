@@ -1,6 +1,7 @@
 import React, { useState,  useRef ,useEffect} from 'react';
 import { Container, Button, Row, Dropdown, Modal, Form, } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import '../css/Styles.css';
 import '../css/DataTable.css';
 import axios from 'axios';
@@ -22,6 +23,7 @@ function Delivery() {
   const table = useRef();
   const submittedFiltersRef = useRef({});
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   // Filter state
     const [filters, setFilters] = useState({
@@ -666,7 +668,7 @@ white-space: normal !important;
          
     };
 
- const deleteHandle = (event) => {
+const deleteHandle = (event) => {
   event.preventDefault();
   let api = table.current.dt();
   let rows = api.rows({ selected: true }).data().toArray();
@@ -676,10 +678,102 @@ white-space: normal !important;
     return;
   }
 
-  
-  
   setSelectedDC(rows[0][1]); // Store the DC number
   setShowDeleteModal(true); // Show delete confirmation modal
+};
+
+const handleCreateInvoice = (event) => {
+  event.preventDefault();
+  let api = table.current.dt();
+  let selectedRowsApi = api.rows({ selected: true }).data();
+  let selectedRows = selectedRowsApi.toArray ? selectedRowsApi.toArray() : Array.from(selectedRowsApi);
+  let selectedNodes = api.rows({ selected: true }).nodes().toArray ? api.rows({ selected: true }).nodes().toArray() : Array.from(api.rows({ selected: true }).nodes());
+
+  if (selectedRows.length === 0) {
+    alert('Select line items to create invoice');
+    return;
+  }
+
+  const getCustomer = (row) => {
+    if (!row) return '';
+    return row.customer || row.name || row[7] || '';
+  };
+
+  const getInvoiceParam = (row, node) => {
+    const fromRow = row.invoiceParameter || row.invparams || row.invParam || row.inv_param || row['invoiceParameter'];
+    let fromNode = null;
+    if (node) {
+      fromNode = node.getAttribute ? node.getAttribute('data-inv') : null;
+      if (!fromNode && node.querySelector) {
+        const child = node.querySelector('[data-inv]');
+        fromNode = child ? child.getAttribute('data-inv') : null;
+      }
+      if (!fromNode && node.dataset) {
+        fromNode = node.dataset.invparams || null;
+      }
+    }
+    return (fromRow || fromNode || '').toString().trim().toLowerCase();
+  };
+
+  const getQuantityAndUnit = (row, invParam) => {
+    switch (invParam) {
+      case 'gw':
+        return { quantity: Number(row[12] || 0), unit: 'KG' };
+      case 'gm':
+        return { quantity: Number(row[13] || 0), unit: 'MTR' };
+      case 'fw':
+        return { quantity: Number(row[15] || 0), unit: 'KG' };
+      case 'fm':
+        return { quantity: Number(row[16] || 0), unit: 'MTR' };
+      default:
+        return { quantity: Number(row[15] || row[12] || 0), unit: 'KG' };
+    }
+  };
+
+  const customerName = getCustomer(selectedRows[0]).toString().trim();
+  const differentCustomer = selectedRows.some((row) => getCustomer(row).toString().trim() !== customerName);
+
+  if (differentCustomer) {
+    alert('All selected line items must be for the same customer');
+    return;
+  }
+
+  const invoiceItems = selectedRows.reduce((acc, row, index) => {
+    const process = row[19] || '';
+    const color = (row[9] || row[10] || '').toString().trim();
+    const node = selectedNodes[index] || null;
+    const invParam = getInvoiceParam(row, node);
+    const { quantity, unit } = getQuantityAndUnit(row, invParam);
+    const dcNo = (row[1] || '').toString().trim();
+    const key = `${process.toString().trim().toLowerCase()}||${color.toLowerCase()}||${unit}`;
+
+    const existing = acc.find((item) => item.key === key);
+    if (existing) {
+      existing.quantity = Number(existing.quantity || 0) + quantity;
+      if (dcNo && !existing.dcNo.split(',').map((v) => v.trim()).includes(dcNo)) {
+        existing.dcNo = existing.dcNo ? `${existing.dcNo}, ${dcNo}` : dcNo;
+      }
+      existing.amount = '';
+      return acc;
+    }
+
+    acc.push({
+      key,
+      dcNo,
+      date: row[0] || '',
+      customer: customerName,
+      description: process || '',
+      color,
+      quantity,
+      unit,
+      rate: '',
+      tax: 0,
+      amount: ''
+    });
+    return acc;
+  }, []).map(({ key, ...item }) => item);
+
+  navigate('/invoice', { state: { customer: customerName, items: invoiceItems } });
 };
 
 const handleDeleteConfirm = async () => {
@@ -948,6 +1042,8 @@ const handleDeleteConfirm = async () => {
                   <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
                 {user && ((user.role === "admin") || (user.role === "SP1") || (user.role === "delivery") || (user.role==="PA" )) && 
                   <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
+                {user && ((user.role === "admin") || (user.role === "SP1") || (user.role === "delivery") || (user.role==="PA" )) && 
+                  <Dropdown.Item href="#" onClick={handleCreateInvoice}>Create Invoice</Dropdown.Item>}
                 {user && ((user.role === "admin") || (user.role === "SP1") || (user.role === "delivery") || (user.role==="PA" )) && 
                   <Dropdown.Item href="#" onClick={InvExport}>Invoice Export</Dropdown.Item>}
               </Dropdown.Menu>

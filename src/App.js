@@ -30,6 +30,8 @@ import Pstock from './components/Pstock'
 import Bstock from './components/Bstock'
 import Batchfinishing from './components/Bathchfinishing';
 import Delivery from './components/Delivery';
+import Invoice from './components/Invoice';
+import InvoiceList from './components/InvoiceList';
 import PO from './components/PurchaseOrder';
 import EditPO from './components/EditPurchaeOrder';
 import PrintPO from './components/PrintPurchaseOrder';
@@ -158,6 +160,17 @@ function App() {
 <Route path="/delivery" element={
               <Role allowedRoles={["admin","delivery","SP1","finishing","PA"]} userRole={userRole}>
               <Delivery />
+              </Role>
+              } />
+              <Route path="/invoice" element={
+              <Role allowedRoles={["admin","delivery","SP1","finishing","PA"]} userRole={userRole}>
+              <Invoice />
+              </Role>
+              } />
+
+              <Route path="/invoices" element={
+              <Role allowedRoles={["admin","delivery","SP1","finishing","PA"]} userRole={userRole}>
+              <InvoiceList />
               </Role>
               } />
 

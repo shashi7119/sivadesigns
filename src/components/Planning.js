@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Container, Button, Row, Modal, Form, Dropdown } from 'react-bootstrap';
+import { Container, Button, Row, Modal, Form, Dropdown, Col } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
 import '../css/DataTable.css';
@@ -210,8 +210,8 @@ function Planning() {
       setIsSubmitting(true);
       console.log('Form Submitted with Data:', formData);
       
-      const response = await axios.post(`${API_URL}/addBatch1`, formData);
-      console.log(response);   
+      //const response = await axios.post(`${API_URL}/addBatch1`, formData);
+      //console.log(response);   
       setShow(false);
       setFormData([]);
       alert("Batch Created!!");
@@ -485,106 +485,211 @@ function Planning() {
           <Modal.Body className="p-6">
             <Form className="space-y-4">
               {formData.map((row, index) => (
-                <Row key={index} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <Form.Group className="flex-1">
-                    <Form.Label className="block text-sm font-medium text-gray-700">
-                      {row.planid}
-                    </Form.Label>
-                  </Form.Group>
-                  <Form.Group className="flex-1">
-                    <Form.Label className="block text-sm font-medium text-gray-700">
-                      {row.inwardno}
-                    </Form.Label>     
-                  </Form.Group>        
-         
-           <Form.Group className="flex-1">
-           <Form.Label className="block text-sm font-medium text-gray-700">
-             {row.construction}
-           </Form.Label>       
-          </Form.Group>
-          <Form.Group className="flex-1">  
-          <Form.Label className="block text-sm font-medium text-gray-700">
-            {row.planned_weight}
-          </Form.Label>                 
-          </Form.Group>
-           <Form.Group className="flex-1">
-            <Form.Control
-              type="text"
-              placeholder="Batch Weight"
-              name="actual_weight"   
-              data-planid={row.planid}              
-              value={row.actual_weight}
-              onChange={(e) => {
-                setFormData((prevRows) =>
-                  prevRows.map((row1) =>
-                    row1.planid === row.planid ? { ...row1, actual_weight: e.target.value} : row1
-                  )
-                )
-              }}
-              onBlur={(e) => checkStock(e)} 
-              required 
-              
-            />       
-          </Form.Group>
-          <Form.Group className="flex-1">   
-           <Form.Label className="block text-sm font-medium text-gray-700">
-             {row.planned_gmeter}
-           </Form.Label>
-          </Form.Group>
-         
-          <Form.Group className="flex-1">
-            <Form.Control
-              type="text"
-              placeholder="Batch Gmeter"
-             name="actual_gmeter" 
-             data-planid={row.planid}  
-              value={row.actual_gmeter}               
-              onChange={(e) => {
-                setFormData((prevRows) =>
-                  prevRows.map((row1) =>
-                    row1.planid === row.planid ? { ...row1, actual_gmeter: e.target.value} : row1
-                  )
-                )
-              }}
-              onBlur={(e) => checkStock(e)} 
-              required
-            />       
-          </Form.Group>
-          <Form.Group className="flex-1">
-            <Form.Control
-              type="text"
-             name="noofpcs"    
-             placeholder="No of pcs"
-              value={row.noofpcs}               
-              onChange={(e) =>  setFormData((prevRows) =>
-                prevRows.map((row1) =>
-                  row1.planid === row.planid ? { ...row1, noofpcs:e.target.value} : row1
-                )
-              )
-            } 
-              required
-            />       
-          </Form.Group>
-           <Form.Group className="flex-1">
-            <Form.Control
-              type="text"
-             name="sono"    
-             placeholder="Sale Order"
-              value={row.sono}               
-              onChange={(e) =>  setFormData((prevRows) =>
-                prevRows.map((row1) =>
-                  row1.planid === row.planid ? { ...row1, sono:e.target.value} : row1
-                )
-              )
-            } 
-              required
-            />       
-          </Form.Group>
-          </Row>
-          ))}          
+                <div key={index} className="space-y-4">
+                  {/* Row 1: Plan ID, Inward No, Construction */}
+                  <Row className="gap-3">
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          Plan ID
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Plan ID"
+                          value={row.planid}
+                          disabled
+                          className="bg-gray-100"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          Inward No
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Inward No"
+                          value={row.inwardno}
+                          disabled
+                          className="bg-gray-100"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          Construction
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Construction"
+                          value={row.construction}
+                          disabled
+                          className="bg-gray-100"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-          </Form>
-        </Modal.Body>
+                  {/* Row 2: Planned Weight, Batch Weight, Planned GMeter */}
+                  <Row className="gap-3">
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          Planned Weight
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Planned Weight"
+                          value={row.planned_weight}
+                          disabled
+                          className="bg-gray-100"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          Batch Weight
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Batch Weight"
+                          name="actual_weight"
+                          data-planid={row.planid}
+                          value={row.actual_weight}
+                          onChange={(e) => {
+                            setFormData((prevRows) =>
+                              prevRows.map((row1) =>
+                                row1.planid === row.planid ? { ...row1, actual_weight: e.target.value } : row1
+                              )
+                            );
+                          }}
+                          onBlur={(e) => checkStock(e)}
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          Planned GMeter
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Planned GMeter"
+                          value={row.planned_gmeter}
+                          disabled
+                          className="bg-gray-100"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          Batch GMeter
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Batch Gmeter"
+                          name="actual_gmeter"
+                          data-planid={row.planid}
+                          value={row.actual_gmeter}
+                          onChange={(e) => {
+                            setFormData((prevRows) =>
+                              prevRows.map((row1) =>
+                                row1.planid === row.planid ? { ...row1, actual_gmeter: e.target.value } : row1
+                              )
+                            );
+                          }}
+                          onBlur={(e) => checkStock(e)}
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {/* Row 3: Batch GMeter, No of Pcs, Sale Order */}
+                  <Row className="gap-3">
+                    
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          No of Pcs
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="No of pcs"
+                          name="noofpcs"
+                          value={row.noofpcs}
+                          onChange={(e) =>
+                            setFormData((prevRows) =>
+                              prevRows.map((row1) =>
+                                row1.planid === row.planid ? { ...row1, noofpcs: e.target.value } : row1
+                              )
+                            )
+                          }
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          Sale Order
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Sale Order"
+                          name="sono"
+                          value={row.sono}
+                          onChange={(e) =>
+                            setFormData((prevRows) =>
+                              prevRows.map((row1) =>
+                                row1.planid === row.planid ? { ...row1, sono: e.target.value } : row1
+                              )
+                            )
+                          }
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={3}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                         Invoice Parameter
+                        </Form.Label>
+                        <Form.Control
+                          as="select"
+                          placeholder="Invoice Parameter"
+                          name="invoiceParameter"
+                          value={row.invoiceParameter}
+                          onChange={(e) =>
+                            setFormData((prevRows) =>
+                              prevRows.map((row1) =>
+                                row1.planid === row.planid ? { ...row1, invoiceParameter: e.target.value } : row1
+                              )
+                            )
+                          }
+                        >
+                          <option value="">Select</option>
+                          <option value="gw">Grey Weight</option>
+                          <option value="gm">Grey Meter</option>
+                          <option value="fw">Final Weight</option>
+                           <option value="fm">Final Meter</option>
+                        </Form.Control>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {/* Row 4: Grey Weight, Grey Meter, Final Weight, Final Meter */}
+                 
+                  <hr className="my-4" />
+                </div>
+              ))}
+            </Form>
+          </Modal.Body>
         <Modal.Footer className="bg-gray-50 border-t border-gray-200">
           <Button 
             variant="secondary" 

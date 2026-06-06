@@ -317,6 +317,14 @@ function Navigation() {
               </Link>
             )}
 
+           
+            {user && (user.role === "admin" || user.role === "delivery" || user.role === "SP1"  || user.role === "PA" ||  user.role === "finishing") && (
+              <Link to="/invoices" className="nav-item">
+                <ClipboardDocumentListIcon className="h-6 w-6" />
+                {isExpanded && <span className="ml-3">Invoice List</span>}
+              </Link>
+            )}
+
             {user && (user.role === "admin" || user.role === "delivery" ||  user.role === "PA" || user.role === "SP1") && (
               <Link to="/return" className="nav-item">
                 <ReceiptRefundIcon className="h-6 w-6" />
