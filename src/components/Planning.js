@@ -210,8 +210,8 @@ function Planning() {
       setIsSubmitting(true);
       console.log('Form Submitted with Data:', formData);
       
-      //const response = await axios.post(`${API_URL}/addBatch1`, formData);
-      //console.log(response);   
+      const response = await axios.post(`${API_URL}/addBatch1`, formData);
+      console.log(response);   
       setShow(false);
       setFormData([]);
       alert("Batch Created!!");
