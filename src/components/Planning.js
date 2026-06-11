@@ -21,7 +21,8 @@ function Planning() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState([{
     planid: '', customer:'', width:'',construction:'',inwardno:'',
-    planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',noofpcs:'',sono:''
+    planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',
+    dyeing_weight: '', dyeing_gmeter: '', noofpcs:'',sono:''
   }]);
   const [searchState, setSearchState] = useState('');
   const [selData, setSelData] = useState([]); // Changed from setselData to setSelData
@@ -179,7 +180,8 @@ function Planning() {
   const addRow = (dataArr) => {  
       
        const newRow = { planid: dataArr[0], customer:dataArr[5], width:dataArr[9],construction:dataArr[8],inwardno:dataArr[1],
-    planned_weight: dataArr[10],planned_gmeter: dataArr[11],actual_weight: '',actual_gmeter: ''};
+    planned_weight: dataArr[10],planned_gmeter: dataArr[11],actual_weight: '',actual_gmeter: '',
+    dyeing_weight: '', dyeing_gmeter: '', noofpcs:'',sono:''};
         setFormData(formData=>[...formData, newRow]);    
       
   }
@@ -679,6 +681,49 @@ function Planning() {
                           <option value="fw">Final Weight</option>
                            <option value="fm">Final Meter</option>
                         </Form.Control>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Row className="gap-3">
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          Dyeing Weight
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Dyeing Weight"
+                          name="dyeing_weight"
+                          value={row.dyeing_weight}
+                          onChange={(e) =>
+                            setFormData((prevRows) =>
+                              prevRows.map((row1) =>
+                                row1.planid === row.planid ? { ...row1, dyeing_weight: e.target.value } : row1
+                              )
+                            )
+                          }
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
+                          Dyeing Meter
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Dyeing Meter"
+                          name="dyeing_gmeter"
+                          value={row.dyeing_gmeter}
+                          onChange={(e) =>
+                            setFormData((prevRows) =>
+                              prevRows.map((row1) =>
+                                row1.planid === row.planid ? { ...row1, dyeing_gmeter: e.target.value } : row1
+                              )
+                            )
+                          }
+                        />
                       </Form.Group>
                     </Col>
                   </Row>

@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col, Table, Form, Button, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
@@ -10,15 +10,79 @@ function Invoice() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const invoiceState = location.state || {};
+  const stateInvoiceNo = invoiceState.invoiceNo || invoiceState.invNo || invoiceState.invoice_number || '';
+  const isEditMode = Boolean(stateInvoiceNo);
   const initialItems = Array.isArray(invoiceState.items) ? invoiceState.items : [];
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [existingChecked, setExistingChecked] = useState(false);
+
+  const stateCustomerId = invoiceState.customerid || invoiceState.customerId || invoiceState.customer_id || invoiceState.customerID || invoiceState.customerID || '';
+
   const [invoiceDetails, setInvoiceDetails] = useState({
-    invoiceNo: invoiceState.invoiceNo || '',
+    invoiceNo: stateInvoiceNo || '',
     invoiceDate: invoiceState.invoiceDate || new Date().toISOString().slice(0, 10),
     referenceNo: invoiceState.referenceNo || '',
-    totalDiscount: invoiceState.totalDiscount || 0
+    totalDiscount: invoiceState.totalDiscount || 0,
+    financialYear: invoiceState.financialYear || '',
+    customer: invoiceState.customer || '',
+    customerid: stateCustomerId || ''
   });
 
-  const customerName = invoiceState.customer || (initialItems[0] && initialItems[0].customer) || '';
+  useEffect(() => {
+    const fetchInvoiceDetails = async () => {
+      if (!stateInvoiceNo || (invoiceState.items && invoiceState.items.length > 0)) {
+        setExistingChecked(true);
+        return;
+      }
+
+      setLoadingDetails(true);
+      try {
+        const resp = await axios.post(`${API_URL}/getInvEditDetails`, [stateInvoiceNo]);
+        if (resp && resp.data) {
+          const invoiceData = Array.isArray(resp.data) ? resp.data[0] || resp.data : resp.data;
+          if (invoiceData) {
+            const fetchedCustomerId = invoiceData.customerid || invoiceData.customerId || invoiceData.customer_id || invoiceData.customerID || '';
+            setInvoiceDetails((prev) => ({
+              ...prev,
+              invoiceNo: invoiceData.invoiceNo || invoiceState.invoiceNo,
+              invoiceDate: invoiceData.invoiceDate || invoiceState.invoiceDate || prev.invoiceDate,
+              referenceNo: invoiceData.referenceNo || invoiceState.referenceNo || prev.referenceNo,
+              totalDiscount: invoiceData.totalDiscount || invoiceState.totalDiscount || prev.totalDiscount,
+              financialYear: invoiceData.financialYear || prev.financialYear,
+              customer: invoiceData.customer || invoiceState.customer || prev.customer,
+              customerid: fetchedCustomerId || stateCustomerId || prev.customerid
+            }));
+            setLineItems(
+              (Array.isArray(invoiceData.items) ? invoiceData.items : []).map((item) => ({
+                ...item,
+                description: item.description || item.itemDescription || '',
+                color: item.color || '',
+                quantity: item.quantity || 0,
+                unit: item.unit || 'KG',
+                rate: item.rate || 0,
+                tax: item.tax || 0,
+                amount: item.amount || 0
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn('Unable to load full invoice details from backend', err);
+      } finally {
+        setLoadingDetails(false);
+        setExistingChecked(true);
+      }
+    };
+
+    fetchInvoiceDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const customerName =
+    invoiceDetails.customer ||
+    invoiceState.customer ||
+    (initialItems[0] && initialItems[0].customer) ||
+    '';
 
   const [lineItems, setLineItems] = useState(() =>
     initialItems.map((item) => ({
@@ -34,18 +98,18 @@ function Invoice() {
   );
 
   useEffect(() => {
-    if (!invoiceDetails.invoiceNo) {
-      (async () => {
-        try {
-          const generated = await generateInvoiceNo();
-          setInvoiceDetails((prev) => ({ ...prev, invoiceNo: generated, financialYear: getFinancialYear(prev.invoiceDate) }));
-        } catch (e) {
-          console.warn('Failed to generate invoice number', e);
-        }
-      })();
-    }
+    if (!existingChecked) return;
+    if (stateInvoiceNo || invoiceDetails.invoiceNo) return;
+    (async () => {
+      try {
+        const generated = await generateInvoiceNo();
+        setInvoiceDetails((prev) => ({ ...prev, invoiceNo: generated, financialYear: getFinancialYear(prev.invoiceDate) }));
+      } catch (e) {
+        console.warn('Failed to generate invoice number', e);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [existingChecked, stateInvoiceNo, invoiceDetails.invoiceNo]);
 
   const STORAGE_KEY = 'invoices_v1';
   const API_URL = 'https://www.wynstarcreations.com/seyal/api';
@@ -120,6 +184,19 @@ function Invoice() {
 
   if (!isAuthenticated) {
     return null;
+  }
+
+  if (loadingDetails) {
+    return (
+      <div className="main-content">
+        <Container fluid className="py-5 text-center">
+          <Spinner animation="border" role="status" className="mb-3">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+          <div>Loading invoice details...</div>
+        </Container>
+      </div>
+    );
   }
 
   const handleBack = () => {
@@ -249,6 +326,7 @@ function Invoice() {
       financialYear: invoiceDetails.financialYear || getFinancialYear(invoiceDetails.invoiceDate),
       referenceNo: invoiceDetails.referenceNo,
       customer: customerName,
+      customerid: invoiceDetails.customerid || stateCustomerId || invoiceState.customerid || invoiceState.customerId || invoiceState.customer_id || '',
       items: lineItems,
       subtotal: invoiceTotals.subTotal,
       totalDiscount: invoiceTotals.totalDiscount,
@@ -261,10 +339,11 @@ function Invoice() {
 
   const handleSave = async () => {
     const invoice = saveInvoice();
+    const apiPath = isEditMode ? 'updateInvoice' : 'addInvoice';
     try {
-      const response = await axios.post(`${API_URL}/addInvoice`, invoice);
+      const response = await axios.post(`${API_URL}/${apiPath}`, invoice);
       if (response && response.data) {
-        alert('ok');
+        alert(isEditMode ? 'Invoice updated successfully' : 'Invoice created successfully');
         navigate('/invoices');
       } else {
         alert('Invoice saved locally but no server response');
@@ -275,13 +354,16 @@ function Invoice() {
     }
   };
 
+  const pageTitle = isEditMode ? 'Edit Invoice' : 'Create Invoice';
+  const pageSubtitle = isEditMode ? 'Update invoice details.' : 'Create a new invoice from selected delivery line items.';
+
   return (
     <div className="main-content">
       <Container fluid>
         <Row className="mb-4">
           <Col>
-            <h1 className="text-2xl font-bold text-gray-800">Create Invoice</h1>
-            <p className="text-gray-600">Create a new invoice from selected delivery line items.</p>
+            <h1 className="text-2xl font-bold text-gray-800">{pageTitle}</h1>
+            <p className="text-gray-600">{pageSubtitle}</p>
           </Col>
         </Row>
 
@@ -440,7 +522,7 @@ function Invoice() {
 
                 <Row className="mt-3">
                   <Col className="d-flex justify-content-end">
-                    <Button variant="success" onClick={handleSave}>Save Invoice</Button>
+                    <Button variant="success" onClick={handleSave}>{isEditMode ? 'Update Invoice' : 'Save Invoice'}</Button>
                   </Col>
                 </Row>
               </div>

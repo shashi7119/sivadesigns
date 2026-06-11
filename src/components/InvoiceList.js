@@ -1,4 +1,4 @@
-import React, { useRef,  useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,32 @@ DataTable.use(Responsive);
 DataTable.use(Select);
 DataTable.use(FixedHeader);
 DataTable.use(DT);
+
+const normalizeInvoiceRow = (row) => {
+  if (!row) return {};
+  if (Array.isArray(row)) {
+    return {
+      invoiceNo: row[0] || '',
+      invoiceDate: row[1] || '',
+      customer: row[2] || '',
+      customerid: row[7] || '',
+      subtotal: row[3] || '',
+      tax: row[4] || '',
+      total: row[5] || '',
+      items: row[6] || []
+    };
+  }
+  return {
+    invoiceNo: row.invoiceNo || row.invNo || row.invoice_number || '',
+    invoiceDate: row.invoiceDate || row.date || row.invDate || '',
+    customer: row.customer || row.customerName || row.name || '',
+    customerid: row.customerid || row.customerId || row.customer_id || row.customerID || '',
+    subtotal: row.subtotal || row.subTotal || row.amount || '',
+    tax: row.tax || row.totalTax || 0,
+    total: row.total || row.totalAmount || '',
+    items: Array.isArray(row.items) ? row.items : []
+  };
+};
 
 export default function InvoiceList() {
   const tableRef = useRef();
@@ -46,7 +72,8 @@ export default function InvoiceList() {
   }, []);
 
   const handleView = (inv) => {
-    navigate('/invoice', { state: { ...inv } });
+    const invoiceData = normalizeInvoiceRow(inv);
+    navigate('/invoice', { state: invoiceData });
   };
 
   const handleDeleteRow = (rowNode) => {
@@ -83,33 +110,37 @@ export default function InvoiceList() {
               processing: true,
               serverSide: true,             
               pageLength: 25,
-               ajax: {
+              ajax: {
                 url: `${API_URL}/getInvoices`,
                 type: 'POST',
                 data: function (d) {
                   d.searchcol = $(".tsearch").val();
-                   d.user = user.user; 
+                  d.user = user.user;
                   if (d.length === -1) {
                     d.length = 25;
                   }
                   return d;
                 },
+                dataSrc: function (json) {
+                  if (!json || !Array.isArray(json.data)) return [];
+                  return json.data.map((row) => normalizeInvoiceRow(row));
+                }
               },
               columns: [
-                { title: 'Invoice No', data: '0' },
-                { title: 'Date', data: '1' },
-                { title: 'Customer', data: '2' },
+                { title: 'Invoice No', data: 'invoiceNo' },
+                { title: 'Date', data: 'invoiceDate' },
+                { title: 'Customer', data: 'customer' },
                 {
                   title: 'Subtotal',
-                  data: '3'
+                  data: 'subtotal'
                 },
                 {
                   title: 'Tax',
-                  data: '4'
+                  data: 'tax'
                 },
                 {
                   title: 'Total',
-                  data: '5'
+                  data: 'total'
                 },
                 {
                   title: 'Actions',
