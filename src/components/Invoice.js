@@ -783,9 +783,14 @@ function Invoice() {
 
           <!-- Signature Section -->
           <div class="signature-section">
+            <div class="signature-block" style="width:300px">
+              <div>SUBJECT TO ERODE JURISDICTION</div>
+              <div>This is a Computer Generated Invoice</div>
+            </div>
             <div class="signature-block">
-              <div>Authorized Signatory</div>
+              <div>For Sri Shiva Designs</div>
               <div class="signature-line"></div>
+              <div>Authorized Signatory</div>
             </div>
           </div>
         </div>

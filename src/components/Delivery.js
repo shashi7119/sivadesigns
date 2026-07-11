@@ -718,16 +718,37 @@ const handleCreateInvoice = (event) => {
   const getQuantityAndUnit = (row, invParam) => {
     switch (invParam) {
       case 'gw':
-        return { quantity: Number(row[12] || 0), unit: 'KG' };
+        return { quantity: Number(row[12] || 0), unit: 'g wt' };
       case 'gm':
-        return { quantity: Number(row[13] || 0), unit: 'MTR' };
+        return { quantity: Number(row[13] || 0), unit: 'g mtr' };
       case 'fw':
-        return { quantity: Number(row[15] || 0), unit: 'KG' };
+        return { quantity: Number(row[15] || 0), unit: 'f wt' };
       case 'fm':
-        return { quantity: Number(row[16] || 0), unit: 'MTR' };
+        return { quantity: Number(row[16] || 0), unit: 'f mtr' };
       default:
         return { quantity: Number(row[15] || row[12] || 0), unit: 'KG' };
     }
+  };
+
+  const getWidthByInvoiceParam = (row, invParam) => {
+    switch (invParam) {
+      case 'gw':
+      case 'gm':
+        return (row[11] || '').toString().trim();
+      case 'fw':
+      case 'fm':
+      default:
+        return ( row[11] || '').toString().trim();
+    }
+  };
+
+  const buildInvoiceDescription = (process, quantity, unit, construction, width, fabric) => {
+    
+    const safeProcess = (process || '').toString().trim();
+    const safeConstruction = (construction || '-').toString().trim() || '-';
+    const safeWidth = (width || '-').toString().trim() || '-';
+    const safeFabric = (fabric || '-').toString().trim() || '-';
+    return `${safeProcess} - ${safeConstruction} -  ${safeFabric} - ${safeWidth}`;
   };
 
   const customerName = getCustomer(selectedRows[0]).toString().trim();
@@ -741,11 +762,14 @@ const handleCreateInvoice = (event) => {
   const invoiceItems = selectedRows.reduce((acc, row, index) => {
     const process = row[19] || '';
     const color = (row[9] || row[10] || '').toString().trim();
+    const construction = (row[10] || '').toString().trim();
+    const fabric = (row[8] || '').toString().trim();
     const node = selectedNodes[index] || null;
     const invParam = getInvoiceParam(row, node);
     const { quantity, unit } = getQuantityAndUnit(row, invParam);
+    const width = getWidthByInvoiceParam(row, invParam);
     const dcNo = (row[1] || '').toString().trim();
-    const key = `${process.toString().trim().toLowerCase()}||${color.toLowerCase()}||${unit}`;
+    const key = `${process.toString().trim().toLowerCase()}||${color.toLowerCase()}||${unit}||${construction.toLowerCase()}||${width.toLowerCase()}||${fabric.toLowerCase()}`;
 
     const existing = acc.find((item) => item.key === key);
     if (existing) {
@@ -753,6 +777,14 @@ const handleCreateInvoice = (event) => {
       if (dcNo && !existing.dcNo.split(',').map((v) => v.trim()).includes(dcNo)) {
         existing.dcNo = existing.dcNo ? `${existing.dcNo}, ${dcNo}` : dcNo;
       }
+      existing.description = buildInvoiceDescription(
+        process,
+        existing.quantity,
+        unit,
+        construction,
+        width,
+        fabric
+      );
       existing.amount = '';
       return acc;
     }
@@ -762,7 +794,7 @@ const handleCreateInvoice = (event) => {
       dcNo,
       date: row[0] || '',
       customer: customerName,
-      description: process || '',
+      description: buildInvoiceDescription(process, quantity, unit, construction, width, fabric),
       color,
       quantity,
       unit,
@@ -773,7 +805,15 @@ const handleCreateInvoice = (event) => {
     return acc;
   }, []).map(({ key, ...item }) => item);
 
-  navigate('/invoice', { state: { customer: customerName, items: invoiceItems } });
+  const referenceNo = Array.from(
+    new Set(
+      selectedRows
+        .map((row) => (row[5] || '').toString().trim())
+        .filter(Boolean)
+    )
+  ).join(', ');
+
+  navigate('/invoice', { state: { customer: customerName, referenceNo, items: invoiceItems } });
 };
 
 const handleDeleteConfirm = async () => {
