@@ -4,6 +4,8 @@ import { Container, Row, Col, Table, Form, Button, Spinner } from 'react-bootstr
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
+import { getTaxBreakdown, getTaxStatusFromStateCode } from './invoiceUtils';
+import logo from '../img/slogo.png'
 
 function Invoice() {
   const location = useLocation();
@@ -15,8 +17,11 @@ function Invoice() {
   const initialItems = Array.isArray(invoiceState.items) ? invoiceState.items : [];
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [existingChecked, setExistingChecked] = useState(false);
+  const [taxStatus, setTaxStatus] = useState(() => getTaxStatusFromStateCode(null));
+  const [taxStatusLoading, setTaxStatusLoading] = useState(false);
 
-  const stateCustomerId = invoiceState.customerid || invoiceState.customerId || invoiceState.customer_id || invoiceState.customerID || invoiceState.customerID || '';
+  const stateCustomerId = invoiceState.customerid || invoiceState.customerId || invoiceState.customer_id || invoiceState.customerID || 
+    (initialItems[0]?.customerid) || (initialItems[0]?.customerId) || (initialItems[0]?.customer_id) || '';
 
   const [invoiceDetails, setInvoiceDetails] = useState({
     invoiceNo: stateInvoiceNo || '',
@@ -27,6 +32,23 @@ function Invoice() {
     customer: invoiceState.customer || '',
     customerid: stateCustomerId || ''
   });
+
+  // Buyer Details, QR Code, IRN, ACK State
+  const [buyerDetails, setBuyerDetails] = useState({
+    name: '',
+    address: '',
+    gstin: '',
+    contact: ''
+  });
+
+  // Company Details (Hardcoded)
+  const companyInfo = {
+    name: 'SRI SHIVA DESIGNS',
+    address: 'PLOT NO . G3, 4TH CROSS,SIPCOT INDUSTRIAL GROWTH CENTRE,PERUNDURAI,TAMILNADU,INDIA - 638052',
+    gstin: '33AMEPP2435Q2ZP',
+    contact: '9443029027'
+   
+  };
 
   useEffect(() => {
     const fetchInvoiceDetails = async () => {
@@ -84,17 +106,136 @@ function Invoice() {
     (initialItems[0] && initialItems[0].customer) ||
     '';
 
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchTaxStatus = async () => {
+      if (!customerName?.trim()) {
+        if (isActive) {
+          setTaxStatus(getTaxStatusFromStateCode(null));
+        }
+        return;
+      }
+
+      try {
+        setTaxStatusLoading(true);
+        const responseData = await readInvoices(customerName);
+        const stateCode =
+          responseData?.stateCode ??
+          responseData?.statecode ??
+          responseData?.customerStateCode ??
+          responseData?.customer_state_code ??
+          responseData?.state_code ??
+          responseData?.data?.stateCode ??
+          responseData?.data?.statecode ??
+          responseData?.data?.customerStateCode;
+
+        if (isActive) {
+          setTaxStatus(getTaxStatusFromStateCode(stateCode));
+        }
+      } catch (e) {
+        console.warn('Failed to resolve customer tax status', e);
+        if (isActive) {
+          setTaxStatus(getTaxStatusFromStateCode(null));
+        }
+      } finally {
+        if (isActive) {
+          setTaxStatusLoading(false);
+        }
+      }
+    };
+
+    fetchTaxStatus();
+    return () => {
+      isActive = false;
+    };
+  }, [customerName]);
+
+  // Fetch buyer details from backend
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchBuyerDetails = async () => {
+      const customerId = invoiceDetails.customerid || stateCustomerId;
+      if (!customerId?.trim()) {
+        if (isActive) {
+          setBuyerDetails({
+            name: customerName || 'Not Specified',
+            address: '-',
+            gstin: '-',
+            contact: '-'
+          });
+        }
+        return;
+      }
+
+      try {
+        const resp = await axios.post(`${API_URL}/getCustomerDetails`, { customerId });
+        if (resp && resp.data) {
+          const details = resp.data;
+          if (isActive) {
+            setBuyerDetails({
+              name: details.name || details.customerName || customerName || 'Not Specified',
+              address: details.address || details.customerAddress || '-',
+              gstin: details.gstin || details.customerGstin || '-',
+              contact: details.contact || details.phone || details.contactNo || '-'
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch buyer details', err);
+        if (isActive) {
+          setBuyerDetails({
+            name: customerName || 'Not Specified',
+            address: '-',
+            gstin: '-',
+            contact: '-'
+          });
+        }
+      }
+    };
+
+    fetchBuyerDetails();
+    return () => {
+      isActive = false;
+    };
+  }, [invoiceDetails.customerid, stateCustomerId, customerName]);
+
   const [lineItems, setLineItems] = useState(() =>
-    initialItems.map((item) => ({
-      ...item,
-      description: item.description || item.itemDescription || '',
-      color: item.color || '',
-      quantity: item.quantity || 0,
-      unit: item.unit || 'KG',
-      rate: item.rate || 0,
-      tax: item.tax || 0,
-      amount: item.amount || 0
-    }))
+    initialItems.map((item) => {
+      const qty = Number(item.quantity || 0);
+      const rate = Number(item.rate || 0);
+      const base = qty * rate;
+      const taxPercent = Number(item.tax || 0);
+      const taxAmount = (taxPercent / 100) * base;
+      const total = base + taxAmount;
+
+      let cgst = '0.00';
+      let sgst = '0.00';
+      let igst = '0.00';
+
+      const initialTaxStatus = getTaxStatusFromStateCode(null);
+      if (initialTaxStatus.type === 'cgst_sgst') {
+        cgst = (taxAmount / 2).toFixed(2);
+        sgst = (taxAmount / 2).toFixed(2);
+      } else {
+        igst = taxAmount.toFixed(2);
+      }
+
+      return {
+        ...item,
+        description: item.description || item.itemDescription || '',
+        color: item.color || '',
+        quantity: item.quantity || 0,
+        unit: item.unit || 'KG',
+        rate: item.rate || 0,
+        tax: item.tax || 0,
+        amount: total.toFixed(2),
+        cgst,
+        sgst,
+        igst
+      };
+    })
   );
 
   useEffect(() => {
@@ -114,13 +255,13 @@ function Invoice() {
   const STORAGE_KEY = 'invoices_v1';
   const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
-  async function readInvoices() {
-    // Try backend first
+  async function readInvoices(customerName = '') {
     try {
-      const resp = await axios.get(`${API_URL}/getInvoiceNo`);
-      
+      const payload = customerName ? { customerName } : {};
+      const resp = await axios.post(`${API_URL}/getInvoiceNo`, payload);
+
       if (resp && resp.data) {
-        console.log('Form Submitted with Data:', resp.data);
+        console.log('Invoice number response:', resp.data);
         return resp.data;
       }
     } catch (e) {
@@ -135,8 +276,16 @@ function Invoice() {
   }
 
   async function generateInvoiceNo() {
-    const invoices = await readInvoices();
-    const count = invoices.message ? invoices.message + 1 : 1;
+    const invoices = await readInvoices(invoiceDetails.customer || customerName || '');
+    const countValue = Number(
+      invoices?.message ??
+      invoices?.count ??
+      invoices?.invoiceNo ??
+      invoices?.invoiceNumber ??
+      invoices?.invNo ??
+      0
+    );
+    const count = Number.isFinite(countValue) && countValue > 0 ? countValue + 1 : 1;
     const date = new Date(invoiceDetails.invoiceDate || Date.now());
     const fy = getFinancialYear(date);
     return `INV-${fy}-${String(count).padStart(4, '0')}`;
@@ -153,34 +302,67 @@ function Invoice() {
     return `${year - 1}-${String(year).slice(-2)}`;
   }
 
-  const recalcLineAmount = (line) => {
-    const qty = Number(line.quantity || 0);
-    const rate = Number(line.rate || 0);
+  const syncLineItemTaxBreakdown = (lineItem) => {
+    const qty = Number(lineItem.quantity || 0);
+    const rate = Number(lineItem.rate || 0);
     const base = qty * rate;
-    const tax = (Number(line.tax || 0) / 100) * base;
-    const total = base + tax;
-    return { base, tax, total };
+    const taxPercent = Number(lineItem.tax || 0);
+    const taxAmount = (taxPercent / 100) * base;
+    const total = base + taxAmount;
+
+    let cgst = '0.00';
+    let sgst = '0.00';
+    let igst = '0.00';
+
+    if (taxStatus.type === 'cgst_sgst') {
+      // Split tax equally for CGST and SGST
+      cgst = (taxAmount / 2).toFixed(2);
+      sgst = (taxAmount / 2).toFixed(2);
+    } else {
+      // All tax goes to IGST
+      igst = taxAmount.toFixed(2);
+    }
+
+    return {
+      ...lineItem,
+      amount: total.toFixed(2),
+      cgst: cgst,
+      sgst: sgst,
+      igst: igst
+    };
   };
 
   const invoiceTotals = useMemo(() => {
     let totalTax = 0;
+    let totalCgst = 0;
+    let totalSgst = 0;
+    let totalIgst = 0;
+
     lineItems.forEach((item) => {
       const qty = Number(item.quantity || 0);
       const rate = Number(item.rate || 0);
       const base = qty * rate;
       const tax = (Number(item.tax || 0) / 100) * base;
       totalTax += tax;
+      totalCgst += Number(item.cgst || 0);
+      totalSgst += Number(item.sgst || 0);
+      totalIgst += Number(item.igst || 0);
     });
+
     const discountValue = Number(invoiceDetails.totalDiscount || 0);
     const subTotal = lineItems.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.rate || 0), 0);
     const total = subTotal + totalTax - discountValue;
+    const taxBreakdown = getTaxBreakdown(totalTax, taxStatus.type);
     return {
       subTotal: subTotal.toFixed(2),
       totalDiscount: discountValue.toFixed(2),
-      totalTax: totalTax.toFixed(2),
-      totalAmount: total.toFixed(2)
+      totalTax: taxBreakdown.totalTax,
+      totalAmount: total.toFixed(2),
+      cgst: taxStatus.type === 'cgst_sgst' ? totalCgst.toFixed(2) : taxBreakdown.cgst,
+      sgst: taxStatus.type === 'cgst_sgst' ? totalSgst.toFixed(2) : taxBreakdown.sgst,
+      igst: taxStatus.type === 'igst' ? totalIgst.toFixed(2) : taxBreakdown.igst
     };
-  }, [lineItems, invoiceDetails.totalDiscount]);
+  }, [lineItems, invoiceDetails.totalDiscount, taxStatus.type]);
 
   if (!isAuthenticated) {
     return null;
@@ -203,7 +385,7 @@ function Invoice() {
     navigate('/delivery');
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!lineItems.length) {
       alert('No invoice items found. Please select line items from Delivery.');
       return;
@@ -217,92 +399,395 @@ function Invoice() {
       console.warn('Failed to save invoice', e);
     }
 
+    // Fetch buyer details before printing
+    let currentBuyerDetails = { ...buyerDetails };
+    const customerId = invoiceDetails.customerid || stateCustomerId;
+    const searchParam = customerId ? { customerId } : (customerName ? { customerName } : {});
+    console.log('Customer ID:', customerId);
+    console.log('Customer Name:', customerName);
+    console.log('Search Param:', searchParam);
+    console.log('Invoice Details:', invoiceDetails);
+    
+    if ((customerId && String(customerId).trim()) || (customerName && String(customerName).trim())) {
+      try {
+        console.log('Fetching buyer details from:', `${API_URL}/getCustomerDetails`);
+        console.log('Payload:', searchParam);
+        const resp = await axios.post(`${API_URL}/getCustomerDetails`, searchParam);
+        console.log('Buyer details response:', resp.data);
+        if (resp && resp.data) {
+          const details = resp.data;
+          currentBuyerDetails = {
+            name: details.name || 'Not Specified',
+            address1: details.address1 || '-',
+            address2: details.address2 || '-',
+            city: details.city || '-',
+            pincode: details.pincode || '-',
+            state: details.state || '-',
+            gstin: details.gstin || '-',
+            contact: details.contact_number || '-'
+          };
+          setBuyerDetails(currentBuyerDetails);
+          console.log('Updated buyer details:', currentBuyerDetails);
+        }
+      } catch (err) {
+        console.error('Failed to fetch buyer details:', err);
+        currentBuyerDetails = {
+          name: customerName || 'Not Specified',
+           address1: '-',
+           address2: '-',
+            city: '-',
+            pincode: '-',
+            state: '-',
+            gstin:  '-',
+            contact:  '-'
+        };
+      }
+    } else {
+      console.log('No customer ID or name found, using fallback');
+      currentBuyerDetails = {
+        name: customerName || 'Not Specified',
+        address: '-',
+        gstin: '-',
+        contact: '-'
+      };
+    }
+
+    // Fetch QR Code, IRN, and ACK data before printing
+    let qrLink = '';
+    let irn = '';
+    let ackNo = '';
+    let ackDto = '';
+
+    try {
+      const invoiceNo = invoiceDetails.invoiceNo;
+      const resp = await axios.post(`${API_URL}/generateQRCode`, {
+        invoiceNo: invoiceNo,
+        subtotal: invoiceTotals.subTotal,
+        tax: invoiceTotals.totalTax,
+        totalAmount: invoiceTotals.totalAmount
+      });
+
+      if (resp && resp.data) {
+        qrLink = resp.data.qr_code_url || '';
+        irn = resp.data.irn || '';
+        ackNo = resp.data.ack_no || '';
+        ackDto = resp.data.ack_date || '';
+      }
+    } catch (err) {
+      console.warn('Failed to fetch QR code data', err);
+    }
+
+    const financialYear = invoiceDetails.financialYear || getFinancialYear(invoiceDetails.invoiceDate);
     const rowsHtml = lineItems
-      .map((item, index) => `
+      .map((item, index) => {
+        const qty = Number(item.quantity || 0);
+        const rate = Number(item.rate || 0);
+        const amount = Number(item.amount || 0);
+        return `
         <tr>
-          <td style="padding:8px;border:1px solid #ccc;">${index + 1}</td>
-          <td style="padding:8px;border:1px solid #ccc;">${item.dcNo || ''}</td>
-          <td style="padding:8px;border:1px solid #ccc;">${item.description}</td>
-          <td style="padding:8px;border:1px solid #ccc;">${item.color || ''}</td>
-          <td style="padding:8px;border:1px solid #ccc;">${item.quantity}</td>
-          <td style="padding:8px;border:1px solid #ccc;">${item.unit}</td>
-          <td style="padding:8px;border:1px solid #ccc;">${item.rate}</td>
-          <td style="padding:8px;border:1px solid #ccc;">${item.tax || 0}</td>
-          <td style="padding:8px;border:1px solid #ccc;">${item.amount}</td>
+          <td style="padding:8px;border:1px solid #000;text-align:center;font-size:12px;">${index + 1}</td>
+          <td style="padding:8px;border:1px solid #000;font-size:12px;">${item.dcNo || '-'}</td>
+          <td style="padding:8px;border:1px solid #000;font-size:12px;">${item.description || ''}</td>
+          <td style="padding:8px;border:1px solid #000;font-size:12px;text-align:center;">${item.color || '-'}</td>
+          <td style="padding:8px;border:1px solid #000;text-align:center;font-size:12px;">${qty.toFixed(2)}</td>
+          <td style="padding:8px;border:1px solid #000;text-align:center;font-size:12px;">${item.unit || 'KG'}</td>
+          <td style="padding:8px;border:1px solid #000;text-align:right;font-size:12px;">${rate.toFixed(2)}</td>
+          <td style="padding:8px;border:1px solid #000;text-align:right;font-size:12px;">${item.tax || 0}%</td>
+          <td style="padding:8px;border:1px solid #000;text-align:right;font-size:12px;">${amount.toFixed(2)}</td>
         </tr>
-      `)
+      `;
+      })
       .join('');
+
+    const amountInWords = convertAmountToWords(Number(invoiceTotals.totalAmount));
+
+    // Calculate tax rates and amounts based on actual line item tax percentages
+    const subtotal = Number(invoiceTotals.subTotal);
+    let totalTaxAmount = 0;
+    let cgstRate = 0, sgstRate = 0, igstRate = 0;
+    let cgstAmount = 0, sgstAmount = 0, igstAmount = 0;
+
+    // Calculate total tax from line items
+    lineItems.forEach((item) => {
+      const qty = Number(item.quantity || 0);
+      const rate = Number(item.rate || 0);
+      const base = qty * rate;
+      const tax = (Number(item.tax || 0) / 100) * base;
+      totalTaxAmount += tax;
+    });
+
+    if (taxStatus.type === 'cgst_sgst') {
+      // For CGST/SGST, split the tax amount equally
+      cgstAmount = totalTaxAmount / 2;
+      sgstAmount = totalTaxAmount / 2;
+      cgstRate = subtotal > 0 ? (cgstAmount / subtotal) * 100 : 0;
+      sgstRate = subtotal > 0 ? (sgstAmount / subtotal) * 100 : 0;
+    } else {
+      // For IGST, all tax goes to IGST
+      igstAmount = totalTaxAmount;
+      igstRate = subtotal > 0 ? (igstAmount / subtotal) * 100 : 0;
+    }
+
+    const invoiceCopyLabels = [
+      'Original for Recipient',
+      'Original for Supplier',
+      'Duplicate for Recipient',
+      'Duplicate for Supplier'  
+    ];
 
     const html = `
       <!DOCTYPE html>
       <html lang="en">
       <head>
         <meta charset="UTF-8" />
-        <title>Invoice</title>
+        <title>Tax Invoice - ${invoiceDetails.invoiceNo}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; color: #222; }
-          h1, h2, h3, h4 { margin: 0; }
-          .invoice-header { margin-bottom: 20px; }
-          .invoice-header p { margin: 4px 0; }
-          table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-          th { background: #f4f4f4; }
-          .footer { margin-top: 24px; }
-          .summary { margin-top: 20px; width: 100%; max-width: 480px; }
-          .summary td { padding: 8px; }
+          * { margin: 0; padding: 0; }
+          body { font-family: 'Arial', sans-serif; font-size: 12px; line-height: 1.3; color: #000; }
+          .page { width: 210mm; height: 297mm; padding: 10mm; background: white; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+          .company-block { display: flex; align-items: flex-start; gap: 12px; flex: 1; }
+          .company-logo { width: 190px; height: 190px; border: 1px solid #ccc; object-fit: contain; }
+          .company-info { flex: 1; }
+          .company-name { font-size: 25px; font-weight: bold; margin-bottom: 3px; }
+          .company-details { font-size: 12px; line-height: 1.5; }
+          .header-right { text-align: right; min-width: 166px; }
+          .invoice-type { font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 8px; }
+          .qr-section { text-align: right; width: auto; }
+          .qr-placeholder { width: 190px; height: 190px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+          
+          .invoice-details { display: flex; justify-content: space-between; margin: 10px 0; font-size: 12px; }
+          .details-column { flex: 1; }
+          .detail-row { margin: 3px 0; display: flex; }
+          .detail-label { font-weight: bold; min-width: 100px; }
+          .detail-value { flex: 1; }
+          
+          .parties { display: flex; gap: 20px; margin: 15px 0; font-size: 12px; }
+          .party { flex: 1; border: 1px solid #000; padding: 8px; }
+          .party-title { font-weight: bold; margin-bottom: 5px; text-decoration: underline; }
+          .party-line { margin: 2px 0; }
+          
+          .items-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+          .items-table th { border: 1px solid #000; padding: 6px; background: #f5f5f5; font-weight: bold; font-size: 12px; text-align: center; }
+          .items-table td { border: 1px solid #000; padding: 6px; font-size: 12px; }
+          
+          .totals-section { display: flex; gap: 20px; margin: 15px 0; }
+          .totals-left { flex: 2; }
+          .totals-right { flex: 1; border: 1px solid #000; padding: 8px; }
+          .totals-right-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 12px; }
+          .total-amount { font-weight: bold; border-top: 2px solid #000; padding-top: 4px; margin-top: 4px; }
+          
+          .amount-words { font-size: 12px; margin: 10px 0; padding: 8px; border: 1px solid #000; }
+          .amount-label { font-weight: bold; }
+          
+          .tax-breakdown { width: 100%; border-collapse: collapse; margin: 15px 0; }
+          .tax-breakdown th, .tax-breakdown td { border: 1px solid #000; padding: 6px; font-size: 12px; text-align: right; }
+          .tax-breakdown th { background: #f5f5f5; font-weight: bold; }
+          
+          .footer-section { display: flex; gap: 15px; margin: 15px 0; font-size: 12px; }
+          .footer-col { flex: 1; border: 1px solid #000; padding: 8px; }
+          .footer-col-title { font-weight: bold; margin-bottom: 5px; }
+          
+          .signature-section { display: flex; justify-content: space-between; margin-top: 20px; text-align: center; font-size: 12px; }
+          .signature-block { width: 150px; }
+          .signature-line { border-top: 1px solid #000; margin-top: 30px; padding-top: 5px; }
+          .invoice-copy { page-break-after: always; break-after: page; }
+          .invoice-copy:last-of-type { page-break-after: auto; break-after: auto; }
+          
+          @media print {
+            body { margin: 0; padding: 0; }
+            .page { margin: 0; padding: 10mm; }
+          }
         </style>
       </head>
       <body>
-        <div class="invoice-header">
-          <h1>Invoice</h1>
-          <p><strong>Customer:</strong> ${customerName}</p>
-          <p><strong>Invoice No:</strong> ${invoiceDetails.invoiceNo}</p>
-          <p><strong>Invoice Date:</strong> ${invoiceDetails.invoiceDate}</p>
-          <p><strong>Financial Year:</strong> ${invoiceDetails.financialYear || getFinancialYear(invoiceDetails.invoiceDate)}</p>
-          <p><strong>Reference No:</strong> ${invoiceDetails.referenceNo}</p>
-        </div>
+        <div class="page">
+          <!-- Header -->
+          <div class="header">
+            <div class="company-block">
+              <img src="${logo}" alt="Company Logo" class="company-logo" />
+              <div class="company-info">
+                <div class="company-name">${companyInfo.name}</div>
+                <div class="company-details">
+                  <div>${companyInfo.address}</div>
+                  <div>GSTIN/UIN: ${companyInfo.gstin}</div>
+                  <div>Contact: ${companyInfo.contact}</div>
+                  ${irn ? `<div style="font-size: 12px; margin-top: 4px;"><strong>IRN:</strong> ${irn}</div>` : ''}
+                  ${ackNo ? `<div style="font-size: 12px; margin-top: 2px;"><strong>ACK No:</strong> ${ackNo}</div>` : ''}
+                  ${ackDto ? `<div style="font-size: 12px; margin-top: 2px;"><strong>ACK Date:</strong> ${ackDto}</div>` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="header-right">
+              <div class="invoice-type">
+                TAX INVOICE<br/>
+                <span class="copy-label">(Original for Supplier)</span>
+              </div>
+              <div class="qr-section">
+                ${qrLink ? `<img src="${qrLink}" alt="QR Code" style="width: 158px; height: 151px; border: 1px solid #ccc;" />` : `<div class="qr-placeholder">[QR Code]</div>`}
+              </div>
+            </div>
+          </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>DC No</th>
-              <th>Description</th>              <th>Color</th>              <th>Color</th>
-              <th>Qty</th>
-              <th>Unit</th>
-              <th>Rate</th>
-              <th>Tax %</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHtml}
-          </tbody>
-        </table>
+          <!-- Invoice Meta Details -->
+          <div class="invoice-details">
+            <div class="details-column">
+              <div class="detail-row">
+                <div class="detail-label">Invoice No.:</div>
+                <div class="detail-value">${invoiceDetails.invoiceNo}</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-label">Dated:</div>
+                <div class="detail-value">${invoiceDetails.invoiceDate}</div>
+              </div>
+            </div>
+            <div class="details-column">
+              <div class="detail-row">
+                <div class="detail-label">Reference No:</div>
+                <div class="detail-value">${invoiceDetails.referenceNo || '-'}</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-label">Financial Year:</div>
+                <div class="detail-value">${financialYear}</div>
+              </div>
+            </div>
+          </div>
 
-        <table class="summary">
-          <tbody>
-            <tr>
-              <td><strong>Subtotal</strong></td>
-              <td>${invoiceTotals.subTotal}</td>
-            </tr>
-            <tr>
-              <td><strong>Total Discount</strong></td>
-              <td>${invoiceTotals.totalDiscount}</td>
-            </tr>
-            <tr>
-              <td><strong>Total Tax</strong></td>
-              <td>${invoiceTotals.totalTax}</td>
-            </tr>
-            <tr>
-              <td><strong>Total Amount</strong></td>
-              <td>${invoiceTotals.totalAmount}</td>
-            </tr>
-          </tbody>
-        </table>
+          <!-- Parties Section -->
+          <div class="parties">
+            <div class="party">
+              <div class="party-title">Buyer (Bill To)</div>
+              <div class="party-line"><strong>${currentBuyerDetails.name}</strong></div>
+              <div class="party-line">${currentBuyerDetails.address1}</div>
+               <div class="party-line">${currentBuyerDetails.address2}</div>
+               <div class="party-line">${currentBuyerDetails.city} - ${currentBuyerDetails.pincode}</div>
+               <div class="party-line">${currentBuyerDetails.state}</div>
+              <div class="party-line">GSTIN/UIN: ${currentBuyerDetails.gstin}</div>
+              <div class="party-line">Contact: ${currentBuyerDetails.contact}</div>
+            </div>
+            <div class="party">
+              <div class="party-title">Consignee (Ship To) </div>
+              <div class="party-line"><strong>${currentBuyerDetails.name}</strong></div>
+              <div class="party-line">${currentBuyerDetails.address1}</div>
+               <div class="party-line">${currentBuyerDetails.address2}</div>
+               <div class="party-line">${currentBuyerDetails.city} - ${currentBuyerDetails.pincode}</div>
+               <div class="party-line">${currentBuyerDetails.state}</div>
+              <div class="party-line">GSTIN/UIN: ${currentBuyerDetails.gstin}</div>
+              <div class="party-line">Contact: ${currentBuyerDetails.contact}</div>
+            </div>
+          </div>
 
-        <div class="footer">
-          <p><strong>Total Items:</strong> ${lineItems.length}</p>
+          <!-- Items Table -->
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width: 3%;">S.No</th>
+                <th style="width: 7%;">DC No</th>
+                <th style="width: 30%;">Description of Services</th>
+                <th style="width: 8%;">Color</th>
+                <th style="width: 8%;">Qty</th>
+                <th style="width: 6%;">Unit</th>
+                <th style="width: 10%;">Rate</th>
+                <th style="width: 8%;">Tax %</th>
+                <th style="width: 12%;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          <!-- Totals Section -->
+          <div class="totals-section">
+            <div class="totals-left">
+              <div class="amount-words">
+                <span class="amount-label">Amount Chargeable (in words):</span>
+                <div style="margin-top: 3px;">${amountInWords}</div>
+              </div>
+            </div>
+            <div class="totals-right">
+              <div class="totals-right-row">
+                <span>Subtotal:</span>
+                <span>₹ ${invoiceTotals.subTotal}</span>
+              </div>
+              <div class="totals-right-row">
+                <span>Discount:</span>
+                <span>₹ ${invoiceTotals.totalDiscount}</span>
+              </div>
+              <div class="totals-right-row">
+                <span>Tax:</span>
+                <span>₹ ${invoiceTotals.totalTax}</span>
+              </div>
+              <div class="totals-right-row total-amount">
+                <span>Total Amount:</span>
+                <span>₹ ${invoiceTotals.totalAmount}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tax Breakdown -->
+          <table class="tax-breakdown">
+            <thead>
+              <tr>
+                <th style="text-align: left; width: 30%;">HSN/SAC</th>
+                <th style="width: 15%;">Taxable Value</th>
+                ${taxStatus.type === 'cgst_sgst' ? `
+                  <th style="width: 15%;">CGST Rate</th>
+                  <th style="width: 15%;">CGST Amount</th>
+                  <th style="width: 15%;">SGST Rate</th>
+                  <th style="width: 15%;">SGST Amount</th>
+                ` : `
+                  <th style="width: 15%;">IGST Rate</th>
+                  <th style="width: 15%;">IGST Amount</th>
+                `}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-align: left;">998821</td>
+                <td>₹ ${subtotal.toFixed(2)}</td>
+                ${taxStatus.type === 'cgst_sgst' ? `
+                  <td>${cgstRate}%</td>
+                  <td>₹ ${cgstAmount.toFixed(2)}</td>
+                  <td>${sgstRate}%</td>
+                  <td>₹ ${sgstAmount.toFixed(2)}</td>
+                ` : `
+                  <td>${igstRate}%</td>
+                  <td>₹ ${igstAmount.toFixed(2)}</td>
+                `}
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Footer Sections -->
+          <div class="footer-section">
+            <div class="footer-col">
+              <div class="footer-col-title">Declaration</div>
+              <div style="font-size: 12px;">1) Customers must inspect the goods at the time of delivery Once goods are delivered, company will not be liable for any quality claim.
+
+2) Payment accept A/C payee Cheque/RTGS/NEFT only.
+
+3) Payment made after the due date will attract interest @ 18% PA
+
+4) GST and any other applicable taxes/duties will be charged extra as per govt norms.</div>
+            </div>
+          
+            <div class="footer-col" style="line-height:25px">
+              <div class="footer-col-title">Company's Bank Details</div>
+              <div>Bank Name: - Dhanlaxmi Bank- CC A/c</div>
+              <div>Account Number: - 012510100001612</div>
+              <div>IFSC Code: - V.Chatram Erode & DLXB0000125</div>
+            </div>
+            
+            </div>
+
+          <!-- Signature Section -->
+          <div class="signature-section">
+            <div class="signature-block">
+              <div>Authorized Signatory</div>
+              <div class="signature-line"></div>
+            </div>
+          </div>
         </div>
       </body>
       </html>
@@ -313,10 +798,65 @@ function Invoice() {
       newWindow.document.write(html);
       newWindow.document.close();
       newWindow.focus();
-      newWindow.print();
+
+      const basePage = newWindow.document.querySelector('.page');
+      if (basePage) {
+        const docBody = newWindow.document.body;
+        docBody.innerHTML = '';
+
+        invoiceCopyLabels.forEach((label, index) => {
+          const pageCopy = basePage.cloneNode(true);
+          pageCopy.classList.add('invoice-copy');
+
+          const copyLabelNode = pageCopy.querySelector('.copy-label');
+          if (copyLabelNode) {
+            copyLabelNode.textContent = `(${label})`;
+          }
+
+          if (index === invoiceCopyLabels.length - 1) {
+            pageCopy.classList.remove('invoice-copy');
+          }
+
+          docBody.appendChild(pageCopy);
+        });
+      }
+
+      setTimeout(() => {
+        newWindow.print();
+      }, 500);
     } else {
       alert('Unable to open print window.');
     }
+  };
+
+  const convertAmountToWords = (amount) => {
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const convertGroup = (num) => {
+      if (num === 0) return '';
+      if (num < 10) return ones[num];
+      if (num < 20) return teens[num - 10];
+      if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? ' ' + ones[num % 10] : '');
+      return ones[Math.floor(num / 100)] + ' Hundred' + (num % 100 ? ' ' + convertGroup(num % 100) : '');
+    };
+
+    const roundedAmount = Math.round(amount);
+    if (roundedAmount === 0) return 'Zero Only';
+
+    const crores = Math.floor(roundedAmount / 10000000);
+    const lakhs = Math.floor((roundedAmount % 10000000) / 100000);
+    const thousands = Math.floor((roundedAmount % 100000) / 1000);
+    const remainder = roundedAmount % 1000;
+
+    let words = '';
+    if (crores) words += convertGroup(crores) + ' Crore ';
+    if (lakhs) words += convertGroup(lakhs) + ' Lakh ';
+    if (thousands) words += convertGroup(thousands) + ' Thousand ';
+    if (remainder) words += convertGroup(remainder);
+
+    return (words.trim() + ' Only').replace(/\s+/g, ' ');
   };
 
   const saveInvoice = () => {
@@ -331,7 +871,12 @@ function Invoice() {
       subtotal: invoiceTotals.subTotal,
       totalDiscount: invoiceTotals.totalDiscount,
       totalTax: invoiceTotals.totalTax,
-      totalAmount: invoiceTotals.totalAmount
+      totalAmount: invoiceTotals.totalAmount,
+      cgst: invoiceTotals.cgst,
+      sgst: invoiceTotals.sgst,
+      igst: invoiceTotals.igst,
+      taxStatus: taxStatus.label,
+      taxType: taxStatus.type
     };
     
     return invoice;
@@ -403,7 +948,7 @@ function Invoice() {
               Back to Delivery
             </Button>
             <Button variant="primary" onClick={handlePrint}>
-              
+              Print Invoice
             </Button>
           </Col>
         </Row>
@@ -418,6 +963,9 @@ function Invoice() {
                 <p>
                   <strong>Line items selected:</strong> {lineItems.length}
                 </p>
+                <p>
+                  <strong>Tax Status:</strong> {taxStatusLoading ? 'Checking...' : taxStatus.label}
+                </p>
               </div>
 
               <Table bordered responsive>
@@ -430,14 +978,22 @@ function Invoice() {
                     <th>Qty</th>
                     <th>Unit</th>
                     <th>Rate</th>
-                    <th>Tax %</th>
+                    <th>{taxStatus.taxColumns.length > 1 ? 'CGST/SGST %' : 'IGST %'}</th>
+                    {taxStatus.type === 'cgst_sgst' ? (
+                      <>
+                        <th>CGST</th>
+                        <th>SGST</th>
+                      </>
+                    ) : (
+                      <th>IGST</th>
+                    )}
                     <th>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {lineItems.length === 0 && (
                     <tr>
-                      <td colSpan="9" className="text-center py-4">
+                      <td colSpan={taxStatus.type === 'cgst_sgst' ? '11' : '10'} className="text-center py-4">
                         No selected items. Go back to Delivery and choose delivery line items first.
                       </td>
                     </tr>
@@ -455,8 +1011,7 @@ function Invoice() {
                             onChange={(e) => {
                               const copy = JSON.parse(JSON.stringify(lineItems));
                               copy[index].quantity = e.target.value;
-                              const { total } = recalcLineAmount(copy[index]);
-                              copy[index].amount = total.toFixed(2);
+                              copy[index] = syncLineItemTaxBreakdown(copy[index]);
                               setLineItems(copy);
                             }}
                           />
@@ -469,8 +1024,7 @@ function Invoice() {
                             onChange={(e) => {
                               const copy = JSON.parse(JSON.stringify(lineItems));
                               copy[index].rate = e.target.value;
-                              const { total } = recalcLineAmount(copy[index]);
-                              copy[index].amount = total.toFixed(2);
+                              copy[index] = syncLineItemTaxBreakdown(copy[index]);
                               setLineItems(copy);
                             }}
                           />
@@ -482,12 +1036,19 @@ function Invoice() {
                             onChange={(e) => {
                               const copy = JSON.parse(JSON.stringify(lineItems));
                               copy[index].tax = e.target.value;
-                              const { total } = recalcLineAmount(copy[index]);
-                              copy[index].amount = total.toFixed(2);
+                              copy[index] = syncLineItemTaxBreakdown(copy[index]);
                               setLineItems(copy);
                             }}
                           />
                         </td>
+                        {taxStatus.type === 'cgst_sgst' ? (
+                          <>
+                            <td>{item.cgst || '0.00'}</td>
+                            <td>{item.sgst || '0.00'}</td>
+                          </>
+                        ) : (
+                          <td>{item.igst || '0.00'}</td>
+                        )}
                         <td>{item.amount}</td>
                       </tr>
                   ))}
@@ -515,6 +1076,23 @@ function Invoice() {
                   <Col md={9}><strong>Total Tax</strong></Col>
                   <Col md={3} className="text-end">{invoiceTotals.totalTax}</Col>
                 </Row>
+                {taxStatus.type === 'cgst_sgst' ? (
+                  <>
+                    <Row className="mb-2">
+                      <Col md={9}>CGST</Col>
+                      <Col md={3} className="text-end">{invoiceTotals.cgst}</Col>
+                    </Row>
+                    <Row className="mb-2">
+                      <Col md={9}>SGST</Col>
+                      <Col md={3} className="text-end">{invoiceTotals.sgst}</Col>
+                    </Row>
+                  </>
+                ) : (
+                  <Row className="mb-2">
+                    <Col md={9}>IGST</Col>
+                    <Col md={3} className="text-end">{invoiceTotals.igst}</Col>
+                  </Row>
+                )}
                 <Row>
                   <Col md={9}><strong>Total Amount</strong></Col>
                   <Col md={3} className="text-end"><strong>{invoiceTotals.totalAmount}</strong></Col>

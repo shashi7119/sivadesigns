@@ -14,12 +14,12 @@ function Customer() {
 const table = useRef();
     const [formData, setFormData] = useState({
         mname: '',type:'customer',email:'',contact_number:'',ide:''
-        ,address1:'',address2:'',pincode:'',gstin:'',state:'',ship_contact_number:'',
+        ,address1:'',address2:'',city:'',pincode:'',gstin:'',state:'',ship_contact_number:'',
         ship_address1:'',ship_address2:'',ship_state:'',ship_pincode:'',ship_gstin:'',ship_name:''
       });
 
       const regexPatterns = {
-        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,state: /^[a-zA-Z0-9_@./#&+\-, ]*$/,email: /^[a-zA-Z0-9_@./#&+\-, ]*$/,
+        mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,state: /^[a-zA-Z0-9_@./#&+\-, ]*$/,city: /^[a-zA-Z0-9_@./#&+\-, ]*$/,email: /^[a-zA-Z0-9_@./#&+\-, ]*$/,
         address1: /^[a-zA-Z0-9_@./#&+\-, ]*$/,contact_number: /^[0-9 ]*$/,
         address2: /^[a-zA-Z0-9_@./#&+\-, ]*$/,pincode: /^[0-9 ]*$/,
         gstin: /^[a-zA-Z0-9]*$/, ship_name: /^[a-zA-Z0-9_@./#&+\-, ]*$/,
@@ -133,9 +133,9 @@ const table = useRef();
           console.log(dataArr);          
           
            setFormData({  mname: dataArr[0][1],ide:dataArr[0][0],type:'customer',email:dataArr[0][3],contact_number:dataArr[0][2]
-        ,address1:dataArr[0][4],address2:dataArr[0][5],state:dataArr[0][6],pincode:dataArr[0][7],gstin:dataArr[0][8],
-        ship_contact_number:dataArr[0][9],ship_address1:dataArr[0][10],ship_address2:dataArr[0][11],
-        ship_state:dataArr[0][12],ship_pincode:dataArr[0][13],ship_gstin:dataArr[0][14],ship_name:dataArr[0][16]});   
+        ,address1:dataArr[0][4],address2:dataArr[0][5],city:dataArr[0][6],state:dataArr[0][7],pincode:dataArr[0][8],gstin:dataArr[0][9],
+        ship_contact_number:dataArr[0][10],ship_address1:dataArr[0][11],ship_address2:dataArr[0][12],
+        ship_state:dataArr[0][13],ship_pincode:dataArr[0][14],ship_gstin:dataArr[0][15],ship_name:dataArr[0][17]});   
              
           setShow(true);
         }
@@ -210,6 +210,7 @@ const table = useRef();
                 <th className="px-6 py-3">Email</th> 
                 <th className="px-6 py-3">Address 1</th> 
                 <th className="px-6 py-3">Address 2</th> 
+                 <th className="px-6 py-3">City</th> 
                 <th className="px-6 py-3">State</th>
                 <th className="px-6 py-3">Pincode</th> 
                 <th className="px-6 py-3">GSTIN</th>   
@@ -337,6 +338,25 @@ const table = useRef();
                       [e.target.name]: e.target.value
                     }))}    
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </Form.Group>
+              </Row>
+              <Row className="flex items-center space-x-4">
+                <Form.Group className="col-6 mb-3">
+                  <Form.Label className="block text-sm font-medium text-gray-700">
+                    City
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="city"              
+                    value={formData.city}
+                    onKeyUp={handleKeyUp}
+                    onChange={(e) => setFormData((prevData) => ({
+                      ...prevData,
+                      [e.target.name]: e.target.value
+                    }))}    
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    required
                   />
                 </Form.Group>
               </Row>

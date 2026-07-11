@@ -76,6 +76,11 @@ export default function InvoiceList() {
     navigate('/invoice', { state: invoiceData });
   };
 
+  const handlePrint = (inv) => {
+    const invoiceData = normalizeInvoiceRow(inv);
+    navigate('/invoice', { state: invoiceData, action: 'print' });
+  };
+
   const handleDeleteRow = (rowNode) => {
     if (!window.confirm('Delete this invoice?')) return;
     const api = tableRef.current.dt();
@@ -149,7 +154,7 @@ export default function InvoiceList() {
                   searchable: true,
                   render: () =>
                     '<button class="btn btn-sm btn-outline-primary view-btn mr-2">View/Edit</button>' +
-                    '<button class="btn btn-sm btn-outline-danger delete-btn">Print</button>'
+                    '<button class="btn btn-sm btn-outline-primary print-btn">Print</button>'
                 }
               ],
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
@@ -168,6 +173,9 @@ export default function InvoiceList() {
                 const $row = $(row);
                 $row.find('.view-btn').off('click').on('click', function () {
                   handleView(data);
+                });
+                $row.find('.print-btn').off('click').on('click', function () {
+                  handlePrint(data);
                 });
                 $row.find('.delete-btn').off('click').on('click', function () {
                   handleDeleteRow(row);
