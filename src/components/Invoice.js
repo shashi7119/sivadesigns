@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Table, Form, Button, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Table, Form, Button, Spinner, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
@@ -16,6 +16,9 @@ function Invoice() {
   const isEditMode = Boolean(stateInvoiceNo);
   const initialItems = Array.isArray(invoiceState.items) ? invoiceState.items : [];
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasSavedInvoice, setHasSavedInvoice] = useState(Boolean(stateInvoiceNo));
+  const [showPrintPrompt, setShowPrintPrompt] = useState(false);
   const [existingChecked, setExistingChecked] = useState(false);
   const [taxStatus, setTaxStatus] = useState(() => getTaxStatusFromStateCode(null));
   const [taxStatusLoading, setTaxStatusLoading] = useState(false);
@@ -487,6 +490,7 @@ function Invoice() {
         <tr>
           <td style="padding:8px;border:1px solid #000;text-align:center;font-size:12px;">${index + 1}</td>
           <td style="padding:8px;border:1px solid #000;font-size:12px;">${item.dcNo || '-'}</td>
+          <td style="padding:8px;border:1px solid #000;font-size:12px;">${item.vchno || '-'}</td>
           <td style="padding:8px;border:1px solid #000;font-size:12px;">${item.description || ''}</td>
           <td style="padding:8px;border:1px solid #000;font-size:12px;text-align:center;">${item.color || '-'}</td>
           <td style="padding:8px;border:1px solid #000;text-align:center;font-size:12px;">${qty.toFixed(2)}</td>
@@ -683,7 +687,8 @@ function Invoice() {
               <tr>
                 <th style="width: 3%;">S.No</th>
                 <th style="width: 7%;">DC No</th>
-                <th style="width: 30%;">Description of Services</th>
+                <th style="width: 10%;">Vehicle No</th>
+                <th style="width: 27%;">Description of Services</th>
                 <th style="width: 8%;">Color</th>
                 <th style="width: 8%;">Qty</th>
                 <th style="width: 6%;">Unit</th>
@@ -888,20 +893,35 @@ function Invoice() {
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
     const invoice = saveInvoice();
     const apiPath = isEditMode ? 'updateInvoice' : 'addInvoice';
+    setIsSaving(true);
     try {
       const response = await axios.post(`${API_URL}/${apiPath}`, invoice);
       if (response && response.data) {
-        alert(isEditMode ? 'Invoice updated successfully' : 'Invoice created successfully');
-        navigate('/invoices');
+        alert(isEditMode ? 'Invoice updated successfully.' : 'Invoice created successfully.');
+        setHasSavedInvoice(true);
+        setShowPrintPrompt(true);
       } else {
         alert('Invoice saved locally but no server response');
       }
     } catch (err) {
       console.error('Save invoice error', err);
       alert('Failed to save invoice to server. Saved locally.');
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const handlePrintPromptYes = async () => {
+    setShowPrintPrompt(false);
+    await handlePrint();
+  };
+
+  const handlePrintPromptNo = () => {
+    setShowPrintPrompt(false);
+    navigate('/invoices');
   };
 
   const pageTitle = isEditMode ? 'Edit Invoice' : 'Create Invoice';
@@ -909,6 +929,17 @@ function Invoice() {
 
   return (
     <div className="main-content">
+      {isSaving && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.35)', zIndex: 2000 }}
+        >
+          <Spinner animation="border" variant="light" role="status" className="mb-3">
+            <span className="visually-hidden">Saving...</span>
+          </Spinner>
+          <div className="text-white fw-semibold">Saving invoice...</div>
+        </div>
+      )}
       <Container fluid>
         <Row className="mb-4">
           <Col>
@@ -952,7 +983,7 @@ function Invoice() {
             <Button variant="secondary" className="mr-2" onClick={handleBack}>
               Back to Delivery
             </Button>
-            <Button variant="primary" onClick={handlePrint}>
+            <Button variant="primary" onClick={handlePrint} disabled={!hasSavedInvoice || isSaving}>
               Print Invoice
             </Button>
           </Col>
@@ -978,6 +1009,7 @@ function Invoice() {
                   <tr>
                     <th>#</th>
                     <th>DC No</th>
+                    <th>Vehicle No</th>
                     <th>Description</th>
                     <th>Color</th>
                     <th>Qty</th>
@@ -998,7 +1030,7 @@ function Invoice() {
                 <tbody>
                   {lineItems.length === 0 && (
                     <tr>
-                      <td colSpan={taxStatus.type === 'cgst_sgst' ? '11' : '10'} className="text-center py-4">
+                      <td colSpan={taxStatus.type === 'cgst_sgst' ? '12' : '11'} className="text-center py-4">
                         No selected items. Go back to Delivery and choose delivery line items first.
                       </td>
                     </tr>
@@ -1007,6 +1039,7 @@ function Invoice() {
                     <tr key={index}>
                         <td>{index + 1}</td>
                         <td>{item.dcNo}</td>
+                        <td>{item.vchno || '-'}</td>
                         <td>{item.description}</td>
                         <td>{item.color}</td>
                         <td>
@@ -1084,17 +1117,17 @@ function Invoice() {
                 {taxStatus.type === 'cgst_sgst' ? (
                   <>
                     <Row className="mb-2">
-                      <Col md={9}>CGST</Col>
+                      <Col md={9}>CGST (2.5%)</Col>
                       <Col md={3} className="text-end">{invoiceTotals.cgst}</Col>
                     </Row>
                     <Row className="mb-2">
-                      <Col md={9}>SGST</Col>
+                      <Col md={9}>SGST (2.5%)</Col>
                       <Col md={3} className="text-end">{invoiceTotals.sgst}</Col>
                     </Row>
                   </>
                 ) : (
                   <Row className="mb-2">
-                    <Col md={9}>IGST</Col>
+                    <Col md={9}>IGST (5%)</Col>
                     <Col md={3} className="text-end">{invoiceTotals.igst}</Col>
                   </Row>
                 )}
@@ -1105,7 +1138,9 @@ function Invoice() {
 
                 <Row className="mt-3">
                   <Col className="d-flex justify-content-end">
-                    <Button variant="success" onClick={handleSave}>{isEditMode ? 'Update Invoice' : 'Save Invoice'}</Button>
+                    <Button variant="success" onClick={handleSave} disabled={isSaving}>
+                      {isSaving ? 'Saving...' : (isEditMode ? 'Update Invoice' : 'Save Invoice')}
+                    </Button>
                   </Col>
                 </Row>
               </div>
@@ -1113,6 +1148,21 @@ function Invoice() {
           </Col>
         </Row>
       </Container>
+
+      <Modal show={showPrintPrompt} onHide={handlePrintPromptNo} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Print Invoice</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Do you want to print the invoice now?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handlePrintPromptNo}>
+            No
+          </Button>
+          <Button variant="primary" onClick={handlePrintPromptYes}>
+            Yes
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

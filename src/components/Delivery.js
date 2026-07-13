@@ -185,6 +185,23 @@ function Delivery() {
 const [showDeleteModal, setShowDeleteModal] = useState(false);
 const [deleteReason, setDeleteReason] = useState('');
 const [selectedDC, setSelectedDC] = useState(null);
+
+  const rowHasInvoiceStatusY = (row, node) => {
+    const normalizeStatus = (value) => (value || '').toString().trim().toLowerCase();
+    const hasStatusYInHtml = (value) => /data-inv-status\s*=\s*["']?y["']?/i.test((value || '').toString());
+
+    const nodeStatus = normalizeStatus(node && node.getAttribute ? node.getAttribute('data-inv-status') : '');
+    const nodeChildStatus = normalizeStatus(
+      node && node.querySelector && node.querySelector('[data-inv-status]')
+        ? node.querySelector('[data-inv-status]').getAttribute('data-inv-status')
+        : ''
+    );
+    const rowStatus = Array.isArray(row)
+      ? (row.some((value) => hasStatusYInHtml(value)) ? 'y' : '')
+      : normalizeStatus(row && (row['data-inv-status'] || row.inv_status || row.invStatus || row.invoiceStatus));
+
+    return nodeStatus === 'y' || nodeChildStatus === 'y' || rowStatus === 'y' || hasStatusYInHtml(JSON.stringify(row || {}));
+  };
   const handleClose = () => setShow(false);
   const handleShow = (e) => {
     setShow(true);
@@ -694,6 +711,12 @@ const handleCreateInvoice = (event) => {
     return;
   }
 
+  const hasInvoicedRows = selectedRows.some((row, index) => rowHasInvoiceStatusY(row, selectedNodes[index] || null));
+  if (hasInvoicedRows) {
+    alert('Selected row is already invoiced. Create Invoice is disabled for invoiced rows.');
+    return;
+  }
+
   const getCustomer = (row) => {
     if (!row) return '';
     return row.customer || row.name || row[7] || '';
@@ -769,13 +792,22 @@ const handleCreateInvoice = (event) => {
     const { quantity, unit } = getQuantityAndUnit(row, invParam);
     const width = getWidthByInvoiceParam(row, invParam);
     const dcNo = (row[1] || '').toString().trim();
-    const key = `${process.toString().trim().toLowerCase()}||${color.toLowerCase()}||${unit}||${construction.toLowerCase()}||${width.toLowerCase()}||${fabric.toLowerCase()}`;
-
+    const machineCell = (row[6] || '').toString();
+    const match = machineCell.match(/data-vchno="([^"]*)"/i);
+    const vchno = match && match[1] ? match[1].toString().trim() : '';
+    const key = `${process.toString().trim().toLowerCase()}||${color.toLowerCase()}||${unit}||${construction.toLowerCase()}||${width.toLowerCase()}||${fabric.toLowerCase()}||${vchno.toLowerCase()}`;
+    
     const existing = acc.find((item) => item.key === key);
     if (existing) {
       existing.quantity = Number(existing.quantity || 0) + quantity;
       if (dcNo && !existing.dcNo.split(',').map((v) => v.trim()).includes(dcNo)) {
         existing.dcNo = existing.dcNo ? `${existing.dcNo}, ${dcNo}` : dcNo;
+      }
+      if (vchno) {
+        const existingVehicles = (existing.vchno || '').split(',').map((v) => v.trim()).filter(Boolean);
+        if (!existingVehicles.includes(vchno)) {
+          existing.vchno = existingVehicles.length ? `${existing.vchno}, ${vchno}` : vchno;
+        }
       }
       existing.description = buildInvoiceDescription(
         process,
@@ -792,6 +824,7 @@ const handleCreateInvoice = (event) => {
     acc.push({
       key,
       dcNo,
+      vchno,
       date: row[0] || '',
       customer: customerName,
       description: buildInvoiceDescription(process, quantity, unit, construction, width, fabric),
@@ -799,7 +832,7 @@ const handleCreateInvoice = (event) => {
       quantity,
       unit,
       rate: '',
-      tax: 0,
+      tax: 5,
       amount: ''
     });
     return acc;
@@ -1284,6 +1317,22 @@ const handleDeleteConfirm = async () => {
                   } }, // Finishing
                 { data: "21" }  // Reason
               ],
+              createdRow: function (row, data) {
+                const normalizeStatus = (value) => (value || '').toString().trim().toLowerCase();
+                const hasStatusYInHtml = (value) => /data-inv-status\s*=\s*["']?y["']?/i.test((value || '').toString());
+
+                const rowStatus = normalizeStatus(row.getAttribute('data-inv-status'));
+                const cellWithStatus = row.querySelector('[data-inv-status]');
+                const cellStatus = normalizeStatus(cellWithStatus ? cellWithStatus.getAttribute('data-inv-status') : '');
+                const dataHasStatusY = Array.isArray(data)
+                  ? data.some((value) => hasStatusYInHtml(value))
+                  : hasStatusYInHtml(JSON.stringify(data || {}));
+
+                if (rowStatus === 'y' || cellStatus === 'y' || dataHasStatusY) {
+                  row.style.backgroundColor = '#d1fae5';
+                  
+                }
+              },
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
               language: {
                 search: "Search:",
