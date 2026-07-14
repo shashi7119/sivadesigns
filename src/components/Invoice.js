@@ -1229,9 +1229,11 @@ function Invoice() {
                         {isCancelling ? 'Cancelling...' : 'Cancel Invoice'}
                       </Button>
                     )}
-                    <Button variant="success" onClick={handleSave} disabled={isSaving || hasInvalidRate}>
-                      {isSaving ? 'Saving...' : (isEditMode ? 'Update Invoice' : 'Save Invoice')}
-                    </Button>
+                    {!isEditMode && (
+                      <Button variant="success" onClick={handleSave} disabled={isSaving || hasInvalidRate}>
+                        {isSaving ? 'Saving...' : 'Save Invoice'}
+                      </Button>
+                    )}
                   </Col>
                 </Row>
               </div>
