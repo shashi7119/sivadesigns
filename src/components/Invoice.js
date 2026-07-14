@@ -241,6 +241,21 @@ function Invoice() {
     })
   );
 
+  const vehicleNos = useMemo(() => {
+    const fromState = (invoiceState.vehicleNos || '').toString();
+    const fromItems = lineItems
+      .flatMap((item) => (item.vchno || '').toString().split(','))
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    return Array.from(
+      new Set([
+        ...fromState.split(',').map((value) => value.trim()).filter(Boolean),
+        ...fromItems
+      ])
+    ).join(', ');
+  }, [invoiceState.vehicleNos, lineItems]);
+
   useEffect(() => {
     if (!existingChecked) return;
     if (stateInvoiceNo || invoiceDetails.invoiceNo) return;
@@ -290,8 +305,18 @@ function Invoice() {
     );
     const count = Number.isFinite(countValue) && countValue > 0 ? countValue + 1 : 1;
     const date = new Date(invoiceDetails.invoiceDate || Date.now());
-    const fy = getFinancialYear(date);
-    return `INV-${fy}-${String(count).padStart(4, '0')}`;
+    const fy = getFinancialYearShort(date);
+    return `SSD/${fy}/${count}`;
+  }
+
+  function getFinancialYearShort(date) {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1; // 1-12
+    if (month >= 4) {
+      return `${String(year).slice(-2)}-${String(year + 1).slice(-2)}`;
+    }
+    return `${String(year - 1).slice(-2)}-${String(year).slice(-2)}`;
   }
 
   function getFinancialYear(date) {
@@ -490,7 +515,6 @@ function Invoice() {
         <tr>
           <td style="padding:8px;border:1px solid #000;text-align:center;font-size:12px;">${index + 1}</td>
           <td style="padding:8px;border:1px solid #000;font-size:12px;">${item.dcNo || '-'}</td>
-          <td style="padding:8px;border:1px solid #000;font-size:12px;">${item.vchno || '-'}</td>
           <td style="padding:8px;border:1px solid #000;font-size:12px;">${item.description || ''}</td>
           <td style="padding:8px;border:1px solid #000;font-size:12px;text-align:center;">${item.color || '-'}</td>
           <td style="padding:8px;border:1px solid #000;text-align:center;font-size:12px;">${qty.toFixed(2)}</td>
@@ -654,6 +678,11 @@ function Invoice() {
                 <div class="detail-label">Financial Year:</div>
                 <div class="detail-value">${financialYear}</div>
               </div>
+               <div class="detail-row">
+                <div class="detail-label">Vehicle No:</div>
+                <div class="detail-value">${vehicleNos || '-'}</div>
+              </div>
+
             </div>
           </div>
 
@@ -687,8 +716,7 @@ function Invoice() {
               <tr>
                 <th style="width: 3%;">S.No</th>
                 <th style="width: 7%;">DC No</th>
-                <th style="width: 10%;">Vehicle No</th>
-                <th style="width: 27%;">Description of Services</th>
+                <th style="width: 37%;">Description of Services</th>
                 <th style="width: 8%;">Color</th>
                 <th style="width: 8%;">Qty</th>
                 <th style="width: 6%;">Unit</th>
@@ -701,6 +729,7 @@ function Invoice() {
               ${rowsHtml}
             </tbody>
           </table>
+         
 
           <!-- Totals Section -->
           <div class="totals-section">
@@ -877,6 +906,7 @@ function Invoice() {
       referenceNo: invoiceDetails.referenceNo,
       customer: customerName,
       customerid: invoiceDetails.customerid || stateCustomerId || invoiceState.customerid || invoiceState.customerId || invoiceState.customer_id || '',
+      vehicleNos,
       items: lineItems,
       subtotal: invoiceTotals.subTotal,
       totalDiscount: invoiceTotals.totalDiscount,
@@ -1000,6 +1030,9 @@ function Invoice() {
                   <strong>Line items selected:</strong> {lineItems.length}
                 </p>
                 <p>
+                  <strong>Vehicle No:</strong> {vehicleNos || '-'}
+                </p>
+                <p>
                   <strong>Tax Status:</strong> {taxStatusLoading ? 'Checking...' : taxStatus.label}
                 </p>
               </div>
@@ -1009,7 +1042,6 @@ function Invoice() {
                   <tr>
                     <th>#</th>
                     <th>DC No</th>
-                    <th>Vehicle No</th>
                     <th>Description</th>
                     <th>Color</th>
                     <th>Qty</th>
@@ -1030,7 +1062,7 @@ function Invoice() {
                 <tbody>
                   {lineItems.length === 0 && (
                     <tr>
-                      <td colSpan={taxStatus.type === 'cgst_sgst' ? '12' : '11'} className="text-center py-4">
+                      <td colSpan={taxStatus.type === 'cgst_sgst' ? '11' : '10'} className="text-center py-4">
                         No selected items. Go back to Delivery and choose delivery line items first.
                       </td>
                     </tr>
@@ -1039,7 +1071,6 @@ function Invoice() {
                     <tr key={index}>
                         <td>{index + 1}</td>
                         <td>{item.dcNo}</td>
-                        <td>{item.vchno || '-'}</td>
                         <td>{item.description}</td>
                         <td>{item.color}</td>
                         <td>

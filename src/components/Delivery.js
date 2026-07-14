@@ -782,6 +782,12 @@ const handleCreateInvoice = (event) => {
     return;
   }
 
+  const extractVehicleNo = (row) => {
+    const machineCell = (row[6] || '').toString();
+    const match = machineCell.match(/data-vchno="([^"]*)"/i);
+    return match && match[1] ? match[1].toString().trim() : '';
+  };
+
   const invoiceItems = selectedRows.reduce((acc, row, index) => {
     const process = row[19] || '';
     const color = (row[9] || row[10] || '').toString().trim();
@@ -792,10 +798,8 @@ const handleCreateInvoice = (event) => {
     const { quantity, unit } = getQuantityAndUnit(row, invParam);
     const width = getWidthByInvoiceParam(row, invParam);
     const dcNo = (row[1] || '').toString().trim();
-    const machineCell = (row[6] || '').toString();
-    const match = machineCell.match(/data-vchno="([^"]*)"/i);
-    const vchno = match && match[1] ? match[1].toString().trim() : '';
-    const key = `${process.toString().trim().toLowerCase()}||${color.toLowerCase()}||${unit}||${construction.toLowerCase()}||${width.toLowerCase()}||${fabric.toLowerCase()}||${vchno.toLowerCase()}`;
+    const vchno = extractVehicleNo(row);
+    const key = `${process.toString().trim().toLowerCase()}||${color.toLowerCase()}||${unit}||${construction.toLowerCase()}||${width.toLowerCase()}||${fabric.toLowerCase()}`;
     
     const existing = acc.find((item) => item.key === key);
     if (existing) {
@@ -846,7 +850,15 @@ const handleCreateInvoice = (event) => {
     )
   ).join(', ');
 
-  navigate('/invoice', { state: { customer: customerName, referenceNo, items: invoiceItems } });
+  const vehicleNos = Array.from(
+    new Set(
+      selectedRows
+        .map((row) => extractVehicleNo(row))
+        .filter(Boolean)
+    )
+  ).join(', ');
+
+  navigate('/invoice', { state: { customer: customerName, referenceNo, vehicleNos, items: invoiceItems } });
 };
 
 const handleDeleteConfirm = async () => {
