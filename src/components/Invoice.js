@@ -330,6 +330,25 @@ function Invoice() {
     return `${year - 1}-${String(year).slice(-2)}`;
   }
 
+  function formatDateForPrint(dateValue) {
+    if (!dateValue) return '-';
+    const raw = String(dateValue).trim();
+    const directMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (directMatch) {
+      return `${directMatch[3]}-${directMatch[2]}-${directMatch[1]}`;
+    }
+
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) {
+      return raw;
+    }
+
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+
   const syncLineItemTaxBreakdown = (lineItem) => {
     const qty = Number(lineItem.quantity || 0);
     const rate = Number(lineItem.rate || 0);
@@ -506,6 +525,7 @@ function Invoice() {
     }
 
     const financialYear = invoiceDetails.financialYear || getFinancialYear(invoiceDetails.invoiceDate);
+    const formattedInvoiceDate = formatDateForPrint(invoiceDetails.invoiceDate);
     const rowsHtml = lineItems
       .map((item, index) => {
         const qty = Number(item.quantity || 0);
@@ -558,8 +578,7 @@ function Invoice() {
 
     const invoiceCopyLabels = [
       'Original for Recipient',
-      'Original for Supplier',
-      'Duplicate for Recipient',
+      'Original for Supplier',      
       'Duplicate for Supplier'  
     ];
 
@@ -666,7 +685,7 @@ function Invoice() {
               </div>
               <div class="detail-row">
                 <div class="detail-label">Dated:</div>
-                <div class="detail-value">${invoiceDetails.invoiceDate}</div>
+                <div class="detail-value">${formattedInvoiceDate}</div>
               </div>
             </div>
             <div class="details-column">
