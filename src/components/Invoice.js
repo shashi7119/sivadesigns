@@ -17,6 +17,7 @@ function Invoice() {
   const initialItems = Array.isArray(invoiceState.items) ? invoiceState.items : [];
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [hasSavedInvoice, setHasSavedInvoice] = useState(Boolean(stateInvoiceNo));
   const [showPrintPrompt, setShowPrintPrompt] = useState(false);
   const [existingChecked, setExistingChecked] = useState(false);
@@ -941,8 +942,14 @@ function Invoice() {
     return invoice;
   };
 
+  const hasInvalidRate = lineItems.some((item) => Number(item.rate || 0) <= 0);
+
   const handleSave = async () => {
     if (isSaving) return;
+    if (hasInvalidRate) {
+      alert('Invoice cannot be saved when rate is 0. Please enter a valid rate for all line items.');
+      return;
+    }
     const invoice = saveInvoice();
     const apiPath = isEditMode ? 'updateInvoice' : 'addInvoice';
     setIsSaving(true);
@@ -960,6 +967,35 @@ function Invoice() {
       alert('Failed to save invoice to server. Saved locally.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleCancelInvoice = async () => {
+    if (!isEditMode) return;
+
+    const invoiceNo = (invoiceDetails.invoiceNo || '').toString().trim();
+    if (!invoiceNo) {
+      alert('Invoice number is required to cancel invoice.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to cancel invoice ${invoiceNo}?`);
+    if (!confirmed) return;
+
+    setIsCancelling(true);
+    try {
+      const response = await axios.post(`${API_URL}/cancelInvoice`, { invoiceNo });
+      if (response && response.data.message === 'y') {
+        alert('Invoice cancelled successfully.');
+        navigate('/invoices');
+      } else {
+        alert('Invocie not cancelled.');
+      }
+    } catch (err) {
+      console.error('Cancel invoice error', err);
+      alert('Failed to cancel invoice.');
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -1188,7 +1224,12 @@ function Invoice() {
 
                 <Row className="mt-3">
                   <Col className="d-flex justify-content-end">
-                    <Button variant="success" onClick={handleSave} disabled={isSaving}>
+                    {isEditMode && (
+                      <Button variant="danger" className="me-2" onClick={handleCancelInvoice} disabled={isCancelling || isSaving}>
+                        {isCancelling ? 'Cancelling...' : 'Cancel Invoice'}
+                      </Button>
+                    )}
+                    <Button variant="success" onClick={handleSave} disabled={isSaving || hasInvalidRate}>
                       {isSaving ? 'Saving...' : (isEditMode ? 'Update Invoice' : 'Save Invoice')}
                     </Button>
                   </Col>
