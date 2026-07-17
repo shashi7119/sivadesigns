@@ -10,13 +10,94 @@ const API_URL = 'https://www.wynstarcreations.com/seyal/api/getMasters?type=cust
 const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/addMaster';
 
 DataTable.use(DT);
+
+const createEmptyShipAddress = () => ({
+  ship_name: '',
+  ship_contact_number: '',
+  ship_address1: '',
+  ship_address2: '',
+  ship_city: '',
+  ship_state: '',
+  ship_pincode: '',
+  ship_gstin: '',
+  is_default: false
+});
+
+const toBooleanFlag = (value) => (
+  value === true ||
+  value === 1 ||
+  value === '1' ||
+  ['true', 'yes', 'y', 't'].includes(String(value).trim().toLowerCase())
+);
+
+const normalizeShipAddress = (item) => ({
+  ship_name: (item?.ship_name || item?.name || '').toString().trim(),
+  ship_contact_number: (item?.ship_contact_number || item?.contact_number || '').toString().trim(),
+  ship_address1: (item?.ship_address1 || item?.address1 || '').toString().trim(),
+  ship_address2: (item?.ship_address2 || item?.address2 || '').toString().trim(),
+  ship_city: (item?.ship_city || item?.city || '').toString().trim(),
+  ship_state: (item?.ship_state || item?.state || '').toString().trim(),
+  ship_pincode: (item?.ship_pincode || item?.pincode || '').toString().trim(),
+  ship_gstin: (item?.ship_gstin || item?.gstin || '').toString().trim(),
+  is_default: toBooleanFlag(item?.is_default)
+});
+
+const hasShipAddressValues = (addr = {}) => (
+  [
+    addr.ship_name,
+    addr.ship_contact_number,
+    addr.ship_address1,
+    addr.ship_address2,
+    addr.ship_city,
+    addr.ship_state,
+    addr.ship_pincode,
+    addr.ship_gstin
+  ].some((value) => (value || '').toString().trim() !== '')
+);
+
+const parseShipAddressPayload = (raw) => {
+  if (!raw) return [];
+
+  let parsed = raw;
+  if (typeof raw === 'string') {
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  if (!Array.isArray(parsed)) {
+    parsed = [parsed];
+  }
+
+  const normalized = parsed
+    .map((item, index) => normalizeShipAddress(item, index))
+    .filter((item) => hasShipAddressValues(item));
+
+  if (!normalized.length) return [];
+
+  if (!normalized.some((item) => item.is_default)) {
+    normalized[0] = { ...normalized[0], is_default: true };
+  }
+
+  return normalized.map((item, index) => ({
+    ...item,
+    is_default: item.is_default && normalized.findIndex((addr) => addr.is_default) === index
+  }));
+};
+
+const createInitialFormData = () => ({
+  mname: '', type: 'customer', email: '', contact_number: '', ide: '',
+  address1: '', address2: '', city: '', pincode: '', gstin: '', state: '',
+  ship_contact_number: '', ship_address1: '', ship_address2: '', ship_state: '',
+  ship_pincode: '', ship_gstin: '', ship_name: ''
+});
+
 function Customer() {
 const table = useRef();
-    const [formData, setFormData] = useState({
-        mname: '',type:'customer',email:'',contact_number:'',ide:''
-        ,address1:'',address2:'',city:'',pincode:'',gstin:'',state:'',ship_contact_number:'',
-        ship_address1:'',ship_address2:'',ship_state:'',ship_pincode:'',ship_gstin:'',ship_name:''
-      });
+    const [formData, setFormData] = useState(createInitialFormData);
+    const [shipAddresses, setShipAddresses] = useState([{ ...createEmptyShipAddress(), is_default: true }]);
 
       const regexPatterns = {
         mname: /^[a-zA-Z0-9_@./#&+\-, ]*$/,state: /^[a-zA-Z0-9_@./#&+\-, ]*$/,city: /^[a-zA-Z0-9_@./#&+\-, ]*$/,email: /^[a-zA-Z0-9_@./#&+\-, ]*$/,
@@ -26,7 +107,8 @@ const table = useRef();
         ship_state: /^[a-zA-Z0-9_@./#&+\-, ]*$/,
         ship_address1: /^[a-zA-Z0-9_@./#&+\-, ]*$/,ship_contact_number: /^[0-9 ]*$/,
         ship_address2: /^[a-zA-Z0-9_@./#&+\-, ]*$/,ship_pincode: /^[0-9 ]*$/,
-        ship_gstin: /^[a-zA-Z0-9]*$/
+        ship_gstin: /^[a-zA-Z0-9]*$/,
+        ship_city: /^[a-zA-Z0-9_@./#&+\-, ]*$/
       };
 
     const [isEdit, setIsEdit] = useState(false);
@@ -34,8 +116,18 @@ const table = useRef();
     const [show, setShow] = useState(false);
     const [fetch, setFetch] = useState(false);
 
-  const handleClose = () => { setIsEdit(false);setShow(false); }
-  const handleShow = () => setShow(true);
+  const handleClose = () => {
+    setIsEdit(false);
+    setShow(false);
+    setFormData(createInitialFormData());
+    setShipAddresses([{ ...createEmptyShipAddress(), is_default: true }]);
+  }
+  const handleShow = () => {
+    setIsEdit(false);
+    setFormData(createInitialFormData());
+    setShipAddresses([{ ...createEmptyShipAddress(), is_default: true }]);
+    setShow(true);
+  };
   const { user , isAuthenticated } = useAuth();
 
      // Fetch data from backend API
@@ -82,40 +174,126 @@ const table = useRef();
 
      const handleSubmit = async (event) => {
         event.preventDefault();
-    
-        console.log('Form Submitted with Data:', formData);
-        formData.type="customer";
-        if(!isEdit) {
-            axios.post(`${API_URL1}`, formData)
-      .then(function (response) {
 
-        setShow(false);
-        setFormData('');
-        if(fetch){ setFetch(false);}else {setFetch(true);}
-        
-        console.log(response);
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-  } else {
-       axios.post(`https://www.wynstarcreations.com/seyal/api/updateCustomer`, formData)
-        .then(function (response) {        
-          setShow(false);
-        setFormData('');
-        if(fetch){ setFetch(false);}else {setFetch(true);}
-        
-        })
-        .catch(function (error) {
-          console.log(error);
-        });    
-  }
+        const sanitizedShipAddresses = shipAddresses
+          .map((addr) => ({
+            ship_name: (addr.ship_name || '').trim(),
+            ship_contact_number: (addr.ship_contact_number || '').trim(),
+            ship_address1: (addr.ship_address1 || '').trim(),
+            ship_address2: (addr.ship_address2 || '').trim(),
+            ship_city: (addr.ship_city || '').trim(),
+            ship_state: (addr.ship_state || '').trim(),
+            ship_pincode: (addr.ship_pincode || '').trim(),
+            ship_gstin: (addr.ship_gstin || '').trim(),
+            is_default: toBooleanFlag(addr.is_default)
+          }))
+          .filter((addr) =>
+            addr.ship_name ||
+            addr.ship_address1 ||
+            addr.ship_address2 ||
+            addr.ship_city ||
+            addr.ship_state ||
+            addr.ship_pincode ||
+            addr.ship_contact_number ||
+            addr.ship_gstin
+          );
+
+        const selectedDefaultIndex = sanitizedShipAddresses.findIndex((addr) => addr.is_default);
+        const effectiveDefaultIndex = selectedDefaultIndex >= 0 ? selectedDefaultIndex : 0;
+        const normalizedShipAddresses = sanitizedShipAddresses.map((addr, index) => ({
+          ...addr,
+          is_default: index === effectiveDefaultIndex
+        }));
+
+        if (!normalizedShipAddresses.length) {
+          alert('Please add at least one Ship-To address.');
+          return;
+        }
+
+        const selectedDefault = normalizedShipAddresses.find((addr) => addr.is_default) || normalizedShipAddresses[0];
+
+        const payload = {
+          ...formData,
+          type: 'customer',
+          shipToAddresses: normalizedShipAddresses,
+          ship_to_addresses: JSON.stringify(normalizedShipAddresses),
+          shiptoaddresses: JSON.stringify(normalizedShipAddresses),
+          ship_addresses_json: JSON.stringify(normalizedShipAddresses),
+          // Backward compatibility with existing backend fields
+          ship_name: selectedDefault.ship_name,
+          ship_contact_number: selectedDefault.ship_contact_number,
+          ship_address1: selectedDefault.ship_address1,
+          ship_address2: selectedDefault.ship_address2,
+          ship_city: selectedDefault.ship_city,
+          ship_state: selectedDefault.ship_state,
+          ship_pincode: selectedDefault.ship_pincode,
+          ship_gstin: selectedDefault.ship_gstin
+        };
+
+        console.log('Form Submitted with Data:', payload);
+
+        if(!isEdit) {
+          axios.post(`${API_URL1}`, payload)
+            .then(function (response) {
+              setShow(false);
+              setFormData(createInitialFormData());
+              setShipAddresses([{ ...createEmptyShipAddress(), is_default: true }]);
+              setFetch((prev) => !prev);
+              console.log(response);
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        } else {
+          axios.post(`https://www.wynstarcreations.com/seyal/api/updateCustomer`, payload)
+            .then(function (response) {
+              setShow(false);
+              setFormData(createInitialFormData());
+              setShipAddresses([{ ...createEmptyShipAddress(), is_default: true }]);
+              setFetch((prev) => !prev);
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        }
         //const userData = response.data;
        // console.log('Data From Backend:', userData);
     
       };
+
+      const handleShipAddressChange = (index, field, value) => {
+        setShipAddresses((prev) =>
+          prev.map((item, i) =>
+            i === index ? { ...item, [field]: value } : item
+          )
+        );
+      };
+
+      const addShipAddress = () => {
+        setShipAddresses((prev) => [
+          ...prev,
+          createEmptyShipAddress()
+        ]);
+      };
+
+      const removeShipAddress = (index) => {
+        setShipAddresses((prev) => {
+          if (prev.length === 1) return prev;
+          const updated = prev.filter((_, i) => i !== index);
+          if (!updated.some((item) => item.is_default)) {
+            updated[0] = { ...updated[0], is_default: true };
+          }
+          return updated;
+        });
+      };
+
+      const setDefaultShipAddress = (index) => {
+        setShipAddresses((prev) =>
+          prev.map((item, i) => ({ ...item, is_default: i === index }))
+        );
+      };
      
-       const edithandle =  (event) => {
+      const edithandle = async (event) => {
         setIsEdit(true);
         event.preventDefault();       
         let api = table.current.dt();
@@ -131,11 +309,121 @@ const table = useRef();
           alert('Not allowed multiple entries for edit');
         } else {
           console.log(dataArr);          
+          const selectedCustomerId = dataArr[0][0];
           
            setFormData({  mname: dataArr[0][1],ide:dataArr[0][0],type:'customer',email:dataArr[0][3],contact_number:dataArr[0][2]
         ,address1:dataArr[0][4],address2:dataArr[0][5],city:dataArr[0][6],state:dataArr[0][7],pincode:dataArr[0][8],gstin:dataArr[0][9],
         ship_contact_number:dataArr[0][10],ship_address1:dataArr[0][11],ship_address2:dataArr[0][12],
-        ship_state:dataArr[0][13],ship_pincode:dataArr[0][14],ship_gstin:dataArr[0][15],ship_name:dataArr[0][17]});   
+        ship_state:dataArr[0][13],ship_pincode:dataArr[0][14],ship_gstin:dataArr[0][15],ship_name:dataArr[0][17]});
+
+           let mappedShipAddresses = [];
+
+           try {
+            const backendResp = await axios.post('https://www.wynstarcreations.com/seyal/api/getCustomerShipto', { customerId: selectedCustomerId });
+            const backendDetails = backendResp?.data;
+
+            const backendCandidates = [
+              backendDetails,
+              backendDetails?.data,
+              backendDetails?.result,
+              backendDetails?.rows,
+              backendDetails?.items,
+              backendDetails?.ship_to_addresses,
+              backendDetails?.shiptoaddresses,
+              backendDetails?.ship_addresses_json,
+              backendDetails?.ship_address,
+              backendDetails?.shipAddress,
+              backendDetails?.shipToAddresses,
+              backendDetails?.data?.ship_to_addresses,
+              backendDetails?.data?.shiptoaddresses,
+              backendDetails?.data?.ship_addresses_json,
+              backendDetails?.data?.ship_address,
+              backendDetails?.data?.shipAddress,
+              backendDetails?.data?.shipToAddresses
+            ].filter(Boolean);
+
+            for (const candidate of backendCandidates) {
+              mappedShipAddresses = parseShipAddressPayload(candidate);
+              if (mappedShipAddresses.length) break;
+            }
+
+            if (!mappedShipAddresses.length && Array.isArray(backendDetails)) {
+              for (const row of backendDetails) {
+                const rowCandidate =
+                  row?.ship_to_addresses ||
+                  row?.shiptoaddresses ||
+                  row?.ship_addresses_json ||
+                  row?.ship_address ||
+                  row?.shipAddress ||
+                  row?.shipToAddresses ||
+                  row;
+                mappedShipAddresses = parseShipAddressPayload(rowCandidate);
+                if (mappedShipAddresses.length) break;
+              }
+            }
+           } catch (e) {
+            console.warn('Failed to fetch Ship-To JSON from backend for edit', e);
+           }
+
+           const rawShipArray = dataArr[0][18];
+           if (!mappedShipAddresses.length && rawShipArray) {
+            try {
+              const parsed = typeof rawShipArray === 'string' ? JSON.parse(rawShipArray) : rawShipArray;
+              if (Array.isArray(parsed)) {
+                mappedShipAddresses = parseShipAddressPayload(parsed);
+              }
+            } catch (e) {
+              // fallback to legacy single ship fields
+            }
+           }
+
+           if (!mappedShipAddresses.length) {
+             const selectedId = dataArr[0][0];
+             const fullRow = Array.isArray(tableData)
+               ? tableData.find((row) => {
+                   if (Array.isArray(row)) return row[0] === selectedId;
+                   return row?.ide === selectedId || row?.id === selectedId;
+                 })
+               : null;
+
+             const rawFromObject = fullRow && !Array.isArray(fullRow)
+               ? (
+                 fullRow.ship_to_addresses ||
+                 fullRow.shiptoaddresses ||
+                 fullRow.ship_addresses_json ||
+                 fullRow.ship_address ||
+                 fullRow.shipAddress ||
+                 fullRow.shipToAddresses
+               )
+               : null;
+
+             if (rawFromObject) {
+               mappedShipAddresses = parseShipAddressPayload(rawFromObject);
+             }
+           }
+
+           if (!mappedShipAddresses.length) {
+             mappedShipAddresses = [normalizeShipAddress({
+              ship_name: dataArr[0][17] || '',
+              ship_contact_number: dataArr[0][10] || '',
+              ship_address1: dataArr[0][11] || '',
+              ship_address2: dataArr[0][12] || '',
+              ship_city: '',
+              ship_state: dataArr[0][13] || '',
+              ship_pincode: dataArr[0][14] || '',
+              ship_gstin: dataArr[0][15] || '',
+              is_default: true
+             }, 0)];
+           }
+
+           const defaultIndexFromApi = mappedShipAddresses.findIndex((addr) => toBooleanFlag(addr.is_default));
+           const finalDefaultIndex = defaultIndexFromApi >= 0 ? defaultIndexFromApi : 0;
+           const normalizedForEdit = mappedShipAddresses.map((addr, index) => ({
+            ...addr,
+            is_default: index === finalDefaultIndex
+           }));
+
+           setShipAddresses(normalizedForEdit);
              
           setShow(true);
         }
@@ -396,134 +684,219 @@ const table = useRef();
                   />
                 </Form.Group>
               </Row>
-              <Row className="flex items-center space-x-4">
-                <Form.Group className="col-6 mb-3">
-                  <Form.Label className="block text-sm font-medium text-gray-700">
-                    Delivery Customer Name
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="ship_name"              
-                    value={formData.ship_name}
-                    onKeyUp={handleKeyUp}
-                    onChange={(e) => setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value
-                    }))}    
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  />
-                </Form.Group>
-               
-              </Row>
-              <Row className="flex items-center space-x-4">
-                <Form.Group className="col-6 mb-3">
-                  <Form.Label className="block text-sm font-medium text-gray-700">
-                    Delivery Contact Number
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="ship_contact_number"              
-                    value={formData.ship_contact_number}
-                    onKeyUp={handleKeyUp}
-                    onChange={(e) => setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value
-                    }))}    
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  />
-                </Form.Group>
-                <Form.Group className="col-5 mb-3">
-                  <Form.Label className="block text-sm font-medium text-gray-700">
-                    Delivery Address 1
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="ship_address1"              
-                    value={formData.ship_address1}
-                    onKeyUp={handleKeyUp}
-                    onChange={(e) => setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value
-                    }))}    
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  />
-                </Form.Group>
-              </Row>
-              <Row className="flex items-center space-x-4">
-                <Form.Group className="col-6 mb-3">
-                  <Form.Label className="block text-sm font-medium text-gray-700">
-                     Delivery Address 2
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="ship_address2"              
-                    value={formData.ship_address2}
-                    onKeyUp={handleKeyUp}
-                    onChange={(e) => setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value
-                    }))}    
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  />
-                </Form.Group>
-                <Form.Group className="col-5 mb-3">
-                  <Form.Label className="block text-sm font-medium text-gray-700">
-                    Delivery State
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="ship_state"              
-                    value={formData.ship_state}
-                    onKeyUp={handleKeyUp}
-                    onChange={(e) => setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value
-                    }))}    
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  />
-                </Form.Group>
-              </Row>
-              <Row className="flex items-center space-x-4">
-                <Form.Group className="col-6 mb-3">
-                  <Form.Label className="block text-sm font-medium text-gray-700">
-                    Delivery Pincode
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="ship_pincode"              
-                    value={formData.ship_pincode}
-                    onKeyUp={handleKeyUp}
-                    onChange={(e) => setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value
-                    }))}    
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  />
-                </Form.Group>
-                <Form.Group className="col-5 mb-3">
-                  <Form.Label className="block text-sm font-medium text-gray-700">
-                    Delivery GSTIN
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="ship_gstin"              
-                    value={formData.ship_gstin}
-                    onKeyUp={handleKeyUp}
-                    onChange={(e) => setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value
-                    }))}    
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  />
-                </Form.Group>
-              </Row>
+              <div className="mt-4 border rounded p-3 bg-gray-50">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="mb-0">Ship-To Addresses</h6>
+                  <Button type="button" variant="outline-primary" size="sm" onClick={addShipAddress}>
+                    Add Ship-To
+                  </Button>
+                </div>
+
+                {shipAddresses.map((address, index) => (
+                  <div key={index} className="border rounded p-3 mb-3 bg-white">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <strong>Ship-To #{index + 1}</strong>
+                      <div className="d-flex align-items-center">
+                        <Form.Check
+                          type="radio"
+                          name="defaultShipTo"
+                          id={`default-ship-${index}`}
+                          label="Default"
+                          className="me-3"
+                          checked={Boolean(address.is_default)}
+                          onChange={() => setDefaultShipAddress(index)}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => removeShipAddress(index)}
+                          disabled={shipAddresses.length === 1}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Row className="flex items-center space-x-4">
+                      <Form.Group className="col-6 mb-3">
+                        <Form.Label className="block text-sm font-medium text-gray-700">
+                          Delivery Customer Name
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={address.ship_name}
+                          onKeyUp={(e) => {
+                            const value = e.target.value;
+                            const isValid = regexPatterns.ship_name.test(value);
+                            if (isValid) {
+                              handleShipAddressChange(index, 'ship_name', value);
+                            } else {
+                              handleShipAddressChange(index, 'ship_name', '');
+                            }
+                          }}
+                          onChange={(e) => handleShipAddressChange(index, 'ship_name', e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          required
+                        />
+                      </Form.Group>
+                      <Form.Group className="col-5 mb-3">
+                        <Form.Label className="block text-sm font-medium text-gray-700">
+                          Delivery Contact Number
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={address.ship_contact_number}
+                          onKeyUp={(e) => {
+                            const value = e.target.value;
+                            const isValid = regexPatterns.ship_contact_number.test(value);
+                            if (isValid) {
+                              handleShipAddressChange(index, 'ship_contact_number', value);
+                            } else {
+                              handleShipAddressChange(index, 'ship_contact_number', '');
+                            }
+                          }}
+                          onChange={(e) => handleShipAddressChange(index, 'ship_contact_number', e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          required
+                        />
+                      </Form.Group>
+                    </Row>
+
+                    <Row className="flex items-center space-x-4">
+                      <Form.Group className="col-6 mb-3">
+                        <Form.Label className="block text-sm font-medium text-gray-700">
+                          Delivery Address 1
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={address.ship_address1}
+                          onKeyUp={(e) => {
+                            const value = e.target.value;
+                            const isValid = regexPatterns.ship_address1.test(value);
+                            if (isValid) {
+                              handleShipAddressChange(index, 'ship_address1', value);
+                            } else {
+                              handleShipAddressChange(index, 'ship_address1', '');
+                            }
+                          }}
+                          onChange={(e) => handleShipAddressChange(index, 'ship_address1', e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          required
+                        />
+                      </Form.Group>
+                      <Form.Group className="col-5 mb-3">
+                        <Form.Label className="block text-sm font-medium text-gray-700">
+                          Delivery Address 2
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={address.ship_address2}
+                          onKeyUp={(e) => {
+                            const value = e.target.value;
+                            const isValid = regexPatterns.ship_address2.test(value);
+                            if (isValid) {
+                              handleShipAddressChange(index, 'ship_address2', value);
+                            } else {
+                              handleShipAddressChange(index, 'ship_address2', '');
+                            }
+                          }}
+                          onChange={(e) => handleShipAddressChange(index, 'ship_address2', e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                      </Form.Group>
+                    </Row>
+
+                    <Row className="flex items-center space-x-4">
+                      <Form.Group className="col-6 mb-3">
+                        <Form.Label className="block text-sm font-medium text-gray-700">
+                          Delivery City
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={address.ship_city || ''}
+                          onKeyUp={(e) => {
+                            const value = e.target.value;
+                            const isValid = regexPatterns.ship_city.test(value);
+                            if (isValid) {
+                              handleShipAddressChange(index, 'ship_city', value);
+                            } else {
+                              handleShipAddressChange(index, 'ship_city', '');
+                            }
+                          }}
+                          onChange={(e) => handleShipAddressChange(index, 'ship_city', e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                      </Form.Group>
+                      <Form.Group className="col-5 mb-3">
+                        <Form.Label className="block text-sm font-medium text-gray-700">
+                          Delivery State
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={address.ship_state}
+                          onKeyUp={(e) => {
+                            const value = e.target.value;
+                            const isValid = regexPatterns.ship_state.test(value);
+                            if (isValid) {
+                              handleShipAddressChange(index, 'ship_state', value);
+                            } else {
+                              handleShipAddressChange(index, 'ship_state', '');
+                            }
+                          }}
+                          onChange={(e) => handleShipAddressChange(index, 'ship_state', e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          required
+                        />
+                      </Form.Group>
+                    </Row>
+
+                    <Row className="flex items-center space-x-4">
+                      <Form.Group className="col-6 mb-3">
+                        <Form.Label className="block text-sm font-medium text-gray-700">
+                          Delivery Pincode
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={address.ship_pincode}
+                          onKeyUp={(e) => {
+                            const value = e.target.value;
+                            const isValid = regexPatterns.ship_pincode.test(value);
+                            if (isValid) {
+                              handleShipAddressChange(index, 'ship_pincode', value);
+                            } else {
+                              handleShipAddressChange(index, 'ship_pincode', '');
+                            }
+                          }}
+                          onChange={(e) => handleShipAddressChange(index, 'ship_pincode', e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          required
+                        />
+                      </Form.Group>
+                      <Form.Group className="col-5 mb-3">
+                        <Form.Label className="block text-sm font-medium text-gray-700">
+                          Delivery GSTIN
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={address.ship_gstin}
+                          onKeyUp={(e) => {
+                            const value = e.target.value;
+                            const isValid = regexPatterns.ship_gstin.test(value);
+                            if (isValid) {
+                              handleShipAddressChange(index, 'ship_gstin', value);
+                            } else {
+                              handleShipAddressChange(index, 'ship_gstin', '');
+                            }
+                          }}
+                          onChange={(e) => handleShipAddressChange(index, 'ship_gstin', e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                      </Form.Group>
+                    </Row>
+                  </div>
+                ))}
+              </div>
             </Form>
           </Modal.Body>
           <Modal.Footer className="bg-gray-50 border-t border-gray-200">

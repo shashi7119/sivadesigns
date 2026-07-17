@@ -44,25 +44,192 @@ function Delivery() {
       shades: [],
       constructions: []
     });
+
+    const mapCustomerMasterRow = (row) => ({
+      id: row[0],
+      name: row[1],
+      contact_number: row[2],
+      email: row[3],
+      address1: row[4],
+      address2: row[5],
+      city: row[6],
+      state: row[7],
+      pincode: row[8],
+      gstin: row[9],
+      ship_contact_number: row[10],
+      ship_address1: row[11],
+      ship_address2: row[12],
+      ship_state: row[13],
+      ship_pincode: row[14],
+      ship_gstin: row[15],
+      ship_name: row[17],
+      shipToRaw: row[18]
+    });
+
+    const normalizeDefaultFlag = (value) => (
+      value === true ||
+      value === 1 ||
+      value === '1' ||
+      String(value).toLowerCase() === 'true'
+    );
+
+    const normalizeShipToAddress = (item, index) => ({
+      ship_name: (item?.ship_name || item?.name || '').toString().trim(),
+      ship_contact_number: (item?.ship_contact_number || item?.contact_number || '').toString().trim(),
+      ship_address1: (item?.ship_address1 || item?.address1 || '').toString().trim(),
+      ship_address2: (item?.ship_address2 || item?.address2 || '').toString().trim(),
+      ship_city: (item?.ship_city || item?.city || '').toString().trim(),
+      ship_state: (item?.ship_state || item?.state || '').toString().trim(),
+      ship_pincode: (item?.ship_pincode || item?.pincode || '').toString().trim(),
+      ship_gstin: (item?.ship_gstin || item?.gstin || '').toString().trim(),
+      is_default: normalizeDefaultFlag(item?.is_default)
+    });
+
+    const parseShipToPayload = (rawValue) => {
+      if (!rawValue) return [];
+
+      let parsed = rawValue;
+      if (typeof rawValue === 'string') {
+        try {
+          parsed = JSON.parse(rawValue);
+        } catch (e) {
+          return [];
+        }
+      }
+
+      if (!Array.isArray(parsed)) {
+        parsed = [parsed];
+      }
+
+      const normalized = parsed
+        .map((item, index) => normalizeShipToAddress(item, index))
+        .filter((item) => [
+          item.ship_name,
+          item.ship_contact_number,
+          item.ship_address1,
+          item.ship_address2,
+          item.ship_city,
+          item.ship_state,
+          item.ship_pincode,
+          item.ship_gstin
+        ].some(Boolean));
+
+      if (!normalized.length) return [];
+
+      const defaultIndex = normalized.findIndex((item) => item.is_default);
+      const effectiveDefaultIndex = defaultIndex >= 0 ? defaultIndex : 0;
+      return normalized.map((item, index) => ({
+        ...item,
+        is_default: index === effectiveDefaultIndex
+      }));
+    };
+
+    const getShipToChoicesForCustomer = (customerMaster) => {
+      if (!customerMaster) return [];
+
+      let parsedShipTo = [];
+      if (customerMaster.shipToRaw) {
+        try {
+          const parsed = typeof customerMaster.shipToRaw === 'string'
+            ? JSON.parse(customerMaster.shipToRaw)
+            : customerMaster.shipToRaw;
+          parsedShipTo = parseShipToPayload(parsed);
+        } catch (e) {
+          parsedShipTo = [];
+        }
+      }
+
+      if (parsedShipTo.length) {
+        return parsedShipTo;
+      }
+
+      const legacy = normalizeShipToAddress({
+        ship_name: customerMaster.ship_name || customerMaster.name,
+        ship_contact_number: customerMaster.ship_contact_number || customerMaster.contact_number,
+        ship_address1: customerMaster.ship_address1 || customerMaster.address1,
+        ship_address2: customerMaster.ship_address2 || customerMaster.address2,
+        ship_city: customerMaster.city,
+        ship_state: customerMaster.ship_state || customerMaster.state,
+        ship_pincode: customerMaster.ship_pincode || customerMaster.pincode,
+        ship_gstin: customerMaster.ship_gstin || customerMaster.gstin,
+        is_default: true
+      }, 0);
+
+      const hasAnyValue = [
+        legacy.ship_name,
+        legacy.ship_address1,
+        legacy.ship_address2,
+        legacy.ship_city,
+        legacy.ship_state,
+        legacy.ship_pincode,
+        legacy.ship_contact_number,
+        legacy.ship_gstin
+      ].some(Boolean);
+
+      return hasAnyValue ? [legacy] : [];
+    };
+
+    const getShipToChoicesForCustomerFromApi = async (customerMaster) => {
+      const localChoices = getShipToChoicesForCustomer(customerMaster);
+      if (!customerMaster?.id) return localChoices;
+
+      try {
+        const response = await axios.post(`${API_URL}/getCustomerShipto`, { customerId: customerMaster.id });
+        const payload = response?.data;
+
+        const candidates = [
+          payload,
+          payload?.data,
+          payload?.result,
+          payload?.rows,
+          payload?.items,
+          payload?.ship_to_addresses,
+          payload?.shiptoaddresses,
+          payload?.ship_addresses_json,
+          payload?.ship_address,
+          payload?.shipAddress,
+          payload?.shipToAddresses,
+          payload?.data?.ship_to_addresses,
+          payload?.data?.shiptoaddresses,
+          payload?.data?.ship_addresses_json,
+          payload?.data?.ship_address,
+          payload?.data?.shipAddress,
+          payload?.data?.shipToAddresses
+        ].filter(Boolean);
+
+        for (const candidate of candidates) {
+          const parsedChoices = parseShipToPayload(candidate);
+          if (parsedChoices.length) {
+            return parsedChoices;
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch ship-to choices from API', error);
+      }
+
+      return localChoices;
+    };
+
+
   
     // Fetch customer and machine on mount
     React.useEffect(() => {
       const fetchMasters = async () => {
         try {
-          const [customers, machines,fabrics,constructions] = await Promise.all([
+          const [customers, machines, fabrics, constructions] = await Promise.all([
             fetch(`${API_URL}/getMasters?type=customer`).then(r => r.json()),
             fetch(`${API_URL}/getMasters?type=machine`).then(r => r.json()),
             fetch(`${API_URL}/getMasters?type=fabric`).then(r => r.json()),
             fetch(`${API_URL}/getMasters?type=construction`).then(r => r.json())
           ]);
-  
-         setOptions(o => ({
-    ...o,
-    customers: customers.map(row => ({ id: row[0], name: row[1] })),
-    machines: machines.map(row => ({ id: row[0], name: row[1] })),
-    fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),          
-    constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
-  }));
+
+          setOptions(o => ({
+            ...o,
+            customers: customers.map(mapCustomerMasterRow),
+            machines: machines.map(row => ({ id: row[0], name: row[1] })),
+            fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),
+            constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
+          }));
        
         } catch (e) { console.error(e); }
       };
@@ -81,7 +248,7 @@ function Delivery() {
   
          setOptions(o => ({
     ...o,
-    customers: customers.map(row => ({ id: row[0], name: row[1] })),
+    customers: customers.map(mapCustomerMasterRow),
     machines: machines.map(row => ({ id: row[0], name: row[1] })),
     fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),          
     constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
@@ -180,6 +347,8 @@ function Delivery() {
     }, []);
   const [formData, setFormData] = useState({ dcno: '', vchno: '' });
   const [show, setShow] = useState(false);
+  const [printShipToChoices, setPrintShipToChoices] = useState([]);
+  const [selectedPrintShipToIndex, setSelectedPrintShipToIndex] = useState(0);
    const [searchState, setSearchState] = useState('');
    // At the top with other state declarations
 const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -202,7 +371,11 @@ const [selectedDC, setSelectedDC] = useState(null);
 
     return nodeStatus === 'y' || nodeChildStatus === 'y' || rowStatus === 'y' || hasStatusYInHtml(JSON.stringify(row || {}));
   };
-  const handleClose = () => setShow(false);
+  const handleClose = () => {
+    setShow(false);
+    setPrintShipToChoices([]);
+    setSelectedPrintShipToIndex(0);
+  };
   const handleShow = (e) => {
     setShow(true);
   }
@@ -217,7 +390,20 @@ const [selectedDC, setSelectedDC] = useState(null);
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    axios.post(`${API_URL}/updateVechileNo`, formData)
+    const selectedPrintShipTo =
+      printShipToChoices[selectedPrintShipToIndex] ||
+      printShipToChoices.find((item) => item.is_default) ||
+      null;
+
+    const payload = {
+      ...formData,
+      shipToAddress: selectedPrintShipTo,
+      ship_to_address: selectedPrintShipTo,
+      shipToAddressJson: selectedPrintShipTo ? JSON.stringify(selectedPrintShipTo) : '',
+      ship_to_address_json: selectedPrintShipTo ? JSON.stringify(selectedPrintShipTo) : ''
+    };
+
+    axios.post(`${API_URL}/updateVechileNo`, payload)
       .then(function (response) {
 
         setShow(false);
@@ -225,6 +411,8 @@ const [selectedDC, setSelectedDC] = useState(null);
         let api = table.current.dt();
         let selectedRows = api.rows({ selected: true }).data();
         DCPrint(selectedRows);
+        setPrintShipToChoices([]);
+        setSelectedPrintShipToIndex(0);
         console.log('Form Submitted with Data:', response.data);
 
       })
@@ -233,11 +421,11 @@ const [selectedDC, setSelectedDC] = useState(null);
       });
 
     //const userData = response.data;
-    console.log('Data From Backend:', formData);
+    console.log('Data From Backend:', payload);
 
   };
 
-  const PrintHandle = (event) => {
+  const PrintHandle = async (event) => {
     event.preventDefault();
     let api = table.current.dt();
     let selectedRows = api.rows({ selected: true }).data();
@@ -247,6 +435,16 @@ const [selectedDC, setSelectedDC] = useState(null);
     } else if (selectedRows[0][21] !== "") {
       alert('This is deleted DC , you cannot take a print');
     } else {
+
+      const selectedRowsArray = selectedRows.toArray ? selectedRows.toArray() : Array.from(selectedRows);
+      const customerName = (selectedRowsArray[0]?.customer || selectedRowsArray[0]?.name || selectedRowsArray[0]?.[7] || '').toString().trim();
+      const matchedCustomer = options.customers.find(
+        (customer) => (customer.name || '').toString().trim() === customerName
+      );
+      const shipToList = await getShipToChoicesForCustomerFromApi(matchedCustomer);
+      const defaultIndex = shipToList.findIndex((item) => item.is_default);
+      setPrintShipToChoices(shipToList);
+      setSelectedPrintShipToIndex(defaultIndex >= 0 ? defaultIndex : 0);
 
       const match = selectedRows[0][6].match(/data-vchno="([^"]*)"/);
       const vchno = match ? match[1] : null;
@@ -266,11 +464,25 @@ const [selectedDC, setSelectedDC] = useState(null);
 
   const DCPrint = (selectedRows) => {
 
+    const selectedPrintShipTo = printShipToChoices[selectedPrintShipToIndex] || printShipToChoices.find((item) => item.is_default) || null;
+
     formData.dcno = selectedRows[0][1];
     setFormData(formData);
     axios.post(`${API_URL}/getDCDetails`, formData).then(function (response) {
 
       if (response.data) {
+        const responseShipToChoices = parseShipToPayload(
+          response.data['shipping'] 
+        );
+        //const responseShipToChoices = response.data['shipping'] || [];
+
+        const resolvedPrintShipTo =
+        responseShipToChoices[0] || response.data ||
+          selectedPrintShipTo ||         
+          
+          null;
+
+          console.log('Form Submitted with Shipping:', resolvedPrintShipTo);
 
         let pining = (response.data['gpining'] !== "0") ? parseFloat(response.data['gpining'] / 100) : "0";
         let gmetercal = (selectedRows[0][13] !== "0") ? parseFloat(selectedRows[0][13] * pining) : selectedRows[0][13];
@@ -414,7 +626,9 @@ white-space: normal !important;
         <p>${response.data['name']}</p>
         <p>${response.data['address1']}</p>
            <p>${response.data['address2']}</p>
-        <p>${response.data['pincode']}</p>
+            <p>${response.data['city']} - ${response.data['pincode']}</p>
+             <p>${response.data['state']}</p>
+        
         <p><strong>GSTIN:</strong> ${response.data['gstin']}</p>
          <p><strong>Contact:</strong> ${response.data['contact_number']}</p>
 </div>
@@ -432,12 +646,13 @@ white-space: normal !important;
         <div class="row">
 <div class="col-8 col-md-8" style="text-align:left;border-right:1px solid #000"> 
         <p><strong>Delivery To:</strong></p>
-        <p>${response.data['ship_name'] === ''?response.data['name']:response.data['ship_name']}</p>
-        <p>${ (response.data['ship_address1'] !== "" ) ? response.data['ship_address1']:response.data['address1']}</p>
-        <p>${ (response.data['ship_address2'] !== "" ) ? response.data['ship_address2']:response.data['address2']}</p>
-        <p>${ (response.data['ship_pincode'] !== "" ) ? response.data['ship_pincode']:response.data['pincode']}</p>
-        <p><strong>GSTIN:</strong> ${(response.data['ship_gstin'] !== "" ) ? response.data['ship_gstin']:response.data['gstin']}</p>
-        <p><strong>Contact:</strong> ${ (response.data['ship_contact_number'] !== "" ) ? response.data['ship_contact_number']:response.data['contact_number']}</p>
+  <p>${resolvedPrintShipTo['ship_name'] || (response.data['ship_name'] === ''?response.data['name']:response.data['ship_name'])}</p>
+  <p>${resolvedPrintShipTo['ship_address1'] || ((response.data['ship_address1'] !== "" ) ? response.data['ship_address1']:response.data['address1'])}</p>
+  <p>${resolvedPrintShipTo['ship_address2'] || ((response.data['ship_address2'] !== "" ) ? response.data['ship_address2']:response.data['address2'])}</p>
+  <p>${resolvedPrintShipTo['ship_city'] || ((response.data['ship_city'] !== "" ) ? response.data['ship_city']:response.data['city'])} - ${resolvedPrintShipTo['ship_pincode'] || ((response.data['ship_pincode'] !== "" ) ? response.data['ship_pincode']:response.data['pincode'])}</p>
+  <p>${resolvedPrintShipTo['ship_state'] || ((response.data['ship_state'] !== "" ) ? response.data['ship_state']:response.data['state'])}</p>
+  <p><strong>GSTIN:</strong> ${resolvedPrintShipTo['ship_gstin'] || ((response.data['ship_gstin'] !== "" ) ? response.data['ship_gstin']:response.data['gstin'])}</p>
+  <p><strong>Contact:</strong> ${resolvedPrintShipTo['ship_contact_number'] || ((response.data['ship_contact_number'] !== "" ) ? response.data['ship_contact_number']:response.data['contact_number'])}</p>
 </div>
         <div class="col-4 col-md-4" style="text-align:left"> 
         <div class="row"><div class="col-md-4"><p>Construction </p></div> <div class="col-md-6"><p>: ${selectedRows[0][10]}</p></div></div>
@@ -699,8 +914,10 @@ const deleteHandle = (event) => {
   setShowDeleteModal(true); // Show delete confirmation modal
 };
 
-const handleCreateInvoice = (event) => {
-  event.preventDefault();
+const handleCreateInvoice = async (event) => {
+  if (event) {
+    event.preventDefault();
+  }
   let api = table.current.dt();
   let selectedRowsApi = api.rows({ selected: true }).data();
   let selectedRows = selectedRowsApi.toArray ? selectedRowsApi.toArray() : Array.from(selectedRowsApi);
@@ -782,6 +999,10 @@ const handleCreateInvoice = (event) => {
     return;
   }
 
+  const matchedCustomer = options.customers.find(
+    (customer) => (customer.name || '').toString().trim() === customerName
+  );
+
   const extractVehicleNo = (row) => {
     const machineCell = (row[6] || '').toString();
     const match = machineCell.match(/data-vchno="([^"]*)"/i);
@@ -858,7 +1079,50 @@ const handleCreateInvoice = (event) => {
     )
   ).join(', ');
 
-  navigate('/invoice', { state: { customer: customerName, referenceNo, vehicleNos, items: invoiceItems } });
+  const invoiceStateBase = {
+    customer: customerName,
+    customerid: matchedCustomer?.id || '',
+    referenceNo,
+    vehicleNos,
+    items: invoiceItems
+  };
+
+  let shipToList = [];
+ let  selectedShipTo = [];
+  try {
+    const dcDetailsResponse = await axios.post(`${API_URL}/getDCDetails`, {
+      dcno: (selectedRows[0]?.[1] || '').toString().trim(),
+      vchno: ''
+    });
+
+    const dcDetails = dcDetailsResponse?.data;
+     console.log('DC Details:', dcDetails);
+    if (dcDetails['shipping'] !== "null" ) {
+      shipToList = parseShipToPayload(dcDetails['shipping']);
+      selectedShipTo = shipToList[0] || null;
+    } else {
+      
+      selectedShipTo = dcDetails || null;
+    }
+  } catch (error) {
+    console.warn('Failed to fetch ship-to details from getDCDetails for invoice', error);
+  }
+
+
+  navigate('/invoice', {
+    state: {
+      ...invoiceStateBase,
+      shipToAddress: selectedShipTo,
+      ship_name: selectedShipTo?.ship_name || '',
+      ship_contact_number: selectedShipTo?.ship_contact_number || '',
+      ship_address1: selectedShipTo?.ship_address1 || '',
+      ship_address2: selectedShipTo?.ship_address2 || '',
+      ship_city: selectedShipTo?.ship_city || '',
+      ship_state: selectedShipTo?.ship_state || '',
+      ship_pincode: selectedShipTo?.ship_pincode || '',
+      ship_gstin: selectedShipTo?.ship_gstin || ''
+    }
+  });
 };
 
 const handleDeleteConfirm = async () => {
@@ -1431,6 +1695,29 @@ const handleDeleteConfirm = async () => {
                     required
                   />
                 </Form.Group>
+
+                {printShipToChoices.length > 1 && (
+                  <Form.Group className="col-12 mb-3">
+                    <Form.Label className="block text-sm font-medium text-gray-700">
+                      Ship-To Address
+                    </Form.Label>
+                    <Form.Select
+                      value={selectedPrintShipToIndex}
+                      onChange={(e) => setSelectedPrintShipToIndex(Number(e.target.value))}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      {printShipToChoices.map((address, index) => (
+                        <option key={`${address.ship_name}-${index}`} value={index}>
+                          {(address.ship_name || 'Ship-To')}
+                          {address.ship_city ? ` - ${address.ship_city}` : ''}
+                          {address.ship_state ? `, ${address.ship_state}` : ''}
+                          {address.is_default ? ' (Default)' : ''}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                )}
+
               </Row>
             </Form>
           </Modal.Body>

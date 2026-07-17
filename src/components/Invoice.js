@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Table, Form, Button, Spinner, Modal } from 'react-bootstrap';
 import axios from 'axios';
@@ -27,6 +27,100 @@ function Invoice() {
   const stateCustomerId = invoiceState.customerid || invoiceState.customerId || invoiceState.customer_id || invoiceState.customerID || 
     (initialItems[0]?.customerid) || (initialItems[0]?.customerId) || (initialItems[0]?.customer_id) || '';
 
+  const normalizeShipToAddress = useCallback((item = {}) => ({
+    ship_name: (item?.ship_name || item?.name || '').toString().trim(),
+    ship_contact_number: (item?.ship_contact_number || item?.contact_number || '').toString().trim(),
+    ship_address1: (item?.ship_address1 || item?.address1 || '').toString().trim(),
+    ship_address2: (item?.ship_address2 || item?.address2 || '').toString().trim(),
+    ship_city: (item?.ship_city || item?.city || '').toString().trim(),
+    ship_state: (item?.ship_state || item?.state || '').toString().trim(),
+    ship_pincode: (item?.ship_pincode || item?.pincode || '').toString().trim(),
+    ship_gstin: (item?.ship_gstin || item?.gstin || '').toString().trim(),
+    is_default: item?.is_default === true || item?.is_default === 1 || item?.is_default === '1' || item?.is_default === 'true'
+  }), []);
+
+  const hasShipToValues = useCallback((shipTo) => [
+    shipTo?.ship_name,
+    shipTo?.ship_contact_number,
+    shipTo?.ship_address1,
+    shipTo?.ship_address2,
+    shipTo?.ship_city,
+    shipTo?.ship_state,
+    shipTo?.ship_pincode,
+    shipTo?.ship_gstin
+  ].some((value) => (value || '').toString().trim() !== ''), []);
+
+  const parseShipToAddresses = useCallback((rawValue) => {
+    if (!rawValue) return [];
+
+    let parsed = rawValue;
+    if (typeof rawValue === 'string') {
+      try {
+        parsed = JSON.parse(rawValue);
+      } catch (e) {
+        return [];
+      }
+    }
+
+    if (!Array.isArray(parsed)) {
+      parsed = [parsed];
+    }
+
+    return parsed
+      .map((item) => normalizeShipToAddress(item))
+      .filter((item) => hasShipToValues(item));
+  }, [normalizeShipToAddress, hasShipToValues]);
+
+  const routeShipToChoices = parseShipToAddresses(
+    invoiceState.shipToAddressJson ||
+    invoiceState.ship_to_address_json ||
+    invoiceState.shiptoaddressjson ||
+    invoiceState.shipaddressjson ||
+    invoiceState.shipping ||
+    invoiceState.shipToAddresses ||
+    invoiceState.shipAddresses ||
+    invoiceState.ship_address
+  );
+  const selectedShipToFromState = routeShipToChoices.find((address) => address.is_default) || routeShipToChoices[0] || invoiceState.shipToAddress || {
+    ship_name: invoiceState.ship_name || '',
+    ship_contact_number: invoiceState.ship_contact_number || '',
+    ship_address1: invoiceState.ship_address1 || '',
+    ship_address2: invoiceState.ship_address2 || '',
+    ship_city: invoiceState.ship_city || '',
+    ship_state: invoiceState.ship_state || '',
+    ship_pincode: invoiceState.ship_pincode || '',
+    ship_gstin: invoiceState.ship_gstin || ''
+  };
+
+  const initialShipToFromState = normalizeShipToAddress(selectedShipToFromState);
+  const hasShipToFromRouteState = hasShipToValues(initialShipToFromState);
+  const initialShipToChoices = routeShipToChoices;
+
+  if (hasShipToValues(initialShipToFromState)) {
+    const sameAddressExists = initialShipToChoices.some((address) =>
+      address.ship_name === initialShipToFromState.ship_name &&
+      address.ship_contact_number === initialShipToFromState.ship_contact_number &&
+      address.ship_address1 === initialShipToFromState.ship_address1 &&
+      address.ship_address2 === initialShipToFromState.ship_address2 &&
+      address.ship_city === initialShipToFromState.ship_city &&
+      address.ship_state === initialShipToFromState.ship_state &&
+      address.ship_pincode === initialShipToFromState.ship_pincode &&
+      address.ship_gstin === initialShipToFromState.ship_gstin
+    );
+
+    if (!sameAddressExists) {
+      initialShipToChoices.unshift(initialShipToFromState);
+    }
+  }
+
+  const initialDefaultShipToIndex = initialShipToChoices.findIndex((address) => address.is_default);
+  const initialSelectedShipToIndex = initialDefaultShipToIndex >= 0 ? initialDefaultShipToIndex : 0;
+  const [shipToChoices, setShipToChoices] = useState(initialShipToChoices);
+  const [selectedShipToIndex, setSelectedShipToIndex] = useState(initialSelectedShipToIndex);
+  const [shipToDetails, setShipToDetails] = useState(
+    shipToChoices[initialSelectedShipToIndex] || initialShipToFromState
+  );
+
   const [invoiceDetails, setInvoiceDetails] = useState({
     invoiceNo: stateInvoiceNo || '',
     invoiceDate: invoiceState.invoiceDate || new Date().toISOString().slice(0, 10),
@@ -44,6 +138,13 @@ function Invoice() {
     gstin: '',
     contact: ''
   });
+
+  useEffect(() => {
+    const selectedShipTo = shipToChoices[selectedShipToIndex];
+    if (selectedShipTo) {
+      setShipToDetails(selectedShipTo);
+    }
+  }, [shipToChoices, selectedShipToIndex]);
 
   // Company Details (Hardcoded)
   const companyInfo = {
@@ -184,6 +285,23 @@ function Invoice() {
               gstin: details.gstin || details.customerGstin || '-',
               contact: details.contact || details.phone || details.contactNo || '-'
             });
+
+            const parsedShipTo = parseShipToAddresses(
+              details.ship_address ||
+              details.shipAddress ||
+              details.ship_to_addresses ||
+              details.shipToAddresses
+            );
+
+            if (parsedShipTo.length > 0 && !hasShipToFromRouteState) {
+              const defaultIndex = parsedShipTo.findIndex((address) => address.is_default);
+              const effectiveIndex = defaultIndex >= 0 ? defaultIndex : 0;
+              const defaultShipTo = parsedShipTo[effectiveIndex];
+
+              setShipToChoices(parsedShipTo);
+              setSelectedShipToIndex(effectiveIndex);
+              setShipToDetails((prev) => (hasShipToValues(prev) ? prev : defaultShipTo));
+            }
           }
         }
       } catch (err) {
@@ -203,7 +321,7 @@ function Invoice() {
     return () => {
       isActive = false;
     };
-  }, [invoiceDetails.customerid, stateCustomerId, customerName]);
+  }, [invoiceDetails.customerid, stateCustomerId, customerName, parseShipToAddresses, hasShipToValues, hasShipToFromRouteState]);
 
   const [lineItems, setLineItems] = useState(() =>
     initialItems.map((item) => {
@@ -449,6 +567,16 @@ function Invoice() {
 
     // Fetch buyer details before printing
     let currentBuyerDetails = { ...buyerDetails };
+    let currentShipToDetails = {
+      name: shipToDetails.ship_name || '',
+      address1: shipToDetails.ship_address1 || '',
+      address2: shipToDetails.ship_address2 || '',
+      city: shipToDetails.ship_city || '',
+      pincode: shipToDetails.ship_pincode || '',
+      state: shipToDetails.ship_state || '',
+      gstin: shipToDetails.ship_gstin || '',
+      contact: shipToDetails.ship_contact_number || ''
+    };
     const customerId = invoiceDetails.customerid || stateCustomerId;
     const searchParam = customerId ? { customerId } : (customerName ? { customerName } : {});
     console.log('Customer ID:', customerId);
@@ -497,6 +625,23 @@ function Invoice() {
         address: '-',
         gstin: '-',
         contact: '-'
+      };
+    }
+
+    const hasShipToOverride = [
+      currentShipToDetails.name,
+      currentShipToDetails.address1,
+      currentShipToDetails.address2,
+      currentShipToDetails.city,
+      currentShipToDetails.state,
+      currentShipToDetails.pincode,
+      currentShipToDetails.gstin,
+      currentShipToDetails.contact
+    ].some((value) => (value || '').toString().trim() !== '');
+
+    if (!hasShipToOverride) {
+      currentShipToDetails = {
+        ...currentBuyerDetails
       };
     }
 
@@ -720,13 +865,13 @@ function Invoice() {
             </div>
             <div class="party">
               <div class="party-title">Consignee (Ship To) </div>
-              <div class="party-line"><strong>${currentBuyerDetails.name}</strong></div>
-              <div class="party-line">${currentBuyerDetails.address1}</div>
-               <div class="party-line">${currentBuyerDetails.address2}</div>
-               <div class="party-line">${currentBuyerDetails.city} - ${currentBuyerDetails.pincode}</div>
-               <div class="party-line">${currentBuyerDetails.state}</div>
-              <div class="party-line">GSTIN/UIN: ${currentBuyerDetails.gstin}</div>
-              <div class="party-line">Contact: ${currentBuyerDetails.contact}</div>
+              <div class="party-line"><strong>${currentShipToDetails.name}</strong></div>
+              <div class="party-line">${currentShipToDetails.address1}</div>
+               <div class="party-line">${currentShipToDetails.address2}</div>
+               <div class="party-line">${currentShipToDetails.city} - ${currentShipToDetails.pincode}</div>
+               <div class="party-line">${currentShipToDetails.state}</div>
+              <div class="party-line">GSTIN/UIN: ${currentShipToDetails.gstin}</div>
+              <div class="party-line">Contact: ${currentShipToDetails.contact}</div>
             </div>
           </div>
 
@@ -936,7 +1081,16 @@ function Invoice() {
       sgst: invoiceTotals.sgst,
       igst: invoiceTotals.igst,
       taxStatus: taxStatus.label,
-      taxType: taxStatus.type
+      taxType: taxStatus.type,
+      shipToAddress: shipToDetails,
+      ship_name: shipToDetails.ship_name || '',
+      ship_contact_number: shipToDetails.ship_contact_number || '',
+      ship_address1: shipToDetails.ship_address1 || '',
+      ship_address2: shipToDetails.ship_address2 || '',
+      ship_city: shipToDetails.ship_city || '',
+      ship_state: shipToDetails.ship_state || '',
+      ship_pincode: shipToDetails.ship_pincode || '',
+      ship_gstin: shipToDetails.ship_gstin || ''
     };
     
     return invoice;
@@ -1090,6 +1244,21 @@ function Invoice() {
                 <p>
                   <strong>Tax Status:</strong> {taxStatusLoading ? 'Checking...' : taxStatus.label}
                 </p>
+              </div>
+
+              <div className="mb-4 rounded border bg-light p-3">
+                <h6 className="mb-3">Ship To Address</h6>
+               
+
+                <Row className="g-3">
+                  <Col md={4}>
+                    <p>{shipToDetails.ship_name || ''} , {shipToDetails.ship_address1 || ''} </p>                  
+                    <p>{shipToDetails.ship_address2 || ''} , {shipToDetails.ship_city || ''}</p>
+                    <p>{shipToDetails.ship_state || ''} - {shipToDetails.ship_pincode || ''}</p>
+                       <p>{shipToDetails.contact_number || ''}</p>
+                  </Col>
+                 
+                </Row>
               </div>
 
               <Table bordered responsive>
