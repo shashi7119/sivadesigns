@@ -163,13 +163,13 @@ function App() {
               </Role>
               } />
               <Route path="/invoice" element={
-              <Role allowedRoles={["admin","delivery","SP1","finishing","PA"]} userRole={userRole}>
+              <Role allowedRoles={["admin","delivery","PA"]} userRole={userRole}>
               <Invoice />
               </Role>
               } />
 
               <Route path="/invoices" element={
-              <Role allowedRoles={["admin","delivery","SP1","finishing","PA"]} userRole={userRole}>
+              <Role allowedRoles={["admin","delivery","PA"]} userRole={userRole}>
               <InvoiceList />
               </Role>
               } />
