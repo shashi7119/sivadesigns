@@ -498,6 +498,48 @@ function Invoice() {
     };
   };
 
+  const addLineItemBelow = (index) => {
+    setLineItems((prevItems) => {
+      const newItem = syncLineItemTaxBreakdown({
+        dcNo: '',
+        description: '',
+        color: '',
+        quantity: '',
+        unit: '',
+        rate: '',
+        tax: '',
+        cgst: '0.00',
+        sgst: '0.00',
+        igst: '0.00',
+        amount: '0.00',
+        isManual: true
+      });
+
+      if (index >= 0 && index < prevItems.length) {
+        return [
+          ...prevItems.slice(0, index + 1),
+          newItem,
+          ...prevItems.slice(index + 1)
+        ];
+      }
+
+      return [...prevItems, newItem];
+    });
+  };
+
+  const updateLineItemField = (index, key, value) => {
+    setLineItems((prevItems) => {
+      const copy = JSON.parse(JSON.stringify(prevItems));
+      copy[index][key] = value;
+      copy[index] = syncLineItemTaxBreakdown(copy[index]);
+      return copy;
+    });
+  };
+
+  const removeLineItem = (index) => {
+    setLineItems((prevItems) => prevItems.filter((_, itemIndex) => itemIndex !== index));
+  };
+
   const invoiceTotals = useMemo(() => {
     let totalTax = 0;
     let totalCgst = 0;
@@ -1281,68 +1323,148 @@ function Invoice() {
                       <th>IGST</th>
                     )}
                     <th>Amount</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {lineItems.length === 0 && (
                     <tr>
-                      <td colSpan={taxStatus.type === 'cgst_sgst' ? '11' : '10'} className="text-center py-4">
-                        No selected items. Go back to Delivery and choose delivery line items first.
+                      <td colSpan={taxStatus.type === 'cgst_sgst' ? '12' : '11'} className="text-center py-4">
+                        <div className="d-flex flex-column align-items-center gap-2">
+                          <div>No selected items. Go back to Delivery and choose delivery line items first.</div>
+                          <Button size="sm" variant="outline-primary" onClick={() => addLineItemBelow(-1)}>
+                            Add Line Item
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   )}
                   {lineItems.map((item, index) => (
                     <tr key={index}>
                         <td>{index + 1}</td>
-                        <td>{item.dcNo}</td>
-                        <td>{item.description}</td>
-                        <td>{item.color}</td>
+                        <td>
+                          {item.isManual ? (
+                            <Form.Control
+                              size="sm"
+                              value={item.dcNo || ''}
+                              onChange={(e) => updateLineItemField(index, 'dcNo', e.target.value)}
+                            />
+                          ) : (
+                            item.dcNo
+                          )}
+                        </td>
+                        <td>
+                          {item.isManual ? (
+                            <Form.Control
+                              size="sm"
+                              value={item.description || ''}
+                              onChange={(e) => updateLineItemField(index, 'description', e.target.value)}
+                            />
+                          ) : (
+                            item.description
+                          )}
+                        </td>
+                        <td>
+                          {item.isManual ? (
+                            <Form.Control
+                              size="sm"
+                              value={item.color || ''}
+                              onChange={(e) => updateLineItemField(index, 'color', e.target.value)}
+                            />
+                          ) : (
+                            item.color
+                          )}
+                        </td>
                         <td>
                           <Form.Control
                             size="sm"
                             value={item.quantity}
-                            onChange={(e) => {
-                              const copy = JSON.parse(JSON.stringify(lineItems));
-                              copy[index].quantity = e.target.value;
-                              copy[index] = syncLineItemTaxBreakdown(copy[index]);
-                              setLineItems(copy);
-                            }}
+                            onChange={(e) => updateLineItemField(index, 'quantity', e.target.value)}
                           />
                         </td>
-                        <td>{item.unit}</td>
+                        <td>
+                          {item.isManual ? (
+                            <Form.Control
+                              size="sm"
+                              value={item.unit || ''}
+                              onChange={(e) => updateLineItemField(index, 'unit', e.target.value)}
+                            />
+                          ) : (
+                            item.unit
+                          )}
+                        </td>
                         <td>
                           <Form.Control
                             size="sm"
                             value={item.rate}
-                            onChange={(e) => {
-                              const copy = JSON.parse(JSON.stringify(lineItems));
-                              copy[index].rate = e.target.value;
-                              copy[index] = syncLineItemTaxBreakdown(copy[index]);
-                              setLineItems(copy);
-                            }}
+                            onChange={(e) => updateLineItemField(index, 'rate', e.target.value)}
                           />
                         </td>
                         <td>
                           <Form.Control
                             size="sm"
                             value={item.tax || 0}
-                            onChange={(e) => {
-                              const copy = JSON.parse(JSON.stringify(lineItems));
-                              copy[index].tax = e.target.value;
-                              copy[index] = syncLineItemTaxBreakdown(copy[index]);
-                              setLineItems(copy);
-                            }}
+                            onChange={(e) => updateLineItemField(index, 'tax', e.target.value)}
                           />
                         </td>
                         {taxStatus.type === 'cgst_sgst' ? (
                           <>
-                            <td>{item.cgst || '0.00'}</td>
-                            <td>{item.sgst || '0.00'}</td>
+                            <td>
+                              {item.isManual ? (
+                                <Form.Control size="sm" value={item.cgst || '0.00'} readOnly />
+                              ) : (
+                                item.cgst || '0.00'
+                              )}
+                            </td>
+                            <td>
+                              {item.isManual ? (
+                                <Form.Control size="sm" value={item.sgst || '0.00'} readOnly />
+                              ) : (
+                                item.sgst || '0.00'
+                              )}
+                            </td>
                           </>
                         ) : (
-                          <td>{item.igst || '0.00'}</td>
+                          <td>
+                            {item.isManual ? (
+                              <Form.Control size="sm" value={item.igst || '0.00'} readOnly />
+                            ) : (
+                              item.igst || '0.00'
+                            )}
+                          </td>
                         )}
-                        <td>{item.amount}</td>
+                        <td>
+                          {item.isManual ? (
+                            <Form.Control size="sm" value={item.amount || '0.00'} readOnly />
+                          ) : (
+                            item.amount
+                          )}
+                        </td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline-primary"
+                              onClick={() => addLineItemBelow(index)}
+                              title="Add line item"
+                              aria-label="Add line item"
+                              className="px-2"
+                            >
+                              +
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline-danger"
+                              onClick={() => removeLineItem(index)}
+                              title={index === 0 ? 'First line item cannot be removed' : 'Remove line item'}
+                              aria-label={index === 0 ? 'First line item cannot be removed' : 'Remove line item'}
+                              className="px-2"
+                              disabled={index === 0}
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
                   ))}
                 </tbody>
