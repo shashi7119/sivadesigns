@@ -468,6 +468,48 @@ function Invoice() {
     return `${day}-${month}-${year}`;
   }
 
+  async function getPrintableImageSrc(imageSrc) {
+    if (!imageSrc) return '';
+
+    try {
+      const response = await fetch(imageSrc);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image asset: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn('Falling back to original print image source', error);
+      return imageSrc;
+    }
+  }
+
+  async function waitForPrintImages(printWindow) {
+    const images = Array.from(printWindow.document.images || []);
+    if (!images.length) return;
+
+    await Promise.all(
+      images.map(
+        (image) =>
+          new Promise((resolve) => {
+            if (image.complete) {
+              resolve();
+              return;
+            }
+
+            image.addEventListener('load', resolve, { once: true });
+            image.addEventListener('error', resolve, { once: true });
+          })
+      )
+    );
+  }
+
   const syncLineItemTaxBreakdown = (lineItem) => {
     const qty = Number(lineItem.quantity || 0);
     const rate = Number(lineItem.rate || 0);
@@ -770,6 +812,8 @@ function Invoice() {
       'Duplicate for Supplier'  
     ];
 
+    const printableLogo = await getPrintableImageSrc(logo);
+
     const html = `
       <!DOCTYPE html>
       <html lang="en">
@@ -840,7 +884,7 @@ function Invoice() {
           <!-- Header -->
           <div class="header">
             <div class="company-block">
-              <img src="${logo}" alt="Company Logo" class="company-logo" />
+              <img src="${printableLogo}" alt="Company Logo" class="company-logo" />
               <div class="company-info">
                 <div class="company-name">${companyInfo.name}</div>
                 <div class="company-details">
@@ -1067,9 +1111,13 @@ function Invoice() {
         });
       }
 
-      setTimeout(() => {
-        newWindow.print();
-      }, 500);
+      waitForPrintImages(newWindow)
+        .catch((error) => {
+          console.warn('Proceeding to print before all assets confirmed loaded', error);
+        })
+        .finally(() => {
+          newWindow.print();
+        });
     } else {
       alert('Unable to open print window.');
     }
