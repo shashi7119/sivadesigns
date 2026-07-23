@@ -510,11 +510,21 @@ function Invoice() {
     );
   }
 
+  const toNumber = (value) => {
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    const normalized = (value ?? '').toString().replace(/,/g, '').trim();
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
   const syncLineItemTaxBreakdown = (lineItem) => {
-    const qty = Number(lineItem.quantity || 0);
-    const rate = Number(lineItem.rate || 0);
+    const qty = toNumber(lineItem.quantity);
+    const rate = toNumber(lineItem.rate);
     const base = qty * rate;
-    const taxPercent = Number(lineItem.tax || 0);
+    const taxPercent = toNumber(lineItem.tax);
     const taxAmount = (taxPercent / 100) * base;
     const total = base + taxAmount;
 
@@ -543,6 +553,8 @@ function Invoice() {
   const addLineItemBelow = (index) => {
     setLineItems((prevItems) => {
       const newItem = syncLineItemTaxBreakdown({
+        date: invoiceDetails.invoiceDate || new Date().toISOString().slice(0, 10),
+        vchno: vehicleNos || '',
         dcNo: '',
         description: '',
         color: '',
@@ -589,18 +601,18 @@ function Invoice() {
     let totalIgst = 0;
 
     lineItems.forEach((item) => {
-      const qty = Number(item.quantity || 0);
-      const rate = Number(item.rate || 0);
+      const qty = toNumber(item.quantity);
+      const rate = toNumber(item.rate);
       const base = qty * rate;
-      const tax = (Number(item.tax || 0) / 100) * base;
+      const tax = (toNumber(item.tax) / 100) * base;
       totalTax += tax;
-      totalCgst += Number(item.cgst || 0);
-      totalSgst += Number(item.sgst || 0);
-      totalIgst += Number(item.igst || 0);
+      totalCgst += toNumber(item.cgst);
+      totalSgst += toNumber(item.sgst);
+      totalIgst += toNumber(item.igst);
     });
 
-    const discountValue = Number(invoiceDetails.totalDiscount || 0);
-    const subTotal = lineItems.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.rate || 0), 0);
+    const discountValue = toNumber(invoiceDetails.totalDiscount);
+    const subTotal = lineItems.reduce((sum, item) => sum + toNumber(item.quantity) * toNumber(item.rate), 0);
     const total = subTotal + totalTax - discountValue;
     const taxBreakdown = getTaxBreakdown(totalTax, taxStatus.type);
     return {
@@ -1154,6 +1166,22 @@ function Invoice() {
   };
 
   const saveInvoice = () => {
+    const normalizedItems = lineItems.map((item) => ({
+      ...item,
+      date:
+        item.date ||
+        item.deliveryDate ||
+        item.invoiceDate ||
+        invoiceDetails.invoiceDate ||
+        new Date().toISOString().slice(0, 10),
+      vchno:
+        item.vchno ||
+        item.vehicleNo ||
+        item.vehicle_no ||
+        vehicleNos ||
+        ''
+    }));
+
     const invoice = {
       invoiceNo: invoiceDetails.invoiceNo,
       invoiceDate: invoiceDetails.invoiceDate,
@@ -1162,7 +1190,7 @@ function Invoice() {
       customer: customerName,
       customerid: invoiceDetails.customerid || stateCustomerId || invoiceState.customerid || invoiceState.customerId || invoiceState.customer_id || '',
       vehicleNos,
-      items: lineItems,
+      items: normalizedItems,
       subtotal: invoiceTotals.subTotal,
       totalDiscount: invoiceTotals.totalDiscount,
       totalTax: invoiceTotals.totalTax,
@@ -1186,7 +1214,7 @@ function Invoice() {
     return invoice;
   };
 
-  const hasInvalidRate = lineItems.some((item) => Number(item.rate || 0) <= 0);
+  const hasInvalidRate = lineItems.some((item) => toNumber(item.rate) <= 0);
 
   const handleSave = async () => {
     if (isSaving) return;

@@ -27,7 +27,7 @@ function Edit() {
   const [formData, setFormData] = useState({
     ide:'',date:null,machine: '', customer: '', fabric: '', 
     shade: '', construction: '', width: '',batchid:'',
-    weight: '0',  gmeter: 0, glm: '0',aglm: '0',process: '',finishing: '',sale_order_no: '',noofpcs: '',customerdc: '',
+    weight: '0',  gmeter: 0, glm: '0',aglm: '0',process: '',finishing: '',sale_order_no: '',noofpcs: '',customerdc: '',invoiceParameter: '',dyeing_weight: '',dyeing_gmeter: '',
   });
  formData.ide=planid;
       // Fetch data from backend API
@@ -48,7 +48,27 @@ function Edit() {
             setFabricData(response.data['fabric']);
             setConstructionData(response.data['construction']);
             setFinishingData(response.data['finishing']);
-            setFormData(response.data['edit']);
+            const editData = response.data['edit'] || {};
+            const invoiceParameterValue =
+              editData.invoiceParameter ||
+              editData.invparams ||
+              editData.inv_param ||
+              editData.invParam ||
+              '';
+            const dyeingWeightValue =
+              editData.dyeing_weight ||
+              editData.dyeingweight ||
+              '';
+            const dyeingGmeterValue =
+              editData.dyeing_gmeter ||
+              editData.dyeingmeter ||
+              '';
+            setFormData({
+              ...editData,
+              invoiceParameter: invoiceParameterValue,
+              dyeing_weight: dyeingWeightValue,
+              dyeing_gmeter: dyeingGmeterValue
+            });
             
           } catch (error) {
             console.log(error);
@@ -68,7 +88,7 @@ function Edit() {
     customer: /^[A-Za-z0-9_@./#&+\-, ]*$/,              // Only letters for input2
     fabric: /^[A-Za-z0-9_@./#&+\-, ]*$/,       // Alphanumeric and underscores for input3
     shade: /^[A-Za-z0-9_@./#&+\-, ]*$/,construction: /^[A-Za-z0-9_@./#&+\-, ]*$/,
-    width: /^[0-9"]*$/,weight: /^[0-9. ]*$/, gmeter: /^[0-9. ]*$/,glm: /^[0-9. ]*$/,process: /^[a-zA-Z0-9_+ ]*$/,finishing: /^[a-zA-Z0-9_+ ]*$/,
+    width: /^[0-9"]*$/,weight: /^[0-9. ]*$/, gmeter: /^[0-9. ]*$/,glm: /^[0-9. ]*$/,process: /^[a-zA-Z0-9_+ ]*$/,finishing: /^[a-zA-Z0-9_+ ]*$/,dyeing_weight: /^[0-9. ]*$/,dyeing_gmeter: /^[0-9. ]*$/,
   };
 
   
@@ -82,7 +102,19 @@ function Edit() {
     event.preventDefault();
 
     console.log('Form Submitted with Data:', formData);
-    axios.post(`${API_URL}/updateBatchVal`, formData)
+    const payload = {
+      ...formData,
+      invoiceParameter: formData.invoiceParameter || '',
+      invparams: formData.invoiceParameter || '',
+      inv_param: formData.invoiceParameter || '',
+      invParam: formData.invoiceParameter || '',
+      dyeing_weight: formData.dyeing_weight || '',
+      dyeing_gmeter: formData.dyeing_gmeter || '',
+      dyeingweight: formData.dyeing_weight || '',
+      dyeingmeter: formData.dyeing_gmeter || ''
+    };
+
+    axios.post(`${API_URL}/updateBatchVal`, payload)
     .then(function (response) {
       navigate('/batch');
       console.log(response);
@@ -101,7 +133,8 @@ function Edit() {
 
     
     // Step 4: Validate the input value based on the regex pattern
-    const isValid = regexPatterns[name].test(value);
+    const pattern = regexPatterns[name];
+    const isValid = pattern ? pattern.test(value) : true;
 
     // Step 5: If valid, update the state, otherwise you can show an error or just keep it unchanged
     if (isValid) {
@@ -401,6 +434,49 @@ function Edit() {
 ))}
            </Form.Select>      
           </Form.Group>
+          <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicInvoiceParameter">
+            <Form.Label>Invoice Parameter</Form.Label>
+            <Form.Select
+              name="invoiceParameter"
+              value={formData.invoiceParameter || ''}
+              onChange={(e) =>  setFormData((prevData) => ({
+                ...prevData,
+                [e.target.name]: e.target.value
+              }))}
+            >
+              <option value="">Select</option>
+              <option value="gw">Grey Weight</option>
+              <option value="gm">Grey Meter</option>
+              <option value="fw">Final Weight</option>
+              <option value="fm">Final Meter</option>
+            </Form.Select>
+          </Form.Group>
+            <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicDyeingWeight">
+              <Form.Label>Dyeing Weight</Form.Label>
+              <Form.Control
+                type="text"
+                name="dyeing_weight"
+                value={formData.dyeing_weight || ''}
+                onKeyUp={handleKeyUp}
+                onChange={(e) =>  setFormData((prevData) => ({
+                  ...prevData,
+                  [e.target.name]: e.target.value
+                }))}
+              />
+            </Form.Group>
+            <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicDyeingMeter">
+              <Form.Label>Dyeing Meter</Form.Label>
+              <Form.Control
+                type="text"
+                name="dyeing_gmeter"
+                value={formData.dyeing_gmeter || ''}
+                onKeyUp={handleKeyUp}
+                onChange={(e) =>  setFormData((prevData) => ({
+                  ...prevData,
+                  [e.target.name]: e.target.value
+                }))}
+              />
+            </Form.Group>
            <Form.Group className="col-12 col-sm-6 mb-3" controlId="formBasicaglm">
             <Form.Label>Sale Order No </Form.Label>
             <Form.Control

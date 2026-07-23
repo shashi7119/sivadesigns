@@ -936,7 +936,19 @@ const handleCreateInvoice = async (event) => {
 
   const getCustomer = (row) => {
     if (!row) return '';
-    return row.customer || row.name || row[7] || '';
+
+    const rawCustomer = row.customer || row.name || row[7] || '';
+    if (typeof rawCustomer !== 'string') {
+      return rawCustomer;
+    }
+
+    if (!rawCustomer.includes('<')) {
+      return rawCustomer;
+    }
+
+    const parserNode = document.createElement('div');
+    parserNode.innerHTML = rawCustomer;
+    return (parserNode.textContent || parserNode.innerText || '').trim();
   };
 
   const getInvoiceParam = (row, node) => {
