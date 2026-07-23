@@ -22,7 +22,7 @@ function Planning() {
   const [formData, setFormData] = useState([{
     planid: '', customer:'', width:'',construction:'',inwardno:'',
     planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',
-    dyeing_weight: '', dyeing_gmeter: '', noofpcs:'',sono:''
+    dyeing_weight: '', dyeing_gmeter: '', noofpcs:'',sono:'', invoiceParameter: ''
   }]);
   const [searchState, setSearchState] = useState('');
   const [selData, setSelData] = useState([]); // Changed from setselData to setSelData
@@ -181,7 +181,7 @@ function Planning() {
       
        const newRow = { planid: dataArr[0], customer:dataArr[5], width:dataArr[9],construction:dataArr[8],inwardno:dataArr[1],
     planned_weight: dataArr[10],planned_gmeter: dataArr[11],actual_weight: '',actual_gmeter: '',
-    dyeing_weight: '', dyeing_gmeter: '', noofpcs:'',sono:''};
+    dyeing_weight: '', dyeing_gmeter: '', noofpcs:'',sono:'',invoiceParameter: ''};
         setFormData(formData=>[...formData, newRow]);    
       
   }
@@ -202,6 +202,14 @@ function Planning() {
 
    const handleSubmit = async (event) => {
     event.preventDefault();
+
+    const hasMissingInvoiceParameter = formData.some(
+      (row) => !(row.invoiceParameter || '').toString().trim()
+    );
+    if (hasMissingInvoiceParameter) {
+      alert('Invoice Parameter is required for all selected plans.');
+      return;
+    }
     
     // Prevent multiple submissions
     if (isSubmitting) {
@@ -666,7 +674,7 @@ function Planning() {
                           as="select"
                           placeholder="Invoice Parameter"
                           name="invoiceParameter"
-                          value={row.invoiceParameter}
+                          value={row.invoiceParameter || ''}
                           onChange={(e) =>
                             setFormData((prevRows) =>
                               prevRows.map((row1) =>
@@ -674,6 +682,7 @@ function Planning() {
                               )
                             )
                           }
+                          required
                         >
                           <option value="">Select</option>
                           <option value="gw">Grey Weight</option>

@@ -510,7 +510,7 @@ function Invoice() {
     );
   }
 
-  const toNumber = (value) => {
+  const toNumber = useCallback((value) => {
     if (typeof value === 'number') {
       return Number.isFinite(value) ? value : 0;
     }
@@ -518,13 +518,22 @@ function Invoice() {
     const normalized = (value ?? '').toString().replace(/,/g, '').trim();
     const parsed = Number(normalized);
     return Number.isFinite(parsed) ? parsed : 0;
-  };
+  }, []);
 
-  const syncLineItemTaxBreakdown = (lineItem) => {
-    const qty = toNumber(lineItem.quantity);
-    const rate = toNumber(lineItem.rate);
+  const normalizeLineItemValues = useCallback((item = {}) => ({
+    ...item,
+    quantity: item.quantity ?? item.qty ?? item.qnty ?? 0,
+    rate: item.rate ?? item.price ?? item.unitRate ?? 0,
+    tax: item.tax ?? item.gst ?? item.taxPercent ?? 0,
+    unit: item.unit || 'KG'
+  }), []);
+
+  const syncLineItemTaxBreakdown = useCallback((lineItem) => {
+    const normalizedLineItem = normalizeLineItemValues(lineItem);
+    const qty = toNumber(normalizedLineItem.quantity);
+    const rate = toNumber(normalizedLineItem.rate);
     const base = qty * rate;
-    const taxPercent = toNumber(lineItem.tax);
+    const taxPercent = toNumber(normalizedLineItem.tax);
     const taxAmount = (taxPercent / 100) * base;
     const total = base + taxAmount;
 
@@ -542,13 +551,13 @@ function Invoice() {
     }
 
     return {
-      ...lineItem,
+      ...normalizedLineItem,
       amount: total.toFixed(2),
       cgst: cgst,
       sgst: sgst,
       igst: igst
     };
-  };
+  }, [normalizeLineItemValues, taxStatus.type, toNumber]);
 
   const addLineItemBelow = (index) => {
     setLineItems((prevItems) => {
@@ -559,9 +568,9 @@ function Invoice() {
         description: '',
         color: '',
         quantity: '',
-        unit: '',
+        unit: 'MTR',
         rate: '',
-        tax: '',
+        tax: '5',
         cgst: '0.00',
         sgst: '0.00',
         igst: '0.00',
@@ -594,25 +603,47 @@ function Invoice() {
     setLineItems((prevItems) => prevItems.filter((_, itemIndex) => itemIndex !== index));
   };
 
+  useEffect(() => {
+    if (!existingChecked) return;
+
+    setLineItems((prevItems) => {
+      let hasChanges = false;
+
+      const updatedItems = prevItems.map((item) => {
+        const synced = syncLineItemTaxBreakdown(item);
+        if (
+          (item.amount || '0.00').toString() !== (synced.amount || '0.00').toString() ||
+          (item.cgst || '0.00').toString() !== (synced.cgst || '0.00').toString() ||
+          (item.sgst || '0.00').toString() !== (synced.sgst || '0.00').toString() ||
+          (item.igst || '0.00').toString() !== (synced.igst || '0.00').toString()
+        ) {
+          hasChanges = true;
+          return synced;
+        }
+        return item;
+      });
+
+      return hasChanges ? updatedItems : prevItems;
+    });
+  }, [taxStatus.type, existingChecked, syncLineItemTaxBreakdown]);
+
   const invoiceTotals = useMemo(() => {
     let totalTax = 0;
-    let totalCgst = 0;
-    let totalSgst = 0;
-    let totalIgst = 0;
 
     lineItems.forEach((item) => {
-      const qty = toNumber(item.quantity);
-      const rate = toNumber(item.rate);
+      const normalizedItem = normalizeLineItemValues(item);
+      const qty = toNumber(normalizedItem.quantity);
+      const rate = toNumber(normalizedItem.rate);
       const base = qty * rate;
-      const tax = (toNumber(item.tax) / 100) * base;
+      const tax = (toNumber(normalizedItem.tax) / 100) * base;
       totalTax += tax;
-      totalCgst += toNumber(item.cgst);
-      totalSgst += toNumber(item.sgst);
-      totalIgst += toNumber(item.igst);
     });
 
     const discountValue = toNumber(invoiceDetails.totalDiscount);
-    const subTotal = lineItems.reduce((sum, item) => sum + toNumber(item.quantity) * toNumber(item.rate), 0);
+    const subTotal = lineItems.reduce((sum, item) => {
+      const normalizedItem = normalizeLineItemValues(item);
+      return sum + toNumber(normalizedItem.quantity) * toNumber(normalizedItem.rate);
+    }, 0);
     const total = subTotal + totalTax - discountValue;
     const taxBreakdown = getTaxBreakdown(totalTax, taxStatus.type);
     return {
@@ -620,11 +651,11 @@ function Invoice() {
       totalDiscount: discountValue.toFixed(2),
       totalTax: taxBreakdown.totalTax,
       totalAmount: total.toFixed(2),
-      cgst: taxStatus.type === 'cgst_sgst' ? totalCgst.toFixed(2) : taxBreakdown.cgst,
-      sgst: taxStatus.type === 'cgst_sgst' ? totalSgst.toFixed(2) : taxBreakdown.sgst,
-      igst: taxStatus.type === 'igst' ? totalIgst.toFixed(2) : taxBreakdown.igst
+      cgst: taxBreakdown.cgst,
+      sgst: taxBreakdown.sgst,
+      igst: taxBreakdown.igst
     };
-  }, [lineItems, invoiceDetails.totalDiscount, taxStatus.type]);
+  }, [lineItems, invoiceDetails.totalDiscount, normalizeLineItemValues, taxStatus.type, toNumber]);
 
   if (!isAuthenticated) {
     return null;
@@ -1245,6 +1276,17 @@ function Invoice() {
   const handleCancelInvoice = async () => {
     if (!isEditMode) return;
 
+    const invoiceDateValue = (invoiceDetails.invoiceDate || '').toString().trim();
+    const parsedInvoiceDate = invoiceDateValue ? new Date(invoiceDateValue) : null;
+    if (parsedInvoiceDate && !Number.isNaN(parsedInvoiceDate.getTime())) {
+      const cancelWindowMs = 24 * 60 * 60 * 1000;
+      const elapsedMs = Date.now() - parsedInvoiceDate.getTime();
+      if (elapsedMs > cancelWindowMs) {
+        alert('Invoice cancellation is allowed only within 24 hours from the invoice date.');
+        return;
+      }
+    }
+
     const invoiceNo = (invoiceDetails.invoiceNo || '').toString().trim();
     if (!invoiceNo) {
       alert('Invoice number is required to cancel invoice.');
@@ -1280,6 +1322,18 @@ function Invoice() {
     setShowPrintPrompt(false);
     navigate('/invoices');
   };
+
+  const canCancelInvoice = (() => {
+    if (!isEditMode) return false;
+    const invoiceDateValue = (invoiceDetails.invoiceDate || '').toString().trim();
+    if (!invoiceDateValue) return false;
+
+    const parsedInvoiceDate = new Date(invoiceDateValue);
+    if (Number.isNaN(parsedInvoiceDate.getTime())) return false;
+
+    const cancelWindowMs = 24 * 60 * 60 * 1000;
+    return Date.now() - parsedInvoiceDate.getTime() <= cancelWindowMs;
+  })();
 
   const pageTitle = isEditMode ? 'Edit Invoice' : 'Create Invoice';
   const pageSubtitle = isEditMode ? 'Update invoice details.' : 'Create a new invoice from selected delivery line items.';
@@ -1547,10 +1601,7 @@ function Invoice() {
               </Table>
 
               <div className="mt-4 rounded border bg-gray-50 p-4">
-                <Row className="mb-2">
-                  <Col md={9}><strong>Subtotal</strong></Col>
-                  <Col md={3} className="text-end">{invoiceTotals.subTotal}</Col>
-                </Row>
+               
                 <Row className="mb-2">
                   <Col md={9}><strong>Total Discount</strong></Col>
                   <Col md={3} className="text-end">
@@ -1592,7 +1643,13 @@ function Invoice() {
                 <Row className="mt-3">
                   <Col className="d-flex justify-content-end">
                     {isEditMode && (
-                      <Button variant="danger" className="me-2" onClick={handleCancelInvoice} disabled={isCancelling || isSaving}>
+                      <Button
+                        variant="danger"
+                        className="me-2"
+                        onClick={handleCancelInvoice}
+                        disabled={isCancelling || isSaving || !canCancelInvoice}
+                        title={canCancelInvoice ? 'Cancel Invoice' : 'Cancellation allowed only within 24 hours from invoice date'}
+                      >
                         {isCancelling ? 'Cancelling...' : 'Cancel Invoice'}
                       </Button>
                     )}
