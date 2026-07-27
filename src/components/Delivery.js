@@ -1403,7 +1403,7 @@ const handleDeleteConfirm = async () => {
                   <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
                 {user && ((user.role === "admin") || (user.role === "SP1") || (user.role === "delivery") || (user.role==="PA" )) && 
                   <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
-                {user && ((user.role === "admin") || (user.role==="PA" )) && 
+                {user && ((user.role === "admin")) && 
                   <Dropdown.Item href="#" onClick={handleCreateInvoice}>Create Invoice</Dropdown.Item>}
                 {user && ((user.role === "admin") || (user.role === "delivery") || (user.role==="PA" )) && 
                   <Dropdown.Item href="#" onClick={InvExport}>Invoice Export</Dropdown.Item>}
