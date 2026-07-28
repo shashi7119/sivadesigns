@@ -7,6 +7,49 @@ import '../css/Styles.css';
 import { getTaxBreakdown, getTaxStatusFromStateCode } from './invoiceUtils';
 import logo from '../img/slogo.png'
 
+const getDisplayValue = (value, fallback = '-') => {
+  if (value === undefined || value === null) {
+    return fallback;
+  }
+
+  const normalized = value.toString().trim();
+  if (!normalized || normalized.toLowerCase() === 'undefined' || normalized.toLowerCase() === 'null') {
+    return fallback;
+  }
+
+  return normalized;
+};
+
+const normalizeBuyerDetails = (details = {}, fallbackName = 'Not Specified') => ({
+  name: getDisplayValue(details.name || details.customerName, fallbackName),
+  address1: getDisplayValue(details.address1 || details.address || details.customerAddress),
+  address2: getDisplayValue(details.address2),
+  city: getDisplayValue(details.city),
+  pincode: getDisplayValue(details.pincode),
+  state: getDisplayValue(details.state),
+  gstin: getDisplayValue(details.gstin || details.customerGstin),
+  contact: getDisplayValue(details.contact || details.contact_number || details.phone || details.contactNo)
+});
+
+const formatLocationLine = (city, pincode) => {
+  const cityValue = getDisplayValue(city);
+  const pincodeValue = getDisplayValue(pincode);
+
+  if (cityValue === '-' && pincodeValue === '-') {
+    return '-';
+  }
+
+  if (cityValue === '-') {
+    return pincodeValue;
+  }
+
+  if (pincodeValue === '-') {
+    return cityValue;
+  }
+
+  return `${cityValue} - ${pincodeValue}`;
+};
+
 function Invoice() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -134,7 +177,11 @@ function Invoice() {
   // Buyer Details, QR Code, IRN, ACK State
   const [buyerDetails, setBuyerDetails] = useState({
     name: '',
-    address: '',
+    address1: '',
+    address2: '',
+    city: '',
+    pincode: '',
+    state: '',
     gstin: '',
     contact: ''
   });
@@ -264,12 +311,7 @@ function Invoice() {
       const customerId = invoiceDetails.customerid || stateCustomerId;
       if (!customerId?.trim()) {
         if (isActive) {
-          setBuyerDetails({
-            name: customerName || 'Not Specified',
-            address: '-',
-            gstin: '-',
-            contact: '-'
-          });
+          setBuyerDetails(normalizeBuyerDetails({}, customerName || 'Not Specified'));
         }
         return;
       }
@@ -279,12 +321,7 @@ function Invoice() {
         if (resp && resp.data) {
           const details = resp.data;
           if (isActive) {
-            setBuyerDetails({
-              name: details.name || details.customerName || customerName || 'Not Specified',
-              address: details.address || details.customerAddress || '-',
-              gstin: details.gstin || details.customerGstin || '-',
-              contact: details.contact || details.phone || details.contactNo || '-'
-            });
+            setBuyerDetails(normalizeBuyerDetails(details, customerName || 'Not Specified'));
 
             const parsedShipTo = parseShipToAddresses(
               details.ship_address ||
@@ -307,12 +344,7 @@ function Invoice() {
       } catch (err) {
         console.warn('Failed to fetch buyer details', err);
         if (isActive) {
-          setBuyerDetails({
-            name: customerName || 'Not Specified',
-            address: '-',
-            gstin: '-',
-            contact: '-'
-          });
+          setBuyerDetails(normalizeBuyerDetails({}, customerName || 'Not Specified'));
         }
       }
     };
@@ -719,40 +751,17 @@ function Invoice() {
         console.log('Buyer details response:', resp.data);
         if (resp && resp.data) {
           const details = resp.data;
-          currentBuyerDetails = {
-            name: details.name || 'Not Specified',
-            address1: details.address1 || '-',
-            address2: details.address2 || '-',
-            city: details.city || '-',
-            pincode: details.pincode || '-',
-            state: details.state || '-',
-            gstin: details.gstin || '-',
-            contact: details.contact_number || '-'
-          };
+          currentBuyerDetails = normalizeBuyerDetails(details, customerName || 'Not Specified');
           setBuyerDetails(currentBuyerDetails);
           console.log('Updated buyer details:', currentBuyerDetails);
         }
       } catch (err) {
         console.error('Failed to fetch buyer details:', err);
-        currentBuyerDetails = {
-          name: customerName || 'Not Specified',
-           address1: '-',
-           address2: '-',
-            city: '-',
-            pincode: '-',
-            state: '-',
-            gstin:  '-',
-            contact:  '-'
-        };
+        currentBuyerDetails = normalizeBuyerDetails({}, customerName || 'Not Specified');
       }
     } else {
       console.log('No customer ID or name found, using fallback');
-      currentBuyerDetails = {
-        name: customerName || 'Not Specified',
-        address: '-',
-        gstin: '-',
-        contact: '-'
-      };
+      currentBuyerDetails = normalizeBuyerDetails({}, customerName || 'Not Specified');
     }
 
     const hasShipToOverride = [
@@ -987,7 +996,7 @@ function Invoice() {
               <div class="party-line"><strong>${currentBuyerDetails.name}</strong></div>
               <div class="party-line">${currentBuyerDetails.address1}</div>
                <div class="party-line">${currentBuyerDetails.address2}</div>
-               <div class="party-line">${currentBuyerDetails.city} - ${currentBuyerDetails.pincode}</div>
+               <div class="party-line">${formatLocationLine(currentBuyerDetails.city, currentBuyerDetails.pincode)}</div>
                <div class="party-line">${currentBuyerDetails.state}</div>
               <div class="party-line">GSTIN/UIN: ${currentBuyerDetails.gstin}</div>
               <div class="party-line">Contact: ${currentBuyerDetails.contact}</div>
@@ -997,7 +1006,7 @@ function Invoice() {
               <div class="party-line"><strong>${currentShipToDetails.name}</strong></div>
               <div class="party-line">${currentShipToDetails.address1}</div>
                <div class="party-line">${currentShipToDetails.address2}</div>
-               <div class="party-line">${currentShipToDetails.city} - ${currentShipToDetails.pincode}</div>
+               <div class="party-line">${formatLocationLine(currentShipToDetails.city, currentShipToDetails.pincode)}</div>
                <div class="party-line">${currentShipToDetails.state}</div>
               <div class="party-line">GSTIN/UIN: ${currentShipToDetails.gstin}</div>
               <div class="party-line">Contact: ${currentShipToDetails.contact}</div>
