@@ -1255,11 +1255,19 @@ function Invoice() {
   };
 
   const hasInvalidRate = lineItems.some((item) => toNumber(item.rate) <= 0);
+  const hasInvalidUnit = lineItems.some((item) => {
+    const unit = (item.unit || '').toString().trim().toUpperCase();
+    return unit === 'KG';
+  });
 
   const handleSave = async () => {
     if (isSaving) return;
     if (hasInvalidRate) {
       alert('Invoice cannot be saved when rate is 0. Please enter a valid rate for all line items.');
+      return;
+    }
+    if (hasInvalidUnit) {
+      alert('Please check the invoice parameters. Unit KG is not allowed.');
       return;
     }
     const invoice = saveInvoice();
