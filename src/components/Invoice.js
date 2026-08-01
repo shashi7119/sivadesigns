@@ -1084,12 +1084,12 @@ function Invoice() {
                 <td style="text-align: left;">998821</td>
                 <td>₹ ${subtotal.toFixed(2)}</td>
                 ${taxStatus.type === 'cgst_sgst' ? `
-                  <td>${cgstRate}%</td>
+                  <td>${cgstRate.toFixed(2)}%</td>
                   <td>₹ ${cgstAmount.toFixed(2)}</td>
-                  <td>${sgstRate}%</td>
+                  <td>${sgstRate.toFixed(2)}%</td>
                   <td>₹ ${sgstAmount.toFixed(2)}</td>
                 ` : `
-                  <td>${igstRate}%</td>
+                  <td>${igstRate.toFixed(2)}%</td>
                   <td>₹ ${igstAmount.toFixed(2)}</td>
                 `}
               </tr>
