@@ -4,7 +4,7 @@ import { Container, Row, Col, Table, Form, Button, Spinner, Modal } from 'react-
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
-import { getTaxBreakdown, getTaxStatusFromStateCode } from './invoiceUtils';
+import { getTaxBreakdown, getTaxStatusFromStateCode, hasShipToOverride as hasShipToOverrideValue } from './invoiceUtils';
 import logo from '../img/slogo.png'
 
 const getDisplayValue = (value, fallback = '-') => {
@@ -726,7 +726,7 @@ function Invoice() {
 
     // Fetch buyer details before printing
     let currentBuyerDetails = { ...buyerDetails };
-    let currentShipToDetails = {
+    const fallbackShipToDetails = {
       name: shipToDetails.ship_name || '',
       address1: shipToDetails.ship_address1 || '',
       address2: shipToDetails.ship_address2 || '',
@@ -736,6 +736,7 @@ function Invoice() {
       gstin: shipToDetails.ship_gstin || '',
       contact: shipToDetails.ship_contact_number || ''
     };
+    let currentShipToDetails = { ...fallbackShipToDetails };
     const customerId = invoiceDetails.customerid || stateCustomerId;
     const searchParam = customerId ? { customerId } : (customerName ? { customerName } : {});
     console.log('Customer ID:', customerId);
@@ -753,7 +754,20 @@ function Invoice() {
           const details = resp.data;
           currentBuyerDetails = normalizeBuyerDetails(details, customerName || 'Not Specified');
           setBuyerDetails(currentBuyerDetails);
+
+          const apiShipTo = normalizeShipToAddress(details);
+          currentShipToDetails = {
+            name: apiShipTo.ship_name || fallbackShipToDetails.name,
+            address1: apiShipTo.ship_address1 || fallbackShipToDetails.address1,
+            address2: apiShipTo.ship_address2 || fallbackShipToDetails.address2,
+            city: apiShipTo.ship_city || fallbackShipToDetails.city,
+            pincode: apiShipTo.ship_pincode || fallbackShipToDetails.pincode,
+            state: apiShipTo.ship_state || fallbackShipToDetails.state,
+            gstin: apiShipTo.ship_gstin || fallbackShipToDetails.gstin,
+            contact: apiShipTo.ship_contact_number || fallbackShipToDetails.contact
+          };
           console.log('Updated buyer details:', currentBuyerDetails);
+          console.log('Updated ship-to details from API:', currentShipToDetails);
         }
       } catch (err) {
         console.error('Failed to fetch buyer details:', err);
@@ -764,16 +778,27 @@ function Invoice() {
       currentBuyerDetails = normalizeBuyerDetails({}, customerName || 'Not Specified');
     }
 
-    const hasShipToOverride = [
-      currentShipToDetails.name,
-      currentShipToDetails.address1,
-      currentShipToDetails.address2,
-      currentShipToDetails.city,
-      currentShipToDetails.state,
-      currentShipToDetails.pincode,
-      currentShipToDetails.gstin,
-      currentShipToDetails.contact
-    ].some((value) => (value || '').toString().trim() !== '');
+    const hasShipToOverride = hasShipToOverrideValue({
+      ...currentShipToDetails,
+      name: currentShipToDetails.name,
+      address1: currentShipToDetails.address1,
+      address2: currentShipToDetails.address2,
+      city: currentShipToDetails.city,
+      state: currentShipToDetails.state,
+      pincode: currentShipToDetails.pincode,
+      gstin: currentShipToDetails.gstin,
+      contact: currentShipToDetails.contact,
+      ship_name: currentShipToDetails.name,
+      ship_address1: currentShipToDetails.address1,
+      ship_address2: currentShipToDetails.address2,
+      ship_city: currentShipToDetails.city,
+      ship_state: currentShipToDetails.state,
+      ship_pincode: currentShipToDetails.pincode,
+      ship_gstin: currentShipToDetails.gstin,
+      ship_contact_number: currentShipToDetails.contact
+    });
+
+    console.log('hasShipToOverride:', hasShipToOverride);
 
     if (!hasShipToOverride) {
       currentShipToDetails = {
