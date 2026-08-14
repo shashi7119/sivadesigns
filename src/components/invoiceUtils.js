@@ -62,3 +62,30 @@ export function getLineItemTaxBreakdown(item, taxType = 'igst') {
     igst: itemTax.toFixed(2)
   };
 }
+
+export function hasShipToOverride(shipTo = {}) {
+  const values = [
+    shipTo?.ship_name,
+    shipTo?.name,
+    shipTo?.ship_address1,
+    shipTo?.address1,
+    shipTo?.ship_address2,
+    shipTo?.address2,
+    shipTo?.ship_city,
+    shipTo?.city,
+    shipTo?.ship_state,
+    shipTo?.state,
+    shipTo?.ship_pincode,
+    shipTo?.pincode,
+    shipTo?.ship_gstin,
+    shipTo?.gstin,
+    shipTo?.ship_contact_number,
+    shipTo?.contact_number,
+    shipTo?.contact,
+    shipTo?.phone,
+    shipTo?.mobile,
+    shipTo?.contactNo
+  ];
+
+  return values.some((value) => (value ?? '').toString().trim() !== '');
+}
