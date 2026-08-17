@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Form } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import '../css/Styles.css';
@@ -23,17 +23,19 @@ const normalizeInvoiceRow = (row) => {
   if (Array.isArray(row)) {
     return {
       invoiceNo: row[0] || '',
-      invoiceDate: row[1] || '',
-      customer: row[2] || '',
-      customerid: row[7] || '',
-      subtotal: row[3] || '',
-      tax: row[4] || '',
-      total: row[5] || '',
-      items: row[6] || []
+      dcno: row[1] || '',
+      invoiceDate: row[2] || '',
+      customer: row[3] || '',
+      customerid: row[8] || '',
+      subtotal: row[4] || '',
+      tax: row[5] || '',
+      total: row[6] || '',
+      items: row[7] || []
     };
   }
   return {
     invoiceNo: row.invoiceNo || row.invNo || row.invoice_number || '',
+    dcno: row.dcno || row.dcno || row.dcno || '',
     invoiceDate: row.invoiceDate || row.date || row.invDate || '',
     customer: row.customer || row.customerName || row.name || '',
     customerid: row.customerid || row.customerId || row.customer_id || row.customerID || '',
@@ -48,7 +50,8 @@ export default function InvoiceList() {
   const tableRef = useRef();
   const navigate = useNavigate();
 
-    const { user , isAuthenticated } = useAuth();
+
+  const { user , isAuthenticated } = useAuth();
 
   useEffect(() => {
     const currentTable = tableRef.current;
@@ -87,6 +90,15 @@ export default function InvoiceList() {
     api.row(rowNode).remove().draw(false);
   };
 
+  const handleColumnChange = (event) => {
+    const nextValue = event.target.value;
+   
+    $('.tsearch').val(nextValue);
+    // setSearchState(nextValue);
+  };
+
+ 
+
   if (!isAuthenticated) {
         return null;
       // navigate('/login');  // Avoid rendering profile if the user is not authenticated
@@ -95,11 +107,22 @@ export default function InvoiceList() {
   return (
     <div className="main-content">
       <Container fluid className="p-4">
-        <Row className="mb-3">
+        <Row className="mb-3 align-items-center">
           <Col>
             <h2>Invoices</h2>
           </Col>
-   
+          <Col xs="auto" className="d-flex justify-content-end">
+            <Form.Select
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 tsearch"
+              onChange={handleColumnChange}
+              style={{ minWidth: '220px' }}
+            >
+              <option value="invoiceNo">Invoice No</option>
+              <option value="customer">Customer</option>
+              <option value="dcNo">DC No</option>
+              <option value="invoiceDate">Invoice Date</option>
+            </Form.Select>
+          </Col>
         </Row>
 
         <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
@@ -119,8 +142,8 @@ export default function InvoiceList() {
                 url: `${API_URL}/getInvoices`,
                 type: 'POST',
                 data: function (d) {
-                  d.searchcol = $(".tsearch").val();
-                  d.user = user.user;
+                  d.searchcol = $('.tsearch').val() || 'invoiceNo';
+                  d.user = user?.user || '';
                   if (d.length === -1) {
                     d.length = 25;
                   }
@@ -133,6 +156,7 @@ export default function InvoiceList() {
               },
               columns: [
                 { title: 'Invoice No', data: 'invoiceNo' },
+                { title: 'DC NO', data: 'dcno' },
                 { title: 'Date', data: 'invoiceDate' },
                 { title: 'Customer', data: 'customer' },
                 {
