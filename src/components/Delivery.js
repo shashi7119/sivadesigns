@@ -934,6 +934,16 @@ const handleCreateInvoice = async (event) => {
     return;
   }
 
+  const stripHtml = (value) => {
+    const rawValue = (value || '').toString();
+    if (!rawValue.includes('<')) {
+      return rawValue.trim();
+    }
+    const parserNode = document.createElement('div');
+    parserNode.innerHTML = rawValue;
+    return (parserNode.textContent || parserNode.innerText || '').trim();
+  };
+
   const getCustomer = (row) => {
     if (!row) return '';
 
@@ -942,14 +952,24 @@ const handleCreateInvoice = async (event) => {
       return rawCustomer;
     }
 
-    if (!rawCustomer.includes('<')) {
-      return rawCustomer;
-    }
-
-    const parserNode = document.createElement('div');
-    parserNode.innerHTML = rawCustomer;
-    return (parserNode.textContent || parserNode.innerText || '').trim();
+    return stripHtml(rawCustomer);
   };
+
+  const hasPartialRows = selectedRows.some((row) => stripHtml(row[2]).toUpperCase() === 'Y');
+  const hasCustomer = selectedRows.some((row) => stripHtml(row[7]).toUpperCase() === 'PREMIER FINE LINENS PVT LTD');
+  if (hasPartialRows && !hasCustomer) {
+    const partialDcNos = Array.from(
+      new Set(
+        selectedRows
+          .filter((row) => stripHtml(row[2]).toUpperCase() === 'Y')
+          .map((row) => stripHtml(row[1]))
+          .filter(Boolean)
+      )
+    );
+
+    alert(`Create Invoice is disabled. DC No ${partialDcNos.join(', ')} has a partial dispatch and must be completed before invoicing.`);
+    return;
+  }
 
   const getInvoiceParam = (row, node) => {
     const fromRow = row.invoiceParameter || row.invparams || row.invParam || row.inv_param || row['invoiceParameter'];
@@ -1101,14 +1121,16 @@ const handleCreateInvoice = async (event) => {
 
   let shipToList = [];
  let  selectedShipTo = [];
+  let apiDcNos = '';
   try {
-    const dcDetailsResponse = await axios.post(`${API_URL}/getDCDetails`, {
+    const dcDetailsResponse = await axios.post(`${API_URL}/getDCDetailsForInvoice`, {
       dcno: (selectedRows[0]?.[1] || '').toString().trim(),
       vchno: ''
     });
 
     const dcDetails = dcDetailsResponse?.data;
      console.log('DC Details:', dcDetails);
+    apiDcNos = (dcDetails?.dcnos || '').toString().trim();
     if (dcDetails['shipping'] !== "null" ) {
       shipToList = parseShipToPayload(dcDetails['shipping']);
       selectedShipTo = shipToList[0] || null;
@@ -1120,10 +1142,15 @@ const handleCreateInvoice = async (event) => {
     console.warn('Failed to fetch ship-to details from getDCDetails for invoice', error);
   }
 
+  // Backend dcnos is the authoritative DC No for the invoiced line items
+  const invoiceItemsWithDcNo = apiDcNos
+    ? invoiceStateBase.items.map((item) => ({ ...item, dcNo: apiDcNos }))
+    : invoiceStateBase.items;
 
   navigate('/invoice', {
     state: {
       ...invoiceStateBase,
+      items: invoiceItemsWithDcNo,
       shipToAddress: selectedShipTo,
       ship_name: selectedShipTo?.ship_name || '',
       ship_contact_number: selectedShipTo?.ship_contact_number || '',
