@@ -1121,16 +1121,40 @@ const handleCreateInvoice = async (event) => {
 
   let shipToList = [];
  let  selectedShipTo = [];
-  let apiDcNos = '';
+  let apiDcNosByDcNo = new Map();
+  const selectedDcNos = Array.from(
+    new Set(
+      selectedRows
+        .map((row) => (row[1] || '').toString().trim())
+        .filter(Boolean)
+    )
+  );
   try {
     const dcDetailsResponse = await axios.post(`${API_URL}/getDCDetailsForInvoice`, {
       dcno: (selectedRows[0]?.[1] || '').toString().trim(),
-      vchno: ''
+      vchno: '',
+      dcnos: selectedDcNos
     });
 
     const dcDetails = dcDetailsResponse?.data;
      console.log('DC Details:', dcDetails);
-    apiDcNos = (dcDetails?.dcnos || '').toString().trim();
+    const responseDcNos = dcDetails?.dcnos || {};
+    apiDcNosByDcNo = new Map(
+      Array.isArray(responseDcNos)
+        ? responseDcNos
+            .map((entry) => {
+              const sourceDcNo = (entry?.dcno || entry?.dcNo || '').toString().trim();
+              const resolvedDcNos = (entry?.dcnos || entry?.dcno || entry?.dcNo || '').toString().trim();
+              return sourceDcNo && resolvedDcNos ? [sourceDcNo, resolvedDcNos] : null;
+            })
+            .filter(Boolean)
+        : Object.entries(responseDcNos)
+            .map(([sourceDcNo, resolvedDcNos]) => [
+              sourceDcNo.toString().trim(),
+              resolvedDcNos.toString().trim()
+            ])
+            .filter(([sourceDcNo, resolvedDcNos]) => sourceDcNo && resolvedDcNos)
+    );
     if (dcDetails['shipping'] !== "null" ) {
       shipToList = parseShipToPayload(dcDetails['shipping']);
       selectedShipTo = shipToList[0] || null;
@@ -1142,10 +1166,17 @@ const handleCreateInvoice = async (event) => {
     console.warn('Failed to fetch ship-to details from getDCDetails for invoice', error);
   }
 
-  // Backend dcnos is the authoritative DC No for the invoiced line items
-  const invoiceItemsWithDcNo = apiDcNos
-    ? invoiceStateBase.items.map((item) => ({ ...item, dcNo: apiDcNos }))
-    : invoiceStateBase.items;
+  // Resolve each invoice item's DC number from the matching API response entry.
+  const invoiceItemsWithDcNo = invoiceStateBase.items.map((item) => {
+    const itemDcNos = (item.dcNo || '').split(',').map((value) => value.trim()).filter(Boolean);
+    const resolvedDcNos = Array.from(
+      new Set(
+        itemDcNos.map((dcNo) => apiDcNosByDcNo.get(dcNo) || dcNo)
+      )
+    ).join(', ');
+
+    return { ...item, dcNo: resolvedDcNos };
+  });
 
   navigate('/invoice', {
     state: {
