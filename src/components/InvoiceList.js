@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { Container, Row, Col, Form } from 'react-bootstrap';
+import React, { useRef, useEffect, useState } from 'react';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import '../css/Styles.css';
@@ -46,9 +46,17 @@ const normalizeInvoiceRow = (row) => {
   };
 };
 
+const escapeExcelValue = (value) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;');
+
 export default function InvoiceList() {
   const tableRef = useRef();
   const navigate = useNavigate();
+  const submittedFiltersRef = useRef({ fromDate: '', toDate: '' });
+  const [filters, setFilters] = useState({ fromDate: '', toDate: '' });
 
 
   const { user , isAuthenticated } = useAuth();
@@ -97,6 +105,49 @@ export default function InvoiceList() {
     // setSearchState(nextValue);
   };
 
+  const handleFilterChange = (name, value) => {
+    setFilters((previous) => ({ ...previous, [name]: value }));
+  };
+
+  const reloadInvoices = () => {
+    submittedFiltersRef.current = filters;
+    if (tableRef.current && tableRef.current.dt) {
+      tableRef.current.dt().ajax.reload();
+    }
+  };
+
+  const handleResetFilters = () => {
+    const clearedFilters = { fromDate: '', toDate: '' };
+    setFilters(clearedFilters);
+    submittedFiltersRef.current = clearedFilters;
+    if (tableRef.current && tableRef.current.dt) {
+      tableRef.current.dt().ajax.reload();
+    }
+  };
+
+  const handleExcelExport = () => {
+    if (!tableRef.current || !tableRef.current.dt) return;
+
+    const api = tableRef.current.dt();
+    const rows = api.rows({ search: 'applied' }).data().toArray().map(normalizeInvoiceRow);
+    const headers = ['Invoice No', 'DC No', 'Invoice Date', 'Customer', 'Subtotal', 'Tax', 'Total'];
+    const tableRows = rows.map((row) => [
+      row.invoiceNo, row.dcno, row.invoiceDate, row.customer, row.subtotal, row.tax, row.total
+    ]);
+    const html = `<table><thead><tr>${headers.map((header) => `<th>${escapeExcelValue(header)}</th>`).join('')}</tr></thead><tbody>${
+      tableRows.map((row) => `<tr>${row.map((value) => `<td>${escapeExcelValue(value)}</td>`).join('')}</tr>`).join('')
+    }</tbody></table>`;
+    const blob = new Blob([`<html><head><meta charset="UTF-8"></head><body>${html}</body></html>`], {
+      type: 'application/vnd.ms-excel'
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    const { fromDate, toDate } = submittedFiltersRef.current;
+    link.download = `invoices${fromDate ? `-${fromDate}` : ''}${toDate ? `-to-${toDate}` : ''}.xls`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
  
 
   if (!isAuthenticated) {
@@ -110,6 +161,21 @@ export default function InvoiceList() {
         <Row className="mb-3 align-items-center">
           <Col>
             <h2>Invoices</h2>
+          </Col>
+          <Col md="auto">
+            <div className="d-flex align-items-end gap-2">
+              <Form.Group>
+                <Form.Label>From Date</Form.Label>
+                <Form.Control type="date" value={filters.fromDate} onChange={(event) => handleFilterChange('fromDate', event.target.value)} />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>To Date</Form.Label>
+                <Form.Control type="date" value={filters.toDate} onChange={(event) => handleFilterChange('toDate', event.target.value)} />
+              </Form.Group>
+              <Button variant="primary" onClick={reloadInvoices}>Apply</Button>
+              <Button variant="outline-secondary" onClick={handleResetFilters}>Reset</Button>
+              <Button variant="success" onClick={handleExcelExport}>Export Excel</Button>
+            </div>
           </Col>
           <Col xs="auto" className="d-flex justify-content-end">
             <Form.Select
@@ -144,6 +210,8 @@ export default function InvoiceList() {
                 data: function (d) {
                   d.searchcol = $('.tsearch').val() || 'invoiceNo';
                   d.user = user?.user || '';
+                  d.fromDate = submittedFiltersRef.current.fromDate || '';
+                  d.toDate = submittedFiltersRef.current.toDate || '';
                   if (d.length === -1) {
                     d.length = 25;
                   }
