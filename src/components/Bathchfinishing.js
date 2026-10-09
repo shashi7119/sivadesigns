@@ -1,114 +1,153 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Container, Button, Row, Modal, Form, Dropdown } from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext';
-import '../css/Styles.css';
-import '../css/DataTable.css';
-import axios from 'axios';
-import DataTable from 'datatables.net-react';
-import Select from 'datatables.net-select-dt';
-import FixedHeader from 'datatables.net-fixedcolumns-dt';
-import Responsive from 'datatables.net-responsive-dt';
-import DT from 'datatables.net-dt';
+import React, { useState, useEffect, useRef } from "react";
+import { Container, Button, Row, Modal, Form, Dropdown } from "react-bootstrap";
+import { useAuth } from "../context/AuthContext";
+import { PERMISSIONS } from "../constants/permissions";
+import "../css/Styles.css";
+import "../css/DataTable.css";
+import axios from "axios";
+import DataTable from "datatables.net-react";
+import Select from "datatables.net-select-dt";
+import FixedHeader from "datatables.net-fixedcolumns-dt";
+import Responsive from "datatables.net-responsive-dt";
+import DT from "datatables.net-dt";
 //import PrintDataTable from '../components/PrintDataTable';
 
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
-DataTable.use(Responsive);DataTable.use(Select);
-DataTable.use(FixedHeader);DataTable.use(DT);
+DataTable.use(Responsive);
+DataTable.use(Select);
+DataTable.use(FixedHeader);
+DataTable.use(DT);
 function Batchfinishing() {
   const table = useRef();
-  const [tableData, setTableData] = useState([ ]);
+  const [tableData, setTableData] = useState([]);
   const [isBlinking, setIsBlinking] = useState(false);
-   const [isBlinking1, setIsBlinking1] = useState(false);
-  
-  const { user , isAuthenticated } = useAuth();
+  const [isBlinking1, setIsBlinking1] = useState(false);
+
+  const { user, isAuthenticated, permissions } = useAuth();
+
+  const canPrintFinishing =
+    permissions.includes(PERMISSIONS.FINISHING_VIEW) ||
+    permissions.includes(PERMISSIONS.FINISHING_PRINT);
+
+  const canCompleteFinishing =
+    permissions.includes(PERMISSIONS.DELIVERY_CREATE) ||
+    permissions.includes(PERMISSIONS.FINISHING_COMPLETE);
+
+  const canDeleteFinishing = permissions.includes(PERMISSIONS.FINISHING_DELETE);
   const [formData, setFormData] = useState({
-      bid: '', batch_weight: '0', batch_gmeter: '0',  batch_width: '0', batch_noofpcs: '0', 
-      final_weight: '',final_gmeter: '',finishing: '',final_width: '',partial:''
-      ,pide:'',pining:'',noofpcs:'',  partial_weight: '',  partial_gmeter: '' 
-      ,partial_noofpcs: '' ,  loss: ''  ,  shrinkage: '' 
-    });  
-    const [fetch, setFetch] = useState(false);
-     const [show, setShow] = useState(false);
-    const handleClose = () => {
-  // Reset switch and related fields
-  setFormData(prevData => ({
-    ...prevData,
-    partial: false,
-    partial_weight: '',
-    partial_gmeter: '',
-    loss: '', shrinkage: ''
-  }));
-  setShow(false);
-};
-    const handleShow = (e) => { 
-      setShow(true);    
-    }
-     const [isSaving, setIsSaving] = useState(false);
-    const [pintypeData] = useState([ '95','96','97','98','99','100','101','102','103','104','105']);
-    const regexPatterns = {
-      batch_weight: /^[0-9.]*$/,          // Only numbers for input1
-      batch_gmeter: /^[0-9.]*$/,              // Only letters for input2
-      final_weight: /^[0-9. ]*$/,       // Alphanumeric and underscores for input3
-      final_gmeter: /^[0-9. ]*$/,
-    };
-     // Fetch data from backend API
+    bid: "",
+    batch_weight: "0",
+    batch_gmeter: "0",
+    batch_width: "0",
+    batch_noofpcs: "0",
+    final_weight: "",
+    final_gmeter: "",
+    finishing: "",
+    final_width: "",
+    partial: "",
+    pide: "",
+    pining: "",
+    noofpcs: "",
+    partial_weight: "",
+    partial_gmeter: "",
+    partial_noofpcs: "",
+    loss: "",
+    shrinkage: "",
+  });
+  const [fetch, setFetch] = useState(false);
+  const [show, setShow] = useState(false);
+  const handleClose = () => {
+    // Reset switch and related fields
+    setFormData((prevData) => ({
+      ...prevData,
+      partial: false,
+      partial_weight: "",
+      partial_gmeter: "",
+      loss: "",
+      shrinkage: "",
+    }));
+    setShow(false);
+  };
+  const handleShow = (e) => {
+    setShow(true);
+  };
+  const [isSaving, setIsSaving] = useState(false);
+  const [pintypeData] = useState([
+    "95",
+    "96",
+    "97",
+    "98",
+    "99",
+    "100",
+    "101",
+    "102",
+    "103",
+    "104",
+    "105",
+  ]);
+  const regexPatterns = {
+    batch_weight: /^[0-9.]*$/, // Only numbers for input1
+    batch_gmeter: /^[0-9.]*$/, // Only letters for input2
+    final_weight: /^[0-9. ]*$/, // Alphanumeric and underscores for input3
+    final_gmeter: /^[0-9. ]*$/,
+  };
+  // Fetch data from backend API
   useEffect(() => {
     const fetchData = async () => {
-        axios.get(`${API_URL}/finishing`, {
-  params: {
-    user: user.role
-  }
-})
-.then(response => {
- setTableData(response.data);
-         setShow(false);
+      axios
+        .get(`${API_URL}/finishing`, {
+          params: {
+            user: user.role,
+          },
+        })
+        .then((response) => {
+          setTableData(response.data);
+          setShow(false);
           setIsSaving(false);
-})
-.catch(error => {
-  // Handle error
-  if (error.response) {
-    // Server responded with error
-    console.log(error.response.data);
-  } else if (error.request) {
-    // Request made but no response
-    console.log('No response received');
-  } else {
-    // Error setting up request
-    console.log('Error:', error.message);
-  }
-});
+        })
+        .catch((error) => {
+          // Handle error
+          if (error.response) {
+            // Server responded with error
+            console.log(error.response.data);
+          } else if (error.request) {
+            // Request made but no response
+            console.log("No response received");
+          } else {
+            // Error setting up request
+            console.log("Error:", error.message);
+          }
+        });
     };
 
-  
     user && fetchData();
-  }, [user,fetch]);
+  }, [user, fetch]);
 
-    // Reload DataTable when tab becomes active (user returns after idle)
+  // Reload DataTable when tab becomes active (user returns after idle)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        setFetch(f => !f); // Toggle fetch to reload data
+      if (document.visibilityState === "visible") {
+        setFetch((f) => !f); // Toggle fetch to reload data
       }
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
-      
-      if (!isAuthenticated) {
-        return null;
-      // navigate('/login');  // Avoid rendering profile if the user is not authenticated
-     }
-   
-     const PrintHandle =  (event) => {
-      event.preventDefault();
-      let api = table.current.dt();
-      let selectedRows = api.rows({ selected: true }).data();
-  console.log(selectedRows);
-      const printableContent = `
+  if (!isAuthenticated) {
+    return null;
+    // navigate('/login');  // Avoid rendering profile if the user is not authenticated
+  }
+
+  const PrintHandle = (event) => {
+    event.preventDefault();
+    let api = table.current.dt();
+    let selectedRows = api.rows({ selected: true }).data();
+    console.log(selectedRows);
+    const printableContent = `
       <html>
         <head>
           <style>
@@ -181,7 +220,7 @@ function Batchfinishing() {
                       <td>${row[14]}</td>
                        <td>${row[15]}</td>
                     </tr>
-                  `
+                  `,
                 )
                 .join("")}
             </tbody>
@@ -189,30 +228,25 @@ function Batchfinishing() {
         </body>
       </html>
     `;
-  
-      const newWindow = window.open("", "_blank");
-      newWindow.document.write(`<pre>${printableContent}</pre>`);
-      newWindow.print();
-      //setSelectedData(dataArr);
-      //console.log(dataArr);  
-         
-    };
-  
 
-  const completeHandle =  (event) => {
-    event.preventDefault();    
+    const newWindow = window.open("", "_blank");
+    newWindow.document.write(`<pre>${printableContent}</pre>`);
+    newWindow.print();
+    //setSelectedData(dataArr);
+    //console.log(dataArr);
+  };
+
+  const completeHandle = (event) => {
+    event.preventDefault();
     let api = table.current.dt();
     let rows = api.rows({ selected: true }).data().toArray();
     let dataArr = [];
-    rows.map(value => (
-      dataArr.push(value)
-    ));    
-    if(dataArr.length === 0) {
-      alert('Select batch for delivery');
-    }else if(dataArr.length > 1) {
-      alert('Not allowed multiple batches for complete');
+    rows.map((value) => dataArr.push(value));
+    if (dataArr.length === 0) {
+      alert("Select batch for delivery");
+    } else if (dataArr.length > 1) {
+      alert("Not allowed multiple batches for complete");
     } else {
-
       const match = dataArr[0][0].match(/data-pide="([^"]*)"/);
       const value = match ? match[1] : null;
 
@@ -227,13 +261,13 @@ function Batchfinishing() {
 
       const match4 = dataArr[0][0].match(/data-bnoofpcs="([^"]*)"/);
       const value4 = match4 ? match4[1] : null;
-      
+
       formData.bid = dataArr[0][0];
       formData.batch_width = dataArr[0][9];
       formData.batch_weight = dataArr[0][10];
       formData.batch_gmeter = dataArr[0][11];
-      formData.finishing    = dataArr[0][15];
-      formData.pide    = value;
+      formData.finishing = dataArr[0][15];
+      formData.pide = value;
       formData.final_weight = "";
       formData.final_gmeter = "";
       formData.partial_weight = value1;
@@ -241,148 +275,158 @@ function Batchfinishing() {
       formData.partial_noofpcs = value3;
       formData.batch_noofpcs = value4;
       setFormData(formData);
-          handleShow();           
-  }    
+      handleShow();
+    }
   };
 
   const handleKeyUp = (event) => {
     const { name, value } = event.target; // Destructure name and value from the event
-    
+
     // Step 4: Validate the input value based on the regex pattern
     const isValid = regexPatterns[name].test(value);
 
     // Step 5: If valid, update the state, otherwise you can show an error or just keep it unchanged
     if (isValid) {
-
-      
       setFormData((prevData) => ({
         ...prevData,
-        [name]: value // Update the value of the specific input field
+        [name]: value, // Update the value of the specific input field
       }));
     } else {
       setFormData((prevData) => ({
         ...prevData,
-        [name]: '' // Reset the field to empty
+        [name]: "", // Reset the field to empty
       }));
     }
 
     //alert(formData.machine);
-    
-   };
+  };
 
-   const handleSubmit = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-      setIsSaving(true); 
-    console.log('Form Submitted with Data:', formData);
-    if((formData.final_weight === 0) || (formData.final_weight === "")){
+    setIsSaving(true);
+    console.log("Form Submitted with Data:", formData);
+    if (formData.final_weight === 0 || formData.final_weight === "") {
       alert("Final weight needed to complete");
       return;
     }
 
-    if((formData.final_gmeter === 0) || (formData.final_gmeter === "")){
+    if (formData.final_gmeter === 0 || formData.final_gmeter === "") {
       alert("Final gmeter needed to complete");
       return;
     }
-   axios.post(`${API_URL}/addDelivery`, formData)
-  .then(function (response) {
-
-   
-  formData.bid = '';
-      formData.batch_weight = '';
-      formData.batch_gmeter = '';
-      formData.finishing    = '';
-      formData.pide    = '';
-      formData.final_weight = "";
-      formData.final_gmeter = "";
-      formData.partial = false;
-      setFormData(formData);      
-     if(fetch){setFetch(false);} else {setFetch(true);}
-    alert("DC Created!!");   
-  })
-  .catch(function (error) {
-    console.log(error);
-  });
+    axios
+      .post(`${API_URL}/addDelivery`, formData)
+      .then(function (response) {
+        formData.bid = "";
+        formData.batch_weight = "";
+        formData.batch_gmeter = "";
+        formData.finishing = "";
+        formData.pide = "";
+        formData.final_weight = "";
+        formData.final_gmeter = "";
+        formData.partial = false;
+        setFormData(formData);
+        if (fetch) {
+          setFetch(false);
+        } else {
+          setFetch(true);
+        }
+        alert("DC Created!!");
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
     //const userData = response.data;
-    console.log('Data From Backend:', formData);
-
+    console.log("Data From Backend:", formData);
   };
 
   const checkStock = (event) => {
     const { name, value } = event.target;
-    let stock = 0;    let totweight = 0;  let diff=0;
-    if(name ==="final_weight"){
+    let stock = 0;
+    let totweight = 0;
+    let diff = 0;
+    if (name === "final_weight") {
       stock = formData.batch_weight;
-      totweight = parseFloat(value ) + parseFloat(formData.partial_weight ); 
-      diff= parseFloat(formData.batch_weight) - parseFloat(totweight);
-      formData.loss = diff > 0 ? ((diff / parseFloat(formData.batch_weight)) * 100).toFixed(2) : '0';
+      totweight = parseFloat(value) + parseFloat(formData.partial_weight);
+      diff = parseFloat(formData.batch_weight) - parseFloat(totweight);
+      formData.loss =
+        diff > 0
+          ? ((diff / parseFloat(formData.batch_weight)) * 100).toFixed(2)
+          : "0";
 
       // Trigger blink animation
-    setIsBlinking(true);
-    setTimeout(() => setIsBlinking(false), 1000); // Reset after 1 second
-      
-     // setFormData(formData);
-    }else if(name ==="final_gmeter"){
-      stock = formData.batch_gmeter;  
-      totweight = parseFloat(value ) + parseFloat(formData.partial_gmeter ); 
-      diff= parseFloat(formData.batch_gmeter) - parseFloat(totweight);
-      formData.shrinkage = diff > 0 ? ((diff / parseFloat(formData.batch_gmeter)) * 100).toFixed(2) : '0';      
+      setIsBlinking(true);
+      setTimeout(() => setIsBlinking(false), 1000); // Reset after 1 second
+
+      // setFormData(formData);
+    } else if (name === "final_gmeter") {
+      stock = formData.batch_gmeter;
+      totweight = parseFloat(value) + parseFloat(formData.partial_gmeter);
+      diff = parseFloat(formData.batch_gmeter) - parseFloat(totweight);
+      formData.shrinkage =
+        diff > 0
+          ? ((diff / parseFloat(formData.batch_gmeter)) * 100).toFixed(2)
+          : "0";
       //setFormData(formData);
 
-       // Trigger blink animation
-    setIsBlinking1(true);
-    setTimeout(() => setIsBlinking1(false), 1000); // Reset after 1 second
+      // Trigger blink animation
+      setIsBlinking1(true);
+      setTimeout(() => setIsBlinking1(false), 1000); // Reset after 1 second
+    }
 
-    }
-   
-    if((parseFloat(stock) < parseFloat(value)) && (formData.finishing !== "Hydro+stenter")){
+    if (
+      parseFloat(stock) < parseFloat(value) &&
+      formData.finishing !== "Hydro+stenter"
+    ) {
       alert("Final value should be lesser than stock value");
-      event.target.value=0;
+      event.target.value = 0;
     }
-  }
-  
+  };
+
   const handleCheckboxChange = (event) => {
     const target = event.target;
     const checked = target.checked;
-    setFormData(prevData => ({
-    ...prevData,
-    partial: checked,
-    partial_weight: formData.partial_weight, // Reset values when toggling
-    partial_gmeter: formData.partial_gmeter  // Reset values when toggling
-  }));
-  }
-  
-    const deleteHandle =  (event) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      partial: checked,
+      partial_weight: formData.partial_weight, // Reset values when toggling
+      partial_gmeter: formData.partial_gmeter, // Reset values when toggling
+    }));
+  };
 
+  const deleteHandle = (event) => {
     event.preventDefault();
     if (window.confirm("Delete this item?")) {
-    let api = table.current.dt();
-    let rows = api.rows({ selected: true }).data().toArray();
-    let dataArr = [];let dataArr1 = [];
-    rows.map(value => (
-      dataArr.push(value)
-    ));    
-    
-    const match = dataArr[0][0].match(/data-pide="([^"]*)"/);
+      let api = table.current.dt();
+      let rows = api.rows({ selected: true }).data().toArray();
+      let dataArr = [];
+      let dataArr1 = [];
+      rows.map((value) => dataArr.push(value));
+
+      const match = dataArr[0][0].match(/data-pide="([^"]*)"/);
       const value = match ? match[1] : null;
       dataArr1.push(value);
-    axios.post(`${API_URL}/deleteFinishing`, dataArr1)
-    .then(function (response) {      
-      console.log(response);
-    })
-  .catch(function (error) {
-    console.log(error);
-  });
-    console.log(dataArr);
-    api.rows({ selected: true }).remove().draw();
-  }
+      axios
+        .post(`${API_URL}/deleteFinishing`, dataArr1)
+        .then(function (response) {
+          console.log(response);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+      console.log(dataArr);
+      api.rows({ selected: true }).remove().draw();
+    }
   };
-  
+
   return (
-    <div className="main-content" >
+    <div className="main-content">
       <Container fluid className="relative">
         <Row className="mb-6">
           <div className="col-10 col-sm-10">
-            <h1 className="text-2xl font-bold text-gray-800">Batch Finishing</h1>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Batch Finishing
+            </h1>
             <p className="text-gray-600">Welcome, {user.user}!</p>
           </div>
         </Row>
@@ -390,41 +434,57 @@ function Batchfinishing() {
         <div className="flex justify-end mb-4">
           <div className="col-2 col-sm-2">
             <Dropdown className="">
-              <Dropdown.Toggle variant="primary" id="dropdown-basic" 
-                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+              <Dropdown.Toggle
+                variant="primary"
+                id="dropdown-basic"
+                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+              >
                 Actions
               </Dropdown.Toggle>
 
               <Dropdown.Menu className="mt-2">
-                <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>
-                {user && ((user.role==="admin") || (user.role==="SP1")|| (user.role==="grey")|| (user.role==="PA" )|| (user.role==="finishing" )) && 
-                  <Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item>}
-                {user && (user.role==="admin") && 
-                  <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
+                {canPrintFinishing && (
+                  <Dropdown.Item href="#" onClick={PrintHandle}>
+                    Print
+                  </Dropdown.Item>
+                )}
+                {canCompleteFinishing && (
+                  <Dropdown.Item href="#" onClick={completeHandle}>
+                    Complete
+                  </Dropdown.Item>
+                )}
+                {canDeleteFinishing && (
+                  <Dropdown.Item href="#" onClick={deleteHandle}>
+                    Delete
+                  </Dropdown.Item>
+                )}
               </Dropdown.Menu>
             </Dropdown>
           </div>
         </div>
 
         <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
-          <DataTable 
+          <DataTable
             ref={table}
             data={tableData}
             options={{
               scrollX: true,
-              scrollY: '60vh',
+              scrollY: "60vh",
               scrollCollapse: true,
               fixedColumns: {
                 left: 2,
                 leftColumns: {
-                  className: 'dtfc-fixed-left'
-                }
+                  className: "dtfc-fixed-left",
+                },
               },
               pageLength: 25,
-              lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-              order: [[0, 'desc']],
+              lengthMenu: [
+                [10, 25, 50, -1],
+                [10, 25, 50, "All"],
+              ],
+              order: [[0, "desc"]],
               paging: true,
-              select: { style: 'multi' },
+              select: { style: "multi" },
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
               language: {
                 search: "Search:",
@@ -434,11 +494,11 @@ function Batchfinishing() {
                   first: "First",
                   last: "Last",
                   next: "Next",
-                  previous: "Previous"
-                }
+                  previous: "Previous",
+                },
               },
               className: "w-full text-sm text-left text-gray-500",
-              containerClassName: "relative z-10"
+              containerClassName: "relative z-10",
             }}
           >
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
@@ -454,7 +514,7 @@ function Batchfinishing() {
                 <th className="px-6 py-3">Construction</th>
                 <th className="px-6 py-3">Width</th>
                 <th className="px-6 py-3">Weight</th>
-                <th className="px-6 py-3">GMeter</th>                   
+                <th className="px-6 py-3">GMeter</th>
                 <th className="px-6 py-3">GLM</th>
                 <th className="px-6 py-3">AGLM</th>
                 <th className="px-6 py-3">Process</th>
@@ -464,8 +524,16 @@ function Batchfinishing() {
           </DataTable>
         </div>
 
-        <Modal size="xl" show={show} onHide={handleClose} className="rounded-lg">
-          <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
+        <Modal
+          size="xl"
+          show={show}
+          onHide={handleClose}
+          className="rounded-lg"
+        >
+          <Modal.Header
+            closeButton
+            className="bg-gray-50 border-b border-gray-200"
+          >
             <Modal.Title className="text-xl font-semibold text-gray-800">
               Complete Finishing
             </Modal.Title>
@@ -475,47 +543,48 @@ function Batchfinishing() {
               <Row className="flex items-center">
                 <Form.Group className="col-3 ">
                   <Form.Label className="block text-sm font-medium text-gray-700">
-                   Batch Weight : <strong>{formData.batch_weight}</strong>
-                  </Form.Label>                  
+                    Batch Weight : <strong>{formData.batch_weight}</strong>
+                  </Form.Label>
                 </Form.Group>
                 <Form.Group className="col-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
-                   Batch Meter : <strong>{formData.batch_gmeter}</strong>
+                    Batch Meter : <strong>{formData.batch_gmeter}</strong>
                   </Form.Label>
-                  </Form.Group>
-                
-                   <Form.Group className="col-3">
+                </Form.Group>
+
+                <Form.Group className="col-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
-                   Batch Width : <strong>{formData.batch_width}</strong>
+                    Batch Width : <strong>{formData.batch_width}</strong>
                   </Form.Label>
-                  </Form.Group>
-                  <Form.Group className="col-3">
+                </Form.Group>
+                <Form.Group className="col-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
-                   Batch No Of Pcs : <strong>{formData.batch_noofpcs}</strong>
+                    Batch No Of Pcs : <strong>{formData.batch_noofpcs}</strong>
                   </Form.Label>
-                  </Form.Group>
+                </Form.Group>
               </Row>
               {!formData.partial && (
-  <Row>
-    <Form.Group className="col-3">
-      <Form.Label className="block text-sm font-medium text-gray-700">
-        Partial Weight : <strong>{formData.partial_weight}</strong>
-      </Form.Label>     
-    </Form.Group>
+                <Row>
+                  <Form.Group className="col-3">
+                    <Form.Label className="block text-sm font-medium text-gray-700">
+                      Partial Weight :{" "}
+                      <strong>{formData.partial_weight}</strong>
+                    </Form.Label>
+                  </Form.Group>
 
-    <Form.Group className="col-3">
-      <Form.Label className="block text-sm font-medium text-gray-700">
-        Partial Meter :  <strong>{formData.partial_gmeter}</strong>
-      </Form.Label>     
-    </Form.Group>
-    <Form.Group className="col-3">
-      <Form.Label className="block text-sm font-medium text-gray-700">
-        Partial Noofpcs :  <strong>{formData.partial_noofpcs}</strong>
-      </Form.Label>     
-    </Form.Group>
-  </Row>
-  
-)}
+                  <Form.Group className="col-3">
+                    <Form.Label className="block text-sm font-medium text-gray-700">
+                      Partial Meter : <strong>{formData.partial_gmeter}</strong>
+                    </Form.Label>
+                  </Form.Group>
+                  <Form.Group className="col-3">
+                    <Form.Label className="block text-sm font-medium text-gray-700">
+                      Partial Noofpcs :{" "}
+                      <strong>{formData.partial_noofpcs}</strong>
+                    </Form.Label>
+                  </Form.Group>
+                </Row>
+              )}
               <Row className="flex items-center space-x-4">
                 <Form.Group className="col-5 ">
                   <Form.Label className="block text-sm font-medium text-gray-700">
@@ -527,13 +596,13 @@ function Batchfinishing() {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     value={formData.final_weight}
                     onKeyUp={handleKeyUp}
-                    onChange={(e) =>  {setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value // Update the value of the specific input field
-                    }));
-                    checkStock(e);
-                  }
-                  } 
+                    onChange={(e) => {
+                      setFormData((prevData) => ({
+                        ...prevData,
+                        [e.target.name]: e.target.value, // Update the value of the specific input field
+                      }));
+                      checkStock(e);
+                    }}
                   />
                 </Form.Group>
                 <Form.Group className="col-5 ">
@@ -546,13 +615,13 @@ function Batchfinishing() {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     value={formData.final_gmeter}
                     onKeyUp={handleKeyUp}
-                    onChange={(e) =>  {setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value // Update the value of the specific input field
-                    }));
-                    checkStock(e);
-                  }
-                  }  
+                    onChange={(e) => {
+                      setFormData((prevData) => ({
+                        ...prevData,
+                        [e.target.name]: e.target.value, // Update the value of the specific input field
+                      }));
+                      checkStock(e);
+                    }}
                   />
                 </Form.Group>
               </Row>
@@ -563,16 +632,14 @@ function Batchfinishing() {
                   </Form.Label>
                   <Form.Control
                     type="text"
-                    name="final_width"             
-                    value={formData.final_width}             
-                    onChange={(e) =>  {setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value // Update the value of the specific input field
-                    }));
-                    
-                  }
-                  }  
-                      
+                    name="final_width"
+                    value={formData.final_width}
+                    onChange={(e) => {
+                      setFormData((prevData) => ({
+                        ...prevData,
+                        [e.target.name]: e.target.value, // Update the value of the specific input field
+                      }));
+                    }}
                   />
                 </Form.Group>
                 <Form.Group className="col-5 mb-3">
@@ -581,16 +648,14 @@ function Batchfinishing() {
                   </Form.Label>
                   <Form.Control
                     type="text"
-                    name="noofpcs"             
-                    value={formData.noofpcs}             
-                    onChange={(e) =>  {setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value // Update the value of the specific input field
-                    }));
-                    
-                  }
-                  }  
-                      
+                    name="noofpcs"
+                    value={formData.noofpcs}
+                    onChange={(e) => {
+                      setFormData((prevData) => ({
+                        ...prevData,
+                        [e.target.name]: e.target.value, // Update the value of the specific input field
+                      }));
+                    }}
                   />
                 </Form.Group>
               </Row>
@@ -599,23 +664,22 @@ function Batchfinishing() {
                   <Form.Label className="block text-sm font-medium text-gray-700">
                     Pining
                   </Form.Label>
-                   <Form.Select             
-                    name="pining"              
+                  <Form.Select
+                    name="pining"
                     value={formData.pining}
-                    onChange={(e) =>  setFormData((prevData) => ({
-                      ...prevData,
-                      [e.target.name]: e.target.value // Update the value of the specific input field
-                    }))}    
-                   required
+                    onChange={(e) =>
+                      setFormData((prevData) => ({
+                        ...prevData,
+                        [e.target.name]: e.target.value, // Update the value of the specific input field
+                      }))
+                    }
+                    required
                   >
-                    <option  value="">Select</option>
-               {pintypeData.map(pining => (
-                
-      <option  value={pining}>
-        {pining}
-      </option>
-    ))}
-               </Form.Select>       
+                    <option value="">Select</option>
+                    {pintypeData.map((pining) => (
+                      <option value={pining}>{pining}</option>
+                    ))}
+                  </Form.Select>
                 </Form.Group>
                 <Form.Group className="col-5 mb-3">
                   <Form.Label className="block text-sm font-medium text-gray-700">
@@ -623,59 +687,55 @@ function Batchfinishing() {
                   </Form.Label>
                   <Form.Check
                     type="switch"
-                    name="partial"             
-                    value={formData.partial}             
-                     onClick={handleCheckboxChange} 
-                  />       
+                    name="partial"
+                    value={formData.partial}
+                    onClick={handleCheckboxChange}
+                  />
                 </Form.Group>
               </Row>
-              
 
+              {!formData.partial && (
+                <Row>
+                  <Form.Group className="col-5 mb-3">
+                    <Form.Label className="block text-sm font-medium text-gray-700">
+                      Loss (%)
+                    </Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="loss"
+                      value={formData.loss}
+                      className={`${isBlinking ? "blink-animation" : ""}`}
+                      disabled
+                    />
+                  </Form.Group>
 
-
-{!formData.partial && (
-  <Row>
-    <Form.Group className="col-5 mb-3">
-      <Form.Label className="block text-sm font-medium text-gray-700">
-        Loss (%)
-      </Form.Label>
-      <Form.Control
-        type="text"
-        name="loss"
-        value={formData.loss}
-        className={`${isBlinking ? 'blink-animation' : ''}`}
-       disabled
-      />
-    </Form.Group>
-
-    <Form.Group className="col-5 mb-3">
-      <Form.Label className="block text-sm font-medium text-gray-700">
-        Shrinkage (%)
-      </Form.Label>
-      <Form.Control
-        type="text"
-        name="shrinkage"
-        value={formData.shrinkage}
-         className={`${isBlinking1 ? 'blink-animation' : ''}`}
-        disabled
-      />
-    </Form.Group>
-  </Row>
-  
-)}
+                  <Form.Group className="col-5 mb-3">
+                    <Form.Label className="block text-sm font-medium text-gray-700">
+                      Shrinkage (%)
+                    </Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="shrinkage"
+                      value={formData.shrinkage}
+                      className={`${isBlinking1 ? "blink-animation" : ""}`}
+                      disabled
+                    />
+                  </Form.Group>
+                </Row>
+              )}
             </Form>
           </Modal.Body>
           <Modal.Footer className="bg-gray-50 border-t border-gray-200">
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={handleClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Close
             </Button>
-            <Button 
-              disabled={isSaving} 
-              variant="primary" 
+            <Button
+              disabled={isSaving}
+              variant="primary"
               onClick={handleSubmit}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
             >
@@ -687,7 +747,5 @@ function Batchfinishing() {
     </div>
   );
 }
-
-
 
 export default Batchfinishing;

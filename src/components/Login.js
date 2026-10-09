@@ -1,15 +1,18 @@
 // Login.js:
 import React, { useState} from 'react';
 import { Form, Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import { useAuth } from '../context/AuthContext';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState('');
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors = {};
@@ -28,14 +31,15 @@ function Login() {
     } else {      
       // Here you would typically send a request to your server
       try {
-        setErrors({});     
-        const userData = await login(email, password);
-        console.log('Login successful:', userData);        
-        window.location.href = '/home';                      
-        //console.log('Login successful:', userData);
-        // Here you would typically store the user data and redirect
+        setErrors({});
+        setIsSubmitting(true);
+        await login(email, password);
+        navigate('/');
       } catch (error) {   
-        alert('Login failed. Please try again.')    
+        const backendMessage = error?.response?.data?.message || error?.response?.data?.error || 'Login failed. Please try again.';
+        setErrors((prev) => ({ ...prev, form: backendMessage }));
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -46,6 +50,9 @@ function Login() {
           <h2 className="text-center mb-4">Login</h2>
          
           <Form onSubmit={handleSubmit}>
+            {errors.form && (
+              <div className="text-danger mb-3">{errors.form}</div>
+            )}
             <Form.Group className="mb-3" controlId="formBasicEmail">
               <Form.Label>Email address</Form.Label>
               <Form.Control
@@ -75,7 +82,7 @@ function Login() {
             </Form.Group>
 
             <Button variant="primary" type="submit" className="login-button">
-              Login
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
           </Form>
     

@@ -1,18 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Container, Row, Dropdown, Form } from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
-import DataTable from 'datatables.net-react';
-import Select from 'datatables.net-select-dt';
-import FixedHeader from 'datatables.net-fixedcolumns-dt';
-import Responsive from 'datatables.net-responsive-dt';
-import DT from 'datatables.net-dt';
-import $ from 'jquery';
-import '../css/Styles.css';
-import '../css/DataTable.css';
+import React, { useState, useRef, useEffect } from "react";
+import { Container, Row, Dropdown, Form } from "react-bootstrap";
+import { useAuth } from "../context/AuthContext";
+import { PERMISSIONS } from "../constants/permissions";
+import axios from "axios";
+import DataTable from "datatables.net-react";
+import Select from "datatables.net-select-dt";
+import FixedHeader from "datatables.net-fixedcolumns-dt";
+import Responsive from "datatables.net-responsive-dt";
+import DT from "datatables.net-dt";
+import $ from "jquery";
+import "../css/Styles.css";
+import "../css/DataTable.css";
 
 // Add styles for editable cells
-const editableCellStyles = document.createElement('style');
+const editableCellStyles = document.createElement("style");
 editableCellStyles.innerHTML = `
   .editable-cell { cursor: pointer; }
   .editable-cell:hover { background-color: #e9ecef !important; }
@@ -28,47 +29,66 @@ document.head.appendChild(editableCellStyles);
 
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
-DataTable.use(Responsive);DataTable.use(Select);
-DataTable.use(FixedHeader);DataTable.use(DT);
+DataTable.use(Responsive);
+DataTable.use(Select);
+DataTable.use(FixedHeader);
+DataTable.use(DT);
 function Batch() {
   const table = useRef();
-  const { user , isAuthenticated } = useAuth();
+  const { user, isAuthenticated, permissions, canAccess } = useAuth();
 
-// Reload DataTable when tab becomes active (user returns after idle)
+  console.log("CURRENT USER PERMISSIONS:", permissions);
+  console.log(
+    "FINISHING CREATE:",
+    permissions.includes(PERMISSIONS.FINISHING_CREATE),
+  );
+
+  const canEditBatch = canAccess(PERMISSIONS.BATCH_EDIT_VIEW, [
+    "admin",
+    "PA",
+    "editor",
+  ]);
+  const canPrintBatch = permissions.includes(PERMISSIONS.BATCH_PRINT_VIEW);
+  const canCompleteBatch = canAccess(PERMISSIONS.FINISHING_CREATE);
+
+  // Reload DataTable when tab becomes active (user returns after idle)
   useEffect(() => {
     const currentTable = table.current;
-    
+
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && currentTable) {
+      if (document.visibilityState === "visible" && currentTable) {
         const api = currentTable.dt();
         api.ajax.reload();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       // Clean up any existing cell edit states
-      $('.editing input').remove();
-      $('.editing').removeClass('editing');
-      $(document).off('mousedown.cellEdit');
+      $(".editing input").remove();
+      $(".editing").removeClass("editing");
+      $(document).off("mousedown.cellEdit");
     };
   }, []);
 
+  const [searchState, setSearchState] = useState("");
+  if (!isAuthenticated) {
+    return null;
+    // navigate('/login');  // Avoid rendering profile if the user is not authenticated
+  }
 
-      const [searchState, setSearchState] = useState('');
-      if (!isAuthenticated) {
-        return null;
-      // navigate('/login');  // Avoid rendering profile if the user is not authenticated
-     }
-   
-     const PrintHandle =  (event) => {
-      event.preventDefault();
-      let api = table.current.dt();
-      let selectedRows = api.rows({ selected: true }).data();
-  console.log(selectedRows);
-      const printableContent = `
+  const PrintHandle = (event) => {
+    event.preventDefault();
+    if (!canPrintBatch) {
+      return;
+    }
+
+    let api = table.current.dt();
+    let selectedRows = api.rows({ selected: true }).data();
+    console.log(selectedRows);
+    const printableContent = `
       <html>
         <head>
           <style>
@@ -145,7 +165,7 @@ function Batch() {
                       <td>${row[16]}</td>
                       <td>${row[17]}</td>
                     </tr>
-                  `
+                  `,
                 )
                 .join("")}
             </tbody>
@@ -153,97 +173,92 @@ function Batch() {
         </body>
       </html>
     `;
-  
-      const newWindow = window.open("", "_blank");
-      newWindow.document.write(`<pre>${printableContent}</pre>`);
-      newWindow.print();
-      //setSelectedData(dataArr);
-      //console.log(dataArr);  
-         
-    };
 
-  const deleteHandle =  (event) => {
+    const newWindow = window.open("", "_blank");
+    newWindow.document.write(`<pre>${printableContent}</pre>`);
+    newWindow.print();
+    //setSelectedData(dataArr);
+    //console.log(dataArr);
+  };
 
+  const deleteHandle = (event) => {
     event.preventDefault();
     if (window.confirm("Delete this item?")) {
-    let api = table.current.dt();
-    let rows = api.rows({ selected: true }).data().toArray();
-    let dataArr = [];
-    rows.map(value => (
-      dataArr.push(value)
-    ));    
-    axios.post(`${API_URL}/deleteBatch`, dataArr)
-    .then(function (response) {      
-      console.log(response);
-    })
-  .catch(function (error) {
-    console.log(error);
-  });
-    console.log(dataArr);
-    api.rows({ selected: true }).remove().draw();
-  }
+      let api = table.current.dt();
+      let rows = api.rows({ selected: true }).data().toArray();
+      let dataArr = [];
+      rows.map((value) => dataArr.push(value));
+      axios
+        .post(`${API_URL}/deleteBatch`, dataArr)
+        .then(function (response) {
+          console.log(response);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+      console.log(dataArr);
+      api.rows({ selected: true }).remove().draw();
+    }
   };
 
-  const completeHandle =  (event) => {
-
+  const completeHandle = (event) => {
     event.preventDefault();
     if (window.confirm("Complete this batch?")) {
-    let api = table.current.dt();
-    let rows = api.rows({ selected: true }).data().toArray();
-    let dataArr = [];let dataArr1 = [];
-    rows.map(value => (
-      dataArr.push(value)
-    ));
-    
-    const match = dataArr[0][4].match(/data-pide="([^"]*)"/);
+      let api = table.current.dt();
+      let rows = api.rows({ selected: true }).data().toArray();
+      let dataArr = [];
+      let dataArr1 = [];
+      rows.map((value) => dataArr.push(value));
+
+      const match = dataArr[0][4].match(/data-pide="([^"]*)"/);
       const value = match ? match[1] : null;
       dataArr1.push(value);
-    
-    if(dataArr.length === 0) {
-      alert('Select batch for complete');
-    }else if(dataArr.length > 1) {
-      alert('Not allowed multiple plans for complete batch');
-    } else {
-    axios.post(`${API_URL}/completeBatch`, dataArr1)
-    .then(function (response) {      
-      alert("Batch Completed");
-      api.rows({ selected: true }).remove().draw();
-    })
-  .catch(function (error) {
-    alert("Please generate MRS before complete this batch!");
-  });
-}
-  }
+
+      if (dataArr.length === 0) {
+        alert("Select batch for complete");
+      } else if (dataArr.length > 1) {
+        alert("Not allowed multiple plans for complete batch");
+      } else {
+        axios
+          .post(`${API_URL}/completeBatch`, dataArr1)
+          .then(function (response) {
+            alert("Batch Completed");
+            api.rows({ selected: true }).remove().draw();
+          })
+          .catch(function (error) {
+            alert("Please generate MRS before complete this batch!");
+          });
+      }
+    }
   };
-  
-      const handleColumnChange = (e) => {
+
+  const handleColumnChange = (e) => {
     setSearchState(e.target.value);
   };
 
   const handleCellEdit = (cell) => {
     // Check if user has permission to edit
-    const allowedRoles = ['admin', 'PA', 'editor'];
-    if (!allowedRoles.includes(user.role)) {
-      alert('You do not have permission to edit this data');
+    if (!canEditBatch) {
+      alert("You do not have permission to edit this data");
       return;
     }
 
     // Clear any existing edit state
-    $('.editing input').trigger('blur');
-    $('.editing').removeClass('editing');
+    $(".editing input").trigger("blur");
+    $(".editing").removeClass("editing");
 
     const $cell = $(cell);
     const api = table.current.dt();
-    
+
     // Get cell data and position
     const cellData = api.cell(cell).data();
     const currentValue = cellData || $cell.text();
     const cellIndex = api.cell(cell).index();
-    
+
     if (!cellIndex) return;
     const columnIdx = cellIndex.column;
     const rowIdx = cellIndex.row;
-    
+
     // Only allow editing for Weight (11) and GMeter (12) columns
     if (columnIdx !== 11 && columnIdx !== 12) return;
 
@@ -251,47 +266,47 @@ function Batch() {
     const rowData = api.row(rowIdx).data();
     if (!rowData || !rowData[0]) return;
     //const batchId = rowData[4];
-    const match =  rowData[4].match(/data-pide="([^"]*)"/);
-      const batchId = match ? match[1] : null;
+    const match = rowData[4].match(/data-pide="([^"]*)"/);
+    const batchId = match ? match[1] : null;
 
     // Store original content
     const originalContent = $cell.html();
-    
+
     // Create input element
     const $input = $('<input type="text">')
       .val(currentValue)
-      .addClass('form-control')
+      .addClass("form-control")
       .css({
-        width: '100%',
-        height: '100%',
-        padding: '5px',
-        boxSizing: 'border-box',
-        border: '1px solid #007bff'
+        width: "100%",
+        height: "100%",
+        padding: "5px",
+        boxSizing: "border-box",
+        border: "1px solid #007bff",
       });
 
     // Replace cell content with input
-    $cell.html($input).addClass('editing');
+    $cell.html($input).addClass("editing");
     $input.focus().select();
 
     // Function to restore original state
     const restoreOriginal = () => {
       // Remove all event handlers first
-      $input.off('keydown mousedown blur');
-      $(document).off('mousedown.cellEdit');
-      
+      $input.off("keydown mousedown blur");
+      $(document).off("mousedown.cellEdit");
+
       // Remove editing class and restore original content
-      $cell.removeClass('editing');
+      $cell.removeClass("editing");
       $cell.empty().html(originalContent);
-      
+
       // Cleanup any floating input elements
-      $('.editing input').remove();
-      $('.editing').removeClass('editing');
+      $(".editing input").remove();
+      $(".editing").removeClass("editing");
     };
 
     // Function to save changes
     const saveChanges = async () => {
       const newValue = $input.val().trim();
-      
+
       if (newValue === currentValue) {
         restoreOriginal();
         return;
@@ -303,7 +318,7 @@ function Batch() {
           columnIndex: columnIdx,
           oldValue: currentValue,
           newValue: newValue,
-          columnName: api.settings()[0].aoColumns[columnIdx].data
+          columnName: api.settings()[0].aoColumns[columnIdx].data,
         });
 
         // Update DataTable
@@ -315,14 +330,14 @@ function Batch() {
         // Cleanup
         restoreOriginal();
       } catch (error) {
-        console.error('Update failed:', error);
-        alert('Failed to update data');
+        console.error("Update failed:", error);
+        alert("Failed to update data");
         restoreOriginal();
       }
     };
 
     // Handle clicks outside the editing cell
-    const handleOutsideClick = function(e) {
+    const handleOutsideClick = function (e) {
       if (!$(e.target).closest($cell).length && !$(e.target).is($input)) {
         e.preventDefault();
         e.stopPropagation();
@@ -332,40 +347,40 @@ function Batch() {
 
     // Delay binding the document click handler
     setTimeout(() => {
-      $(document).on('mousedown.cellEdit', handleOutsideClick);
+      $(document).on("mousedown.cellEdit", handleOutsideClick);
     }, 0);
 
     // Handle input events
     $input
-      .on('keydown.cellEdit', function(e) {
+      .on("keydown.cellEdit", function (e) {
         e.stopPropagation();
-        
-        if (e.key === 'Enter') {
+
+        if (e.key === "Enter") {
           e.preventDefault();
           saveChanges();
-        } else if (e.key === 'Escape') {
+        } else if (e.key === "Escape") {
           e.preventDefault();
           restoreOriginal();
         }
       })
-      .on('mousedown.cellEdit', function(e) {
+      .on("mousedown.cellEdit", function (e) {
         e.stopPropagation();
         e.preventDefault();
       })
-      .on('dblclick.cellEdit', function(e) {
+      .on("dblclick.cellEdit", function (e) {
         e.stopPropagation();
         e.preventDefault();
       })
-      .on('click.cellEdit', function(e) {
+      .on("click.cellEdit", function (e) {
         e.stopPropagation();
         e.preventDefault();
       })
-      .on('blur.cellEdit', function(e) {
+      .on("blur.cellEdit", function (e) {
         // Only handle blur if we're not clicking inside the cell
         if (!$(e.relatedTarget).closest($cell).length) {
           // Small delay to allow other events to process
           setTimeout(() => {
-            if ($cell.hasClass('editing')) {
+            if ($cell.hasClass("editing")) {
               restoreOriginal();
             }
           }, 50);
@@ -373,40 +388,38 @@ function Batch() {
       });
   };
 
-
-
-
   const updateBatchData = (rowData, columnIndex, newValue) => {
-    console.log('Updating batch data:', rowData, columnIndex, newValue);
+    console.log("Updating batch data:", rowData, columnIndex, newValue);
     //const batchId = rowData[4]; // Assuming first column is batch ID
-    const match =  rowData[4].match(/data-pide="([^"]*)"/);
+    const match = rowData[4].match(/data-pide="([^"]*)"/);
     const batchId = match ? match[1] : null;
     const oldValue = rowData[columnIndex]; // Get the current value before update
     const api = table.current.dt();
     const columnName = api.settings()[0].aoColumns[columnIndex].data;
-    
+
     const updateData = {
       batchId: batchId,
       columnIndex: columnIndex,
       oldValue: oldValue,
       newValue: newValue,
-      columnName: columnName
+      columnName: columnName,
     };
 
-    axios.post(`${API_URL}/updateBatch`, updateData)
+    axios
+      .post(`${API_URL}/updateBatch`, updateData)
       .then(function (response) {
-        console.log('Update successful:', response);
+        console.log("Update successful:", response);
         // Refresh the table data
         const api = table.current.dt();
         api.ajax.reload(null, false);
       })
       .catch(function (error) {
-        console.error('Update failed:', error);
-        alert('Failed to update data. Please try again.');
+        console.error("Update failed:", error);
+        alert("Failed to update data. Please try again.");
       });
   };
 
-      const ExportHandle = (event) => {
+  const ExportHandle = (event) => {
     event.preventDefault();
     let api = table.current.dt();
     let selectedRows = api.rows({ selected: true }).data();
@@ -416,19 +429,29 @@ function Batch() {
     let bdata = [];
 
     bdata = [];
-    bdata.push("Batch No");bdata.push("Batch Date");
+    bdata.push("Batch No");
+    bdata.push("Batch Date");
     bdata.push("Sale Order No");
     bdata.push("Inward No");
-    bdata.push("Cust Dc"); bdata.push("Machine");
-    bdata.push("Customer");  bdata.push("Shade");bdata.push("Labdip Code");
-    bdata.push("Fabric"); bdata.push("Construction");
-    bdata.push(" Weight"); bdata.push(" Meter"); bdata.push(" Width");bdata.push("GLM"); bdata.push("AGLM");
-    bdata.push("Process"); bdata.push("Finishing");
+    bdata.push("Cust Dc");
+    bdata.push("Machine");
+    bdata.push("Customer");
+    bdata.push("Shade");
+    bdata.push("Labdip Code");
+    bdata.push("Fabric");
+    bdata.push("Construction");
+    bdata.push(" Weight");
+    bdata.push(" Meter");
+    bdata.push(" Width");
+    bdata.push("GLM");
+    bdata.push("AGLM");
+    bdata.push("Process");
+    bdata.push("Finishing");
     csv.push(bdata.join(","));
 
     const rt = selectedRows.map((row) => {
       let rowData = [];
-        const match = row[0].match(/>(.*?)</);
+      const match = row[0].match(/>(.*?)</);
       const batchid = match ? match[1] : null;
 
       const match1 = row[6].match(/>(.*?)</);
@@ -437,25 +460,36 @@ function Batch() {
       const match2 = row[4].match(/>(.*?)</);
       const custdc = match2 ? match2[1] : null;
 
-      rowData.push(batchid); rowData.push(row[1]); rowData.push(row[2]);rowData.push(row[3]);
-      rowData.push(custdc); rowData.push(row[5]); rowData.push(customer);
-      rowData.push(row[7]); rowData.push(row[8]); rowData.push(row[9]);
-      rowData.push(row[10]); rowData.push(row[11]); rowData.push(row[12]);
-      rowData.push(row[13]); rowData.push(row[14]); rowData.push(row[15]); rowData.push(row[16]); rowData.push(row[17]); 
+      rowData.push(batchid);
+      rowData.push(row[1]);
+      rowData.push(row[2]);
+      rowData.push(row[3]);
+      rowData.push(custdc);
+      rowData.push(row[5]);
+      rowData.push(customer);
+      rowData.push(row[7]);
+      rowData.push(row[8]);
+      rowData.push(row[9]);
+      rowData.push(row[10]);
+      rowData.push(row[11]);
+      rowData.push(row[12]);
+      rowData.push(row[13]);
+      rowData.push(row[14]);
+      rowData.push(row[15]);
+      rowData.push(row[16]);
+      rowData.push(row[17]);
       csv.push(rowData.join(","));
       return true;
-    })
+    });
 
     console.log(rt);
 
     let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
     let link = document.createElement("a");
     link.href = URL.createObjectURL(csvFile);
-    link.download = `batch_data.csv`;;
+    link.download = `batch_data.csv`;
     link.click();
-
   };
-  
 
   return (
     <div className="main-content">
@@ -470,17 +504,42 @@ function Batch() {
         <div className="flex justify-end mb-4">
           <div className="col-2 col-sm-2">
             <Dropdown className="">
-              <Dropdown.Toggle variant="primary" id="dropdown-basic" 
-                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+              <Dropdown.Toggle
+                variant="primary"
+                id="dropdown-basic"
+                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+              >
                 Actions
               </Dropdown.Toggle>
 
               <Dropdown.Menu className="mt-2">
-                <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>    
-                 {user && <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item> }     
-                {user && (user.role==="admin" ) && <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-                {user && ((user.role==="admin" ) || (user.role==="batchcomplete" )|| (user.role==="PA" ) || (user.role==="PM" )) && 
-                  <Dropdown.Item href="#" onClick={completeHandle}>Complete</Dropdown.Item>}
+                {canAccess(PERMISSIONS.BATCH_CREATE) && (
+                  <Dropdown.Item href="/planning">Create batch</Dropdown.Item>
+                )}
+
+                {canPrintBatch && (
+                  <Dropdown.Item href="#" onClick={PrintHandle}>
+                    Print
+                  </Dropdown.Item>
+                )}
+
+                {canAccess(PERMISSIONS.BATCH_EXPORT) && (
+                  <Dropdown.Item href="#" onClick={ExportHandle}>
+                    Export
+                  </Dropdown.Item>
+                )}
+
+                {canAccess(PERMISSIONS.BATCH_DELETE) && (
+                  <Dropdown.Item href="#" onClick={deleteHandle}>
+                    Delete
+                  </Dropdown.Item>
+                )}
+
+                {canAccess(PERMISSIONS.FINISHING_CREATE) && (
+                  <Dropdown.Item href="#" onClick={completeHandle}>
+                    Complete
+                  </Dropdown.Item>
+                )}
               </Dropdown.Menu>
             </Dropdown>
           </div>
@@ -498,103 +557,103 @@ function Batch() {
         </div>
 
         <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
-          <DataTable 
+          <DataTable
             ref={table}
             options={{
-              drawCallback: function(settings) {
+              drawCallback: function (settings) {
                 const api = this.api();
                 const $body = $(api.table().body());
-                
+
                 // Remove any existing handlers
-                $body.off('dblclick mousedown');
-                
+                $body.off("dblclick mousedown");
+
                 // Prevent single clicks from interfering
-                $body.on('mousedown', 'td', function(e) {
+                $body.on("mousedown", "td", function (e) {
                   if (e.detail === 1) {
                     e.stopPropagation();
                   }
                 });
 
                 // Handle double-click only for Weight and GMeter columns
-                $body.on('dblclick', 'td', function(e) {
-                  const allowedRoles = ['admin', 'PA', 'editor'];
-                  if (!allowedRoles.includes(user.role)) {
+                $body.on("dblclick", "td", function (e) {
+                  if (!canEditBatch) {
                     return; // Silently ignore if user doesn't have permission
                   }
-                  
+
                   const cell = api.cell(this);
                   const columnIdx = cell.index().column;
                   if (columnIdx !== 11 && columnIdx !== 12) return;
                   e.preventDefault();
                   e.stopPropagation();
-                  if (!$(this).hasClass('editing')) {
+                  if (!$(this).hasClass("editing")) {
                     handleCellEdit(this);
                   }
                 });
               },
               scrollX: true,
-              scrollY: '60vh',
+              scrollY: "60vh",
               scrollCollapse: true,
               fixedColumns: {
-                left: 2
+                left: 2,
               },
               altEditor: true,
-              onEditRow: function(datatable, rowdata, success, error) {
-                const api = datatable.dt();                
+              onEditRow: function (datatable, rowdata, success, error) {
+                const api = datatable.dt();
                 //const batchId = rowdata[4];
-                const match =  rowdata[4].match(/data-pide="([^"]*)"/);
+                const match = rowdata[4].match(/data-pide="([^"]*)"/);
                 const batchId = match ? match[1] : null;
-                console.log('Editing row:', rowdata);
-                
-                axios.post(`${API_URL}/updateBatch`, {
-                  batchId: batchId,
-                  rowData: rowdata
-                })
-                .then(function (response) {
-                  success(response);
-                  api.ajax.reload();
-                })
-                .catch(function (error) {
-                  error(error);
-                  alert('Failed to update data');
-                });
+                console.log("Editing row:", rowdata);
+
+                axios
+                  .post(`${API_URL}/updateBatch`, {
+                    batchId: batchId,
+                    rowData: rowdata,
+                  })
+                  .then(function (response) {
+                    success(response);
+                    api.ajax.reload();
+                  })
+                  .catch(function (error) {
+                    error(error);
+                    alert("Failed to update data");
+                  });
               },
               editable: {
                 enable: true,
-                mode: 'inline',
-                submit: 'blur',
-                onBlur: true
+                mode: "inline",
+                submit: "blur",
+                onBlur: true,
               },
-              order: [[0, 'desc']],
+              order: [[0, "desc"]],
               paging: true,
               processing: true,
               serverSide: true,
-              select: { style: 'multi' },
+              select: { style: "multi" },
               keys: true,
               editor: true,
               cellEdit: {
                 enable: true,
-                mode: 'click',
+                mode: "click",
                 blurToSave: true,
                 beforeSave: (oldValue, newValue, row, column) => {
                   // Don't update if value hasn't changed
                   if (oldValue === newValue) return;
-                  
+
                   // Don't allow empty values
-                  if (newValue.trim() === '') {
-                    alert('Empty values are not allowed');
+                  if (newValue.trim() === "") {
+                    alert("Empty values are not allowed");
                     return false;
                   }
-                  
+
                   updateBatchData(row.data(), column.index(), newValue);
-                }
+                },
               },
               ajax: {
                 url: `${API_URL}/batches1`,
-                type: 'POST',
+                type: "POST",
                 data: function (d) {
                   d.searchcol = $(".tsearch").val();
-                   d.user = user.user; 
+                  d.user = user.user;
                   if (d.length === -1) {
                     d.length = 25;
                   }
@@ -602,13 +661,16 @@ function Batch() {
                 },
               },
               pageLength: 25,
-              lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+              lengthMenu: [
+                [10, 25, 50, -1],
+                [10, 25, 50, "All"],
+              ],
               columns: [
                 {
-                    className: "",                   
-                    data: "0",
-                    defaultContent: "",
-                    editable: false // Batch ID should not be editable
+                  className: "",
+                  data: "0",
+                  defaultContent: "",
+                  editable: false, // Batch ID should not be editable
                 },
                 { data: "1" },
                 { data: "2" },
@@ -620,27 +682,26 @@ function Batch() {
                 { data: "8" },
                 { data: "9" },
                 { data: "10" },
-                { 
+                {
                   data: "11",
                   className: "editable-cell",
-                  createdCell: function(td, cellData, rowData, row, col) {
-                    $(td).css('background-color', '#f8f9fa');
-                  }
+                  createdCell: function (td, cellData, rowData, row, col) {
+                    $(td).css("background-color", "#f8f9fa");
+                  },
                 },
-                { 
+                {
                   data: "12",
                   className: "editable-cell",
-                  createdCell: function(td, cellData, rowData, row, col) {
-                    $(td).css('background-color', '#f8f9fa');
-                  }
+                  createdCell: function (td, cellData, rowData, row, col) {
+                    $(td).css("background-color", "#f8f9fa");
+                  },
                 },
                 { data: "13" },
                 { data: "14" },
                 { data: "15" },
                 { data: "16" },
                 { data: "17" },
-                
-            ],            
+              ],
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
               language: {
                 search: "Search:",
@@ -650,11 +711,11 @@ function Batch() {
                   first: "First",
                   last: "Last",
                   next: "Next",
-                  previous: "Previous"
-                }
+                  previous: "Previous",
+                },
               },
               className: "w-full text-sm text-left text-gray-500",
-              containerClassName: "relative z-10"
+              containerClassName: "relative z-10",
             }}
           >
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
@@ -667,12 +728,12 @@ function Batch() {
                 <th className="px-6 py-3">Machine</th>
                 <th className="px-6 py-3">Customer</th>
                 <th className="px-6 py-3">Shade</th>
-                 <th className="px-6 py-3">Labdip Code</th>
-                <th className="px-6 py-3">Fabric</th>                
-                <th className="px-6 py-3">Construction</th>                
+                <th className="px-6 py-3">Labdip Code</th>
+                <th className="px-6 py-3">Fabric</th>
+                <th className="px-6 py-3">Construction</th>
                 <th className="px-6 py-3">Weight</th>
-                <th className="px-6 py-3">GMeter</th>       
-                <th className="px-6 py-3">Width</th>            
+                <th className="px-6 py-3">GMeter</th>
+                <th className="px-6 py-3">Width</th>
                 <th className="px-6 py-3">GLM</th>
                 <th className="px-6 py-3">AGLM</th>
                 <th className="px-6 py-3">Process</th>

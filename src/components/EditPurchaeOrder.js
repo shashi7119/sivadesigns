@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback, useMemo} from 'react';
-import { Container, Row, Col, Form, Button, Table } from 'react-bootstrap';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import '../css/Styles.css';
-import '../css/DataTable.css';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Container, Row, Col, Form, Button, Table } from "react-bootstrap";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "../css/Styles.css";
+import "../css/DataTable.css";
+import axios from "axios";
 
-const API_URL = 'https://www.wynstarcreations.com/seyal/api';
+const API_URL = "https://www.wynstarcreations.com/seyal/api";
 
 const EditPurchaseOrder = () => {
   const { id } = useParams(); // purchase order id from route
@@ -15,7 +15,7 @@ const EditPurchaseOrder = () => {
 
   const [vendors, setVendors] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
-  const [selectedVendorId, setSelectedVendorId] = useState('');
+  const [selectedVendorId, setSelectedVendorId] = useState("");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,7 +27,7 @@ const EditPurchaseOrder = () => {
         const response = await axios.get(`${API_URL}/getVendors`);
         setVendors(response.data);
       } catch (error) {
-        setError('Failed to fetch vendors.');
+        setError("Failed to fetch vendors.");
       }
     };
 
@@ -36,26 +36,30 @@ const EditPurchaseOrder = () => {
         const response = await axios.get(`${API_URL}/getMasters?type=store`);
         setAvailableItems(response.data);
       } catch (error) {
-        setError('Failed to fetch items.');
+        setError("Failed to fetch items.");
       }
     };
 
     const fetchPurchaseOrder = async () => {
       try {
-        const response = await axios.get(`${API_URL}/getPurchaseOrder?id=${id}`);
+        const response = await axios.get(
+          `${API_URL}/getPurchaseOrder?id=${id}`,
+        );
         const po = response.data;
         setSelectedVendorId(po.vendorId);
-        setItems(po.items.map(item => ({
-          id:item.id,
-          itemId: item.itemId,
-          name: item.name,
-          quantity: item.quantity,
-          unit: item.unit,
-          tax: parseFloat(item.tax) || 0,
-          price: item.price
-        })));
+        setItems(
+          po.items.map((item) => ({
+            id: item.id,
+            itemId: item.itemId,
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            tax: parseFloat(item.tax) || 0,
+            price: item.price,
+          })),
+        );
       } catch (error) {
-        setError('Failed to fetch purchase order.');
+        setError("Failed to fetch purchase order.");
       }
     };
 
@@ -68,7 +72,15 @@ const EditPurchaseOrder = () => {
   const handleAddItem = useCallback(() => {
     setItems((prevItems) => [
       ...prevItems,
-      { id:Date.now(),itemId: '', name: '', quantity: 1, unit: '', tax: 0, price: 0 }
+      {
+        id: Date.now(),
+        itemId: "",
+        name: "",
+        quantity: 1,
+        unit: "",
+        tax: 0,
+        price: 0,
+      },
     ]);
   }, []);
 
@@ -78,21 +90,25 @@ const EditPurchaseOrder = () => {
 
   const handleItemSelectChange = (id, event) => {
     const selectedItemId = event.target.value;
-    if (items.some(item => item.itemId === selectedItemId && item.itemId !== id)) {
-      alert('This item is already selected in another row.');
+    if (
+      items.some((item) => item.itemId === selectedItemId && item.itemId !== id)
+    ) {
+      alert("This item is already selected in another row.");
       return;
     }
-    const selectedItem = availableItems.find((item) => item[0] === selectedItemId);
+    const selectedItem = availableItems.find(
+      (item) => item[0] === selectedItemId,
+    );
     const updatedItems = items.map((item) =>
       item.id === id
         ? {
             ...item,
-            itemId: selectedItem ? selectedItem[0] : '',
-            name: selectedItem ? selectedItem[1] : '',
+            itemId: selectedItem ? selectedItem[0] : "",
+            name: selectedItem ? selectedItem[1] : "",
             price: selectedItem ? selectedItem[2] : 0,
             unit: selectedItem ? selectedItem[3] : "",
           }
-        : item
+        : item,
     );
     setItems(updatedItems);
   };
@@ -100,7 +116,7 @@ const EditPurchaseOrder = () => {
   const handleQuantityChange = (id, event) => {
     const { value } = event.target;
     const updatedItems = items.map((item) =>
-      item.itemId === id ? { ...item, quantity: parseInt(value) || 1 } : item
+      item.itemId === id ? { ...item, quantity: parseInt(value) || 1 } : item,
     );
     setItems(updatedItems);
   };
@@ -108,7 +124,7 @@ const EditPurchaseOrder = () => {
   const handlePriceChange = (id, event) => {
     const { value } = event.target;
     const updatedItems = items.map((item) =>
-      item.itemId === id ? { ...item, price: parseFloat(value) || 0 } : item
+      item.itemId === id ? { ...item, price: parseFloat(value) || 0 } : item,
     );
     setItems(updatedItems);
   };
@@ -116,16 +132,16 @@ const EditPurchaseOrder = () => {
   const handleTaxChange = (id, event) => {
     const { value } = event.target;
     const updatedItems = items.map((item) =>
-      item.itemId === id ? { ...item, tax: parseFloat(value) || 0 } : item
+      item.itemId === id ? { ...item, tax: parseFloat(value) || 0 } : item,
     );
     setItems(updatedItems);
   };
-const total = useMemo(() => {
-    console.log('Calculating total...'); // Debug log to see when calculation happens
+  const total = useMemo(() => {
+    console.log("Calculating total..."); // Debug log to see when calculation happens
     return items.reduce(
-      (total, item) => 
-        total + ((item.quantity * item.price) * ((100 + (item.tax)) / 100)), 
-      0
+      (total, item) =>
+        total + item.quantity * item.price * ((100 + item.tax) / 100),
+      0,
     );
   }, [items]); // Only recalculate when items change
 
@@ -137,7 +153,8 @@ const total = useMemo(() => {
         itemId: item.itemId,
         quantity: item.quantity,
         tax: item.tax,
-        price: item.price,unit: item.unit
+        price: item.price,
+        unit: item.unit,
       })),
       totalAmount: total,
     };
@@ -145,16 +162,16 @@ const total = useMemo(() => {
       const response = await axios.post(
         `${API_URL}/updatePO?id=${id}`,
         purchaseOrderData,
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { "Content-Type": "application/json" } },
       );
-      if (response.data.status === 'success') {
-        alert('Purchase Order Updated!');
-        navigate('/polist'); // or wherever your list page is
+      if (response.data.status === "success") {
+        alert("Purchase Order Updated!");
+        navigate("/polist"); // or wherever your list page is
       } else {
-        alert('Error updating order.');
+        alert("Error updating order.");
       }
     } catch (error) {
-      alert('Error updating order.');
+      alert("Error updating order.");
       console.error(error);
     }
   };
@@ -168,32 +185,42 @@ const total = useMemo(() => {
       <Container fluid className="relative">
         <Row className="mb-6">
           <div className="col-10 col-sm-10">
-            <h1 className="text-2xl font-bold text-gray-800">Edit Purchase Order</h1>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Edit Purchase Order
+            </h1>
             <p className="text-gray-600">Welcome, {user.email}!</p>
           </div>
         </Row>
         <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white p-6">
           <Form onSubmit={handleSubmit} className="space-y-6">
             <Form.Group as={Row} className="mb-4">
-              <Form.Label column sm="2" className="text-sm font-medium text-gray-700">
+              <Form.Label
+                column
+                sm="2"
+                className="text-sm font-medium text-gray-700"
+              >
                 Select Vendor
               </Form.Label>
               <Col sm="6">
                 <Form.Select
                   value={selectedVendorId}
-                  onChange={e => setSelectedVendorId(e.target.value)}
+                  onChange={(e) => setSelectedVendorId(e.target.value)}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
                   <option value="">Select a vendor</option>
                   {vendors.map((vendor) => (
-                    <option key={vendor} value={vendor[0]}>{vendor[1]}</option>
+                    <option key={vendor} value={vendor[0]}>
+                      {vendor[1]}
+                    </option>
                   ))}
                 </Form.Select>
               </Col>
             </Form.Group>
             <div className="mt-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Order Items</h3>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Order Items
+                </h3>
                 <Button
                   variant="primary"
                   onClick={handleAddItem}
@@ -207,13 +234,27 @@ const total = useMemo(() => {
                 <Table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tax</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Item
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Quantity
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Unit
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Price
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Tax
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Total
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -222,17 +263,22 @@ const total = useMemo(() => {
                         <td className="px-6 py-4">
                           <Form.Select
                             value={item.itemId}
-                            onChange={(event) => handleItemSelectChange(item.id, event)}
+                            onChange={(event) =>
+                              handleItemSelectChange(item.id, event)
+                            }
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                           >
                             <option value="">Select an item</option>
                             {availableItems.map((availableItem) => (
-                              <option key={availableItem[0]} value={availableItem[0]}
-                                disabled={
-                                  items.some(
-                                    (i) => i.itemId === availableItem[0] && i.itemId !== item.itemId
-                                  )
-                                }>
+                              <option
+                                key={availableItem[0]}
+                                value={availableItem[0]}
+                                disabled={items.some(
+                                  (i) =>
+                                    i.itemId === availableItem[0] &&
+                                    i.itemId !== item.itemId,
+                                )}
+                              >
                                 {availableItem[1]}
                               </option>
                             ))}
@@ -242,7 +288,9 @@ const total = useMemo(() => {
                           <Form.Control
                             type="number"
                             value={item.quantity}
-                            onChange={(event) => handleQuantityChange(item.itemId, event)}
+                            onChange={(event) =>
+                              handleQuantityChange(item.itemId, event)
+                            }
                             min="1"
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                           />
@@ -259,7 +307,9 @@ const total = useMemo(() => {
                           <Form.Control
                             type="number"
                             value={item.price}
-                            onChange={(event) => handlePriceChange(item.itemId, event)}
+                            onChange={(event) =>
+                              handlePriceChange(item.itemId, event)
+                            }
                             min="0"
                             step="0.01"
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -269,14 +319,19 @@ const total = useMemo(() => {
                           <Form.Control
                             type="number"
                             value={item.tax}
-                            onChange={(event) => handleTaxChange(item.itemId, event)}
+                            onChange={(event) =>
+                              handleTaxChange(item.itemId, event)
+                            }
                             min="0"
                             step="0.01"
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                           />
                         </td>
                         <td className="px-6 py-4 font-medium">
-                          Rs.{((item.quantity * item.price) * ((100 + (item.tax)) / 100))}
+                          Rs.
+                          {item.quantity *
+                            item.price *
+                            ((100 + item.tax) / 100)}
                         </td>
                         <td className="px-6 py-4">
                           <Button

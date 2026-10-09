@@ -17,13 +17,14 @@ import {
   ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
+import { PERMISSIONS } from '../constants/permissions';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
 function Navigation() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated, canAccess } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -50,6 +51,48 @@ function Navigation() {
       setIsExpanded(false);
     }
   };
+
+  const hasAccess = (permission, fallbackRoles = []) => isAuthenticated && canAccess(permission, fallbackRoles);
+
+  const canViewMachine = hasAccess(PERMISSIONS.MACHINE_LIST_VIEW, ['admin', 'PA', 'SP1']);
+  const canViewUsers = hasAccess(PERMISSIONS.USER_MANAGEMENT_VIEW, ['admin']);
+  const canViewCustomer = hasAccess(PERMISSIONS.CUSTOMER_LIST_VIEW, ['admin', 'PA', 'SP1']);
+  const canViewFabric = hasAccess(PERMISSIONS.FABRIC_LIST_VIEW, ['admin', 'PA', 'SP1']);
+  const canViewConstruction = hasAccess(PERMISSIONS.CONSTRUCTION_LIST_VIEW, ['admin', 'PA', 'SP1']);
+  const canViewVendor = hasAccess(PERMISSIONS.VENDOR_LIST_VIEW, ['admin', 'purchase', 'PA']);
+  const canViewProcess = hasAccess(PERMISSIONS.PROCESS_LIST_VIEW, ['admin', 'production', 'PA', 'PM']);
+  const canViewWidth = hasAccess(PERMISSIONS.WIDTH_LIST_VIEW, ['admin', 'PA', 'SP1']);
+  const canViewSFinishing = hasAccess(PERMISSIONS.FINISHING_LIST_VIEW, ['admin', 'PA', 'PM']);
+  const canViewPOList = hasAccess(PERMISSIONS.PURCHASE_ORDER_LIST_VIEW, ['admin', 'purchase', 'PA']);
+  const canViewStore = hasAccess(PERMISSIONS.STOREENTRY_VIEW, ['admin', 'store', 'PA', 'PM']);
+  const canViewPStock = hasAccess(PERMISSIONS.PSTOCK_VIEW, ['admin', 'SP1', 'SP2', 'PA', 'PM']);
+  const canViewBStock = hasAccess(PERMISSIONS.BSTOCK_VIEW, ['admin', 'PA']);
+  const canViewGreyEntry = hasAccess(PERMISSIONS.GREYENTRY_VIEW, ['admin', 'SP1', 'PA']);
+  const canViewPlanning = hasAccess(PERMISSIONS.PLANNING_VIEW, ['admin', 'batch', 'SP1', 'SP2', 'PA', 'PM']);
+  const canViewLabEntry = hasAccess(PERMISSIONS.LABENTRY_VIEW, ['admin', 'SP2', 'lab', 'PM']);
+  const canViewBatch = hasAccess(PERMISSIONS.BATCH_VIEW, ['admin', 'batch', 'production', 'batchcomplete', 'grey', 'SP2', 'SP1', 'PA', 'PM']);
+  const canViewFinishing = hasAccess(PERMISSIONS.FINISHING_VIEW, ['admin', 'finishing', 'SP1', 'PA', 'PM']);
+  const canViewDelivery = hasAccess(PERMISSIONS.DELIVERY_VIEW, ['admin', 'delivery', 'SP1', 'PA', 'finishing']);
+  const canViewInvoiceList = hasAccess(PERMISSIONS.INVOICE_LIST_VIEW, ['admin', 'delivery', 'PA']);
+  const canViewReturn = hasAccess(PERMISSIONS.RETURN_VIEW, ['admin', 'delivery', 'SP1', 'PA']);
+  const canViewReports = hasAccess(PERMISSIONS.REPORTS_VIEW, ['admin', 'SP1', 'PA', 'finishing']);
+  const canManageUsers = [
+    PERMISSIONS.USER_MANAGEMENT_CREATE,
+    PERMISSIONS.USER_MANAGEMENT_EDIT,
+    PERMISSIONS.USER_ACCESS_ASSIGN
+  ].some((permission) => hasAccess(permission, ['admin']));
+
+  const canViewSettings = [
+    canViewMachine,
+    canViewUsers,
+    canViewCustomer,
+    canViewFabric,
+    canViewConstruction,
+    canViewVendor,
+    canViewProcess,
+    canViewWidth,
+    canViewSFinishing
+  ].some(Boolean);
 
   return (
     <>
@@ -89,7 +132,7 @@ function Navigation() {
               {isExpanded && <span className="ml-3">Home</span>}
             </Link>
 
-            {user && (user.role === "admin" || user.role === "production" || user.role === "purchase"|| (user.role==="PA" ) || (user.role==="PM" ) || (user.role==="SP1" )) && (
+            {canViewSettings && (
               <Menu as="div" className="relative">
                 <Menu.Button className="nav-item w-full">
                   <Cog6ToothIcon className="h-6 w-6" />
@@ -106,9 +149,9 @@ function Navigation() {
                 >
                   <Menu.Items className='absolute z-10 mt-2 w-48 rounded-md bg-white shadow-lg'>
                     <div className="py-1">
-                      {user && (user.role === "admin" || user.role==="PA" || user.role==="SP1"  ) && (
+                      {(canViewMachine || canViewUsers || canViewCustomer || canViewFabric || canViewConstruction) && (
                         <>
-                          <Menu.Item>
+                          {canViewMachine && <Menu.Item>
                             {({ active }) => (
                               <Link 
                                 to="/machine" 
@@ -121,8 +164,28 @@ function Navigation() {
                                 Machine
                               </Link>
                             )}
-                          </Menu.Item>
-                          <Menu.Item>
+                          </Menu.Item>}
+                          {canViewUsers && <Menu.Item>
+                            {({ active }) => (
+                              <Link to="/users" className={classNames(
+                                active ? 'bg-gray-100' : '',
+                                'block px-4 py-2 text-sm text-gray-700'
+                              )}>
+                                Users
+                              </Link>
+                            )}
+                          </Menu.Item>}
+                          {canManageUsers && <Menu.Item>
+                            {({ active }) => (
+                              <Link to="/users/access" className={classNames(
+                                active ? 'bg-gray-100' : '',
+                                'block px-4 py-2 text-sm text-gray-700'
+                              )}>
+                                User Access
+                              </Link>
+                            )}
+                          </Menu.Item>}
+                          {canViewCustomer && <Menu.Item>
                             {({ active }) => (
                               <Link to="/customer" className={classNames(
                                 active ? 'bg-gray-100' : '',
@@ -131,8 +194,8 @@ function Navigation() {
                                 Customer
                               </Link>
                             )}
-                          </Menu.Item>                         
-                          <Menu.Item>
+                          </Menu.Item>}                         
+                          {canViewFabric && <Menu.Item>
                             {({ active }) => (
                               <Link to="/fabric" className={classNames(
                                 active ? 'bg-gray-100' : '',
@@ -141,8 +204,8 @@ function Navigation() {
                                 Fabric
                               </Link>
                             )}
-                          </Menu.Item>
-                          <Menu.Item>
+                          </Menu.Item>}
+                          {canViewConstruction && <Menu.Item>
                             {({ active }) => (
                               <Link to="/construction" className={classNames(
                                 active ? 'bg-gray-100' : '',
@@ -151,10 +214,10 @@ function Navigation() {
                                 Construction
                               </Link>
                             )}
-                          </Menu.Item>
+                          </Menu.Item>}
                         </>
                       )}
-                       {user && (user.role === "admin" || user.role === "purchase" || user.role === "PA") && (
+                       {canViewVendor && (
 
                          <Menu.Item>
                             {({ active }) => (
@@ -168,8 +231,8 @@ function Navigation() {
                           </Menu.Item>
 
                         )}
-                        {user && (user.role === "admin" || user.role === "production" || user.role === "PA" || user.role === "PM") && (
-                           <Menu.Item>
+                        {canViewProcess && (
+                          <Menu.Item>
                             {({ active }) => (
                               <Link to="/process" className={classNames(
                                 active ? 'bg-gray-100' : '',
@@ -180,7 +243,7 @@ function Navigation() {
                             )}
                           </Menu.Item>
                         )}
-                      {user && (user.role === "admin" || user.role === "production" || user.role === "PA"|| user.role === "SP1") && (
+                      {canViewWidth && (
                         <>
                          
                           <Menu.Item>
@@ -197,8 +260,8 @@ function Navigation() {
                         </>
                       )}
 
-                      {user && (user.role === "admin" || user.role === "production" || user.role === "PA" || user.role === "PM") && (
-                         <Menu.Item>
+                      {canViewSFinishing && (
+                        <Menu.Item>
                             {({ active }) => (
                               <Link to="/sfinishing" className={classNames(
                                 active ? 'bg-gray-100' : '',
@@ -216,21 +279,21 @@ function Navigation() {
             )}
 
             {/* Add other menu items similarly */}
-            {user && (user.role === "admin" || user.role === "purchase" || user.role === "PA")  && (
+            {canViewPOList && (
               <Link to="/polist" className="nav-item">
                 <ShoppingCartIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3" style={{textDecoration:'none'}}>Purchase Order</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "store" || user.role === "PA" || user.role === "PM") && (
+            {canViewStore && (
               <Link to="/storeentry" className="nav-item">
                 <ArchiveBoxIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Store</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" ||   user.role === "PA" ||  user.role === "PM" ||  user.role === "SP1")  && (
+            {(canViewPStock || canViewBStock) && (
               <Menu as="div" className="relative">
                 <Menu.Button className="nav-item w-full">
                   <CircleStackIcon className="h-6 w-6" />
@@ -247,7 +310,7 @@ function Navigation() {
                 >
                   <Menu.Items className="absolute z-10 mt-2 w-48 rounded-md bg-white shadow-lg">
                     <div className="py-1">
-                      <Menu.Item>
+                      {canViewPStock && <Menu.Item>
                         {({ active }) => (
                           <Link to="/pstock" className={classNames(
                             active ? 'bg-gray-100' : '',
@@ -256,8 +319,8 @@ function Navigation() {
                             Planning Stock
                           </Link>
                         )}
-                      </Menu.Item>
-                      {user && (user.role === "admin" || user.role === "PA") && (
+                      </Menu.Item>}
+                      {canViewBStock && (
                         <Menu.Item>
                           {({ active }) => (
                             <Link to="/bstock" className={classNames(
@@ -275,42 +338,42 @@ function Navigation() {
               </Menu>
             )}
 
-            {user && (user.role === "admin" || user.role === "SP1" || user.role === "PA") && (
+            {canViewGreyEntry && (
               <Link to="/greyentry" className="nav-item">
                 <BeakerIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Grey Entry</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "batch" || user.role === "SP1" || user.role === "SP2" || user.role === "PA" ||  user.role === "PM") && (
+            {canViewPlanning && (
               <Link to="/planning" className="nav-item">
                 <ClipboardDocumentListIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Planning</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "SP2" || user.role === "lab" ||  user.role === "PM") && (
+            {canViewLabEntry && (
               <Link to="/labentry" className="nav-item ">
                 <DocumentCheckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Lab Entry</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "batch" || user.role === "production" || user.role === "batchcomplete" || user.role === "grey" || user.role === "SP2" || user.role === "SP1" || user.role === "PA" ||  user.role === "PM") && (
+            {canViewBatch && (
               <Link to="/batch" className="nav-item">
                 <TruckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Batch</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "finishing" || user.role === "SP1" ||  user.role === "PA" ||  user.role === "PM") && (
+            {canViewFinishing && (
               <Link to="/finishing" className="nav-item">
                 <DocumentCheckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Finishing</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "delivery" || user.role === "SP1"  || user.role === "PA" ||  user.role === "finishing") && (
+            {canViewDelivery && (
               <Link to="/delivery" className="nav-item">
                 <TruckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Delivery</span>}
@@ -318,21 +381,21 @@ function Navigation() {
             )}
 
            
-            {user && (user.role === "admin" || user.role === "delivery" || user.role === "PA" ) && (
+            {canViewInvoiceList && (
               <Link to="/invoices" className="nav-item">
                 <ClipboardDocumentListIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Invoice List</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "delivery" ||  user.role === "PA" || user.role === "SP1") && (
+            {canViewReturn && (
               <Link to="/return" className="nav-item">
                 <ReceiptRefundIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Grey Return</span>}
               </Link>
             )}
 
-            {user && (user.role === "admin" || user.role === "SP1" ||  user.role === "PA"||  user.role === "finishing" || user.role === "SP1") && (
+            {canViewReports && (
               <Link to="/reports" className="nav-item">
                 <ChartBarIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Reports</span>}

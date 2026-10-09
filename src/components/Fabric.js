@@ -9,6 +9,8 @@ import DT from 'datatables.net-dt';
 const API_URL = 'https://www.wynstarcreations.com/seyal/api/getMasters?type=fabric';
 const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/addMaster';
 
+
+
 DataTable.use(DT);
 function Fabric() {
   const table = useRef();

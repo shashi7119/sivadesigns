@@ -1,24 +1,27 @@
-import React, { useState, useRef } from 'react';
-import { Container,  Row,  Form,Dropdown } from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext';
-import '../css/Styles.css';
-import '../css/DataTable.css';
-import DataTable from 'datatables.net-react';
-import Select from 'datatables.net-select-dt';
-import FixedHeader from 'datatables.net-fixedcolumns-dt';
-import Responsive from 'datatables.net-responsive-dt';
-import DT from 'datatables.net-dt';
-import $ from 'jquery';
+import React, { useState, useRef } from "react";
+import { Container, Row, Form, Dropdown } from "react-bootstrap";
+import { useAuth } from "../context/AuthContext";
+import "../css/Styles.css";
+import "../css/DataTable.css";
+import DataTable from "datatables.net-react";
+import Select from "datatables.net-select-dt";
+import FixedHeader from "datatables.net-fixedcolumns-dt";
+import Responsive from "datatables.net-responsive-dt";
+import DT from "datatables.net-dt";
+import $ from "jquery";
 
-const API_URL = 'https://www.wynstarcreations.com/seyal/api';
+const API_URL = "https://www.wynstarcreations.com/seyal/api";
 
-DataTable.use(Responsive);DataTable.use(Select);
-DataTable.use(FixedHeader);DataTable.use(DT);
+
+DataTable.use(Responsive);
+DataTable.use(Select);
+DataTable.use(FixedHeader);
+DataTable.use(DT);
 function Reports() {
   const table = useRef();
   const submittedFiltersRef = useRef({});
 
-  const [searchState, setSearchState] = useState('');
+  const [searchState, setSearchState] = useState("");
   const [selData, setSelData] = useState([]);
   const { user, isAuthenticated } = useAuth();
 
@@ -34,13 +37,13 @@ function Reports() {
 
   // Filter state
   const [filters, setFilters] = useState({
-    fromDate: '',
-    toDate: '',
-    customer: '',
-    machine: '',
-    fabric: '',
-    shade: '',
-    construction: ''
+    fromDate: "",
+    toDate: "",
+    customer: "",
+    machine: "",
+    fabric: "",
+    shade: "",
+    construction: "",
   });
 
   // Options state
@@ -49,29 +52,37 @@ function Reports() {
     machines: [],
     fabrics: [],
     shades: [],
-    constructions: []
+    constructions: [],
   });
 
   // Fetch customer and machine on mount
   React.useEffect(() => {
     const fetchMasters = async () => {
       try {
-        const [customers, machines,fabrics,constructions] = await Promise.all([
-          fetch(`${API_URL}/getMasters?type=customer`).then(r => r.json()),
-          fetch(`${API_URL}/getMasters?type=machine`).then(r => r.json()),
-          fetch(`${API_URL}/getMasters?type=fabric`).then(r => r.json()),
-          fetch(`${API_URL}/getMasters?type=construction`).then(r => r.json())
-        ]);
+        const [customers, machines, fabrics, constructions] = await Promise.all(
+          [
+            fetch(`${API_URL}/getMasters?type=customer`).then((r) => r.json()),
+            fetch(`${API_URL}/getMasters?type=machine`).then((r) => r.json()),
+            fetch(`${API_URL}/getMasters?type=fabric`).then((r) => r.json()),
+            fetch(`${API_URL}/getMasters?type=construction`).then((r) =>
+              r.json(),
+            ),
+          ],
+        );
 
-       setOptions(o => ({
-  ...o,
-  customers: customers.map(row => ({ id: row[0], name: row[1] })),
-  machines: machines.map(row => ({ id: row[0], name: row[1] })),
-  fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),          
-  constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
-}));
-     
-      } catch (e) { console.error(e); }
+        setOptions((o) => ({
+          ...o,
+          customers: customers.map((row) => ({ id: row[0], name: row[1] })),
+          machines: machines.map((row) => ({ id: row[0], name: row[1] })),
+          fabrics: fabrics.map((row) => ({ id: row[0], name: row[1] })),
+          constructions: constructions.map((row) => ({
+            id: row[0],
+            name: row[1],
+          })),
+        }));
+      } catch (e) {
+        console.error(e);
+      }
     };
     fetchMasters();
   }, []);
@@ -79,46 +90,61 @@ function Reports() {
   // Function to fetch masters (reusable)
   const fetchMastersData = async () => {
     try {
-      const [customers, machines,fabrics,constructions] = await Promise.all([
-        fetch(`${API_URL}/getMasters?type=customer`).then(r => r.json()),
-        fetch(`${API_URL}/getMasters?type=machine`).then(r => r.json()),
-        fetch(`${API_URL}/getMasters?type=fabric`).then(r => r.json()),
-        fetch(`${API_URL}/getMasters?type=construction`).then(r => r.json())
+      const [customers, machines, fabrics, constructions] = await Promise.all([
+        fetch(`${API_URL}/getMasters?type=customer`).then((r) => r.json()),
+        fetch(`${API_URL}/getMasters?type=machine`).then((r) => r.json()),
+        fetch(`${API_URL}/getMasters?type=fabric`).then((r) => r.json()),
+        fetch(`${API_URL}/getMasters?type=construction`).then((r) => r.json()),
       ]);
 
-       setOptions(o => ({
-  ...o,
-  customers: customers.map(row => ({ id: row[0], name: row[1] })),
-  machines: machines.map(row => ({ id: row[0], name: row[1] })),
-  fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),          
-  constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
-}));
-     
-    } catch (e) { console.error(e); }
+      setOptions((o) => ({
+        ...o,
+        customers: customers.map((row) => ({ id: row[0], name: row[1] })),
+        machines: machines.map((row) => ({ id: row[0], name: row[1] })),
+        fabrics: fabrics.map((row) => ({ id: row[0], name: row[1] })),
+        constructions: constructions.map((row) => ({
+          id: row[0],
+          name: row[1],
+        })),
+      }));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // Fetch fabric, shade, construction when customer or date changes
   React.useEffect(() => {
     if (!filters.customer) {
-      setOptions(o => ({ ...o, fabrics: [], shades: [], constructions: [] }));
-      setFilters(f => ({ ...f, fabric: '', shade: '', construction: '' }));
+      setOptions((o) => ({ ...o, fabrics: [], shades: [], constructions: [] }));
+      setFilters((f) => ({ ...f, fabric: "", shade: "", construction: "" }));
       return;
     }
     const fetchDependent = async () => {
       try {
         const params = `customer=${encodeURIComponent(filters.customer)}&fromDate=${encodeURIComponent(filters.fromDate)}&toDate=${encodeURIComponent(filters.toDate)}`;
         const [fabrics, shades, constructions] = await Promise.all([
-          fetch(`${API_URL}/getFilterMasters?type=fabric&${params}`).then(r => r.json()),
-          fetch(`${API_URL}/getFilterMasters?type=shade&${params}`).then(r => r.json()),
-          fetch(`${API_URL}/getFilterMasters?type=construction&${params}`).then(r => r.json())
+          fetch(`${API_URL}/getFilterMasters?type=fabric&${params}`).then((r) =>
+            r.json(),
+          ),
+          fetch(`${API_URL}/getFilterMasters?type=shade&${params}`).then((r) =>
+            r.json(),
+          ),
+          fetch(`${API_URL}/getFilterMasters?type=construction&${params}`).then(
+            (r) => r.json(),
+          ),
         ]);
-        setOptions(o => ({
+        setOptions((o) => ({
           ...o,
-          fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),
-          shades: shades.map(row => ({ id: row[0], name: row[1] })),
-          constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
+          fabrics: fabrics.map((row) => ({ id: row[0], name: row[1] })),
+          shades: shades.map((row) => ({ id: row[0], name: row[1] })),
+          constructions: constructions.map((row) => ({
+            id: row[0],
+            name: row[1],
+          })),
         }));
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+      }
     };
     fetchDependent();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -126,17 +152,22 @@ function Reports() {
 
   // Handle filter change (do not reload table)
   const handleFilterChange = (name, value) => {
-    setFilters(f => ({ ...f, [name]: value }));
-    if (name === 'customer') {
-      setFilters(f => ({ ...f, fabric: '', shade: '', construction: '', customer: value }));
+    setFilters((f) => ({ ...f, [name]: value }));
+    if (name === "customer") {
+      setFilters((f) => ({
+        ...f,
+        fabric: "",
+        shade: "",
+        construction: "",
+        customer: value,
+      }));
     }
 
-    
     // Do NOT reload table here
   };
 
   // Handle submit button click
-  const handleSubmitFilters = () => {    
+  const handleSubmitFilters = () => {
     submittedFiltersRef.current = filters;
     if (table.current && table.current.dt) {
       table.current.dt().ajax.reload();
@@ -147,22 +178,22 @@ function Reports() {
   const handleResetFilters = () => {
     //const defaultDates = getDefaultDates();
     setFilters({
-      fromDate: '',
-      toDate: '',
-      customer: '',
-      machine: '',
-      fabric: '',
-      shade: '',
-      construction: ''
+      fromDate: "",
+      toDate: "",
+      customer: "",
+      machine: "",
+      fabric: "",
+      shade: "",
+      construction: "",
     });
     submittedFiltersRef.current = {
-      fromDate: '',
-      toDate: '',
-      customer: '',
-      machine: '',
-      fabric: '',
-      shade: '',
-      construction: ''
+      fromDate: "",
+      toDate: "",
+      customer: "",
+      machine: "",
+      fabric: "",
+      shade: "",
+      construction: "",
     };
     // Call fetchMasters to reload all options
     fetchMastersData();
@@ -171,15 +202,13 @@ function Reports() {
     }
   };
 
-
-
   if (!isAuthenticated) {
-     console.log("not logged in")
-     return null;  // Avoid rendering profile if the user is not authenticated
-   }
+    console.log("not logged in");
+    return null; // Avoid rendering profile if the user is not authenticated
+  }
 
-  const PrintHandle =  (event) => {
-    event.preventDefault();  
+  const PrintHandle = (event) => {
+    event.preventDefault();
     let api = table.current.dt();
     api.rows().deselect();
     const printableContent = `
@@ -255,7 +284,7 @@ function Reports() {
                     <td>${row[14]}</td>
                     <td>${row[15]}</td>                    
                   </tr>
-                `
+                `,
               )
               .join("")}
           </tbody>
@@ -263,19 +292,16 @@ function Reports() {
       </body>
     </html>
   `;
-    
+
     const newWindow = window.open("", "_blank");
     newWindow.document.write(`<pre>${printableContent}</pre>`);
     newWindow.print();
-    selData.length=0;       
-  }; 
+    selData.length = 0;
+  };
 
-  
   const handleColumnChange = (e) => {
     setSearchState(e.target.value);
-   
   };
-  
 
   const rowClick = (e) => {
     e.preventDefault();
@@ -283,24 +309,23 @@ function Reports() {
     let rows = api.rows({ selected: true }).data().toArray();
     let newSelData = [...selData];
 
-    rows.forEach(value => {
-      if (!newSelData.some(existing => existing[0] === value[0])) {
+    rows.forEach((value) => {
+      if (!newSelData.some((existing) => existing[0] === value[0])) {
         newSelData.push(value);
       }
     });
 
     setSelData(newSelData); // Now this matches the state setter name
-  }
-  
+  };
+
   return (
-    <div className="main-content" >
+    <div className="main-content">
       <Container fluid className="relative">
         <Row className="mb-6">
           <div className="col-10 col-sm-10">
             <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
             <p className="text-gray-600">Welcome, {user.user}!</p>
           </div>
-         
         </Row>
 
         {/* Filter Row */}
@@ -308,31 +333,41 @@ function Reports() {
           <div className="col-md-2">
             <Form.Group>
               <Form.Label>From Date</Form.Label>
-              <Form.Control type="date" value={filters.fromDate} onChange={e => handleFilterChange('fromDate', e.target.value)} />
+              <Form.Control
+                type="date"
+                value={filters.fromDate}
+                onChange={(e) => handleFilterChange("fromDate", e.target.value)}
+              />
             </Form.Group>
           </div>
           <div className="col-md-2">
             <Form.Group>
               <Form.Label>To Date</Form.Label>
-              <Form.Control type="date" value={filters.toDate} onChange={e => handleFilterChange('toDate', e.target.value)} />
+              <Form.Control
+                type="date"
+                value={filters.toDate}
+                onChange={(e) => handleFilterChange("toDate", e.target.value)}
+              />
             </Form.Group>
           </div>
-          </div>
-          <div className="row mb-3">
+        </div>
+        <div className="row mb-3">
           <div className="col-md-2">
             <Form.Group>
               <Form.Label>Customer</Form.Label>
               <Form.Control
                 list="customer-list"
                 value={filters.customer}
-                onChange={e => handleFilterChange('customer', e.target.value)}
+                onChange={(e) => handleFilterChange("customer", e.target.value)}
                 placeholder="Type to search..."
                 autoComplete="off"
               />
               <datalist id="customer-list">
                 <option value="">All</option>
-                {options.customers.map(opt => (
-                  <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
+                {options.customers.map((opt) => (
+                  <option key={opt.id || opt.name} value={opt.name}>
+                    {opt.name}
+                  </option>
                 ))}
               </datalist>
             </Form.Group>
@@ -340,10 +375,15 @@ function Reports() {
           <div className="col-md-2">
             <Form.Group>
               <Form.Label>Machine</Form.Label>
-              <Form.Select value={filters.machine} onChange={e => handleFilterChange('machine', e.target.value)}>
+              <Form.Select
+                value={filters.machine}
+                onChange={(e) => handleFilterChange("machine", e.target.value)}
+              >
                 <option value="">All</option>
-                {options.machines.map(opt => (
-                  <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
+                {options.machines.map((opt) => (
+                  <option key={opt.id || opt.name} value={opt.name}>
+                    {opt.name}
+                  </option>
                 ))}
               </Form.Select>
             </Form.Group>
@@ -354,14 +394,16 @@ function Reports() {
               <Form.Control
                 list="fabric-list"
                 value={filters.fabric}
-                onChange={e => handleFilterChange('fabric', e.target.value)}
+                onChange={(e) => handleFilterChange("fabric", e.target.value)}
                 placeholder="Type to search..."
                 autoComplete="off"
               />
               <datalist id="fabric-list">
                 <option value="">All</option>
-                {options.fabrics.map(opt => (
-                  <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
+                {options.fabrics.map((opt) => (
+                  <option key={opt.id || opt.name} value={opt.name}>
+                    {opt.name}
+                  </option>
                 ))}
               </datalist>
             </Form.Group>
@@ -369,10 +411,15 @@ function Reports() {
           <div className="col-md-2">
             <Form.Group>
               <Form.Label>Shade</Form.Label>
-              <Form.Select value={filters.shade} onChange={e => handleFilterChange('shade', e.target.value)} >
+              <Form.Select
+                value={filters.shade}
+                onChange={(e) => handleFilterChange("shade", e.target.value)}
+              >
                 <option value="">All</option>
-                {options.shades.map(opt => (
-                  <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
+                {options.shades.map((opt) => (
+                  <option key={opt.id || opt.name} value={opt.name}>
+                    {opt.name}
+                  </option>
                 ))}
               </Form.Select>
             </Form.Group>
@@ -383,14 +430,18 @@ function Reports() {
               <Form.Control
                 list="construction-list"
                 value={filters.construction}
-                onChange={e => handleFilterChange('construction', e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("construction", e.target.value)
+                }
                 placeholder="Type to search..."
                 autoComplete="off"
               />
               <datalist id="construction-list">
                 <option value="">All</option>
-                {options.constructions.map(opt => (
-                  <option key={opt.id || opt.name} value={opt.name}>{opt.name}</option>
+                {options.constructions.map((opt) => (
+                  <option key={opt.id || opt.name} value={opt.name}>
+                    {opt.name}
+                  </option>
                 ))}
               </datalist>
             </Form.Group>
@@ -398,25 +449,40 @@ function Reports() {
         </div>
         {/* Submit button and ...existing code for actions/search... */}
         <div className="flex justify-end mb-4">
-          <button className="btn btn-primary mr-3" onClick={handleSubmitFilters}>
+          <button
+            className="btn btn-primary mr-3"
+            onClick={handleSubmitFilters}
+          >
             Submit
           </button>
-          <button className="btn btn-secondary mr-3" onClick={handleResetFilters}>
+          <button
+            className="btn btn-secondary mr-3"
+            onClick={handleResetFilters}
+          >
             Reset
           </button>
-           <div className="col-2 col-sm-2">
+          <div className="col-2 col-sm-2">
             <Dropdown className="">
-              <Dropdown.Toggle variant="primary" id="dropdown-basic" 
-                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+              <Dropdown.Toggle
+                variant="primary"
+                id="dropdown-basic"
+                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+              >
                 Actions
               </Dropdown.Toggle>
 
-              <Dropdown.Menu className="mt-2">                
-                 {user && <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>   }                
+              <Dropdown.Menu className="mt-2">
+                {user && (
+                  <Dropdown.Item href="#" onClick={PrintHandle}>
+                    Print
+                  </Dropdown.Item>
+                )}
               </Dropdown.Menu>
             </Dropdown>
           </div>
-          <div className="ml-auto w-1/5"> {/* This creates 20% width and right alignment */}
+          <div className="ml-auto w-1/5">
+            {" "}
+            {/* This creates 20% width and right alignment */}
             <Form.Select
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 tsearch"
               value={searchState}
@@ -430,48 +496,52 @@ function Reports() {
         </div>
 
         <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
-          <DataTable 
-            onSelect={rowClick} 
+          <DataTable
+            onSelect={rowClick}
             ref={table}
             options={{
               scrollX: true,
-              scrollY: '60vh',
+              scrollY: "60vh",
               scrollCollapse: true,
               fixedColumns: {
-                left: 2
+                left: 2,
               },
-              order: [[0, 'desc']],
+              order: [[0, "desc"]],
               paging: true,
               processing: true,
               serverSide: true,
-              select: { style: 'multi' },
+              select: { style: "multi" },
               ajax: {
-        url: `${API_URL}/reports`,
-        type: 'POST',
-        data: function (d) {
-             d.searchcol = $(".tsearch").val();
-             d.user = user.user; // send email
-             console.log('Data sent to server:', submittedFiltersRef.current);
-             // Use submitted filters from ref
-             d.fromDate = submittedFiltersRef.current.fromDate || '';
-             d.toDate = submittedFiltersRef.current.toDate || '';
-             d.customer = submittedFiltersRef.current.customer || '';
-             d.machine = submittedFiltersRef.current.machine || '';
-             d.fabric = submittedFiltersRef.current.fabric || '';
-             d.shade = submittedFiltersRef.current.shade || '';
-             d.construction = submittedFiltersRef.current.construction || '';
-            if (d.length === -1) {
-                d.length = 25; // Set default page length
-              }
-              return d;
-        },
-      },
-       pageLength: 25,
+                url: `${API_URL}/reports`,
+                type: "POST",
+                data: function (d) {
+                  d.searchcol = $(".tsearch").val();
+                  d.user = user.user; // send email
+                  console.log(
+                    "Data sent to server:",
+                    submittedFiltersRef.current,
+                  );
+                  // Use submitted filters from ref
+                  d.fromDate = submittedFiltersRef.current.fromDate || "";
+                  d.toDate = submittedFiltersRef.current.toDate || "";
+                  d.customer = submittedFiltersRef.current.customer || "";
+                  d.machine = submittedFiltersRef.current.machine || "";
+                  d.fabric = submittedFiltersRef.current.fabric || "";
+                  d.shade = submittedFiltersRef.current.shade || "";
+                  d.construction =
+                    submittedFiltersRef.current.construction || "";
+                  if (d.length === -1) {
+                    d.length = 25; // Set default page length
+                  }
+                  return d;
+                },
+              },
+              pageLength: 25,
               columns: [
                 {
-                    className: "", // Add a class for the toggle button                    
-                    data: "0",
-                    defaultContent: ""
+                  className: "", // Add a class for the toggle button
+                  data: "0",
+                  defaultContent: "",
                 },
                 { data: "1" },
                 { data: "2" },
@@ -487,9 +557,8 @@ function Reports() {
                 { data: "12" },
                 { data: "13" },
                 { data: "14" },
-                { data: "15" }            
-                
-            ],
+                { data: "15" },
+              ],
               // Add custom styling
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
               language: {
@@ -500,13 +569,13 @@ function Reports() {
                   first: "First",
                   last: "Last",
                   next: "Next",
-                  previous: "Previous"
-                }
+                  previous: "Previous",
+                },
               },
               // Add custom classes
               className: "w-full text-sm text-left text-gray-500",
               // Add container class
-              containerClassName: "relative z-10"
+              containerClassName: "relative z-10",
             }}
           >
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
@@ -522,8 +591,8 @@ function Reports() {
                 <th className="px-6 py-3">Construction</th>
                 <th className="px-6 py-3">Width</th>
                 <th className="px-6 py-3">Weight</th>
-                <th className="px-6 py-3">GMeter</th>                   
-                <th className="px-6 py-3">Inward Date</th>         
+                <th className="px-6 py-3">GMeter</th>
+                <th className="px-6 py-3">Inward Date</th>
                 <th className="px-6 py-3">Batch</th>
                 <th className="px-6 py-3">Finishing</th>
                 <th className="px-6 py-3">Delivery</th>
@@ -531,11 +600,9 @@ function Reports() {
             </thead>
           </DataTable>
         </div>
-
-
-    </Container>
-  </div>
-);
+      </Container>
+    </div>
+  );
 }
 
 export default Reports;

@@ -1,55 +1,110 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Container, Button, Row, Modal, Form, Dropdown, Col } from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext';
-import '../css/Styles.css';
-import '../css/DataTable.css';
-import axios from 'axios';
-import DataTable from 'datatables.net-react';
-import Select from 'datatables.net-select-dt';
-import FixedHeader from 'datatables.net-fixedcolumns-dt';
-import Responsive from 'datatables.net-responsive-dt';
-import DT from 'datatables.net-dt';
-import $ from 'jquery';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Container,
+  Button,
+  Row,
+  Modal,
+  Form,
+  Dropdown,
+  Col,
+} from "react-bootstrap";
+import { useAuth } from "../context/AuthContext";
+import { PERMISSIONS } from "../constants/permissions";
+import "../css/Styles.css";
+import "../css/DataTable.css";
+import axios from "axios";
+import DataTable from "datatables.net-react";
+import Select from "datatables.net-select-dt";
+import FixedHeader from "datatables.net-fixedcolumns-dt";
+import Responsive from "datatables.net-responsive-dt";
+import DT from "datatables.net-dt";
+import $ from "jquery";
 
-const API_URL = 'https://www.wynstarcreations.com/seyal/api';
+const API_URL = "https://www.wynstarcreations.com/seyal/api/";
 
-DataTable.use(Responsive);DataTable.use(Select);
-DataTable.use(FixedHeader);DataTable.use(DT);
+
+DataTable.use(Responsive);
+DataTable.use(Select);
+DataTable.use(FixedHeader);
+DataTable.use(DT);
 function Planning() {
   const table = useRef();
   const [show, setShow] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState([{
-    planid: '', customer:'', width:'',construction:'',inwardno:'',
-    planned_weight: '',planned_gmeter: '',actual_weight: '',actual_gmeter: '',
-    dyeing_weight: '', dyeing_gmeter: '', noofpcs:'',sono:'', invoiceParameter: ''
-  }]);
-  const [searchState, setSearchState] = useState('');
+  const [formData, setFormData] = useState([
+    {
+      planid: "",
+      customer: "",
+      width: "",
+      construction: "",
+      inwardno: "",
+      planned_weight: "",
+      planned_gmeter: "",
+      actual_weight: "",
+      actual_gmeter: "",
+      dyeing_weight: "",
+      dyeing_gmeter: "",
+      noofpcs: "",
+      sono: "",
+      invoiceParameter: "",
+    },
+  ]);
+  const [searchState, setSearchState] = useState("");
   const [selData, setSelData] = useState([]); // Changed from setselData to setSelData
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, permissions, canAccess } = useAuth();
+
+  const canPlanningAction = (permission, allowedRoles = []) => {
+    // If the user has permissions, use the permission system
+    if (permissions.length > 0) {
+      return canAccess(permission, allowedRoles);
+    }
+
+    // Otherwise keep the old role-based behavior
+    return user && allowedRoles.includes(user.role);
+  };
+
+  const canAddPlanning = canPlanningAction(PERMISSIONS.PLANNING_CREATE, [
+    "admin",
+  ]);
+
+  const canPrintPlanning = canPlanningAction(PERMISSIONS.PLANNING_PRINT, [
+    "admin",
+  ]);
+
+  const canExportPlanning = canPlanningAction(PERMISSIONS.PLANNING_EXPORT, [
+    "admin",
+  ]);
+
+  const canCreateBatch =
+    canPlanningAction(PERMISSIONS.BATCH_CREATE, ["admin"]) ||
+    canPlanningAction(PERMISSIONS.PLANNING_CREATE, ["admin"]);
+
+  const canDeletePlanning = canPlanningAction(PERMISSIONS.PLANNING_DELETE, [
+    "admin",
+  ]);
 
   // Reload DataTable when tab becomes active (user returns after idle)
-    useEffect(() => {
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible' && table.current) {
-          // Reload DataTable data
-          const api = table.current.dt();
-          api.ajax.reload();
-        }
-      };
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      return () => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-      };
-    }, []);
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && table.current) {
+        // Reload DataTable data
+        const api = table.current.dt();
+        api.ajax.reload();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   if (!isAuthenticated) {
-     console.log("not logged in")
-     return null;  // Avoid rendering profile if the user is not authenticated
-   }
+    console.log("not logged in");
+    return null; // Avoid rendering profile if the user is not authenticated
+  }
 
-  const PrintHandle =  (event) => {
-    event.preventDefault();  
+  const PrintHandle = (event) => {
+    event.preventDefault();
     let api = table.current.dt();
     api.rows().deselect();
     const printableContent = `
@@ -125,7 +180,7 @@ function Planning() {
                     <td>${row[14]}</td>
                     <td>${row[15]}</td>
                   </tr>
-                `
+                `,
               )
               .join("")}
           </tbody>
@@ -133,84 +188,93 @@ function Planning() {
       </body>
     </html>
   `;
-    
+
     const newWindow = window.open("", "_blank");
     newWindow.document.write(`<pre>${printableContent}</pre>`);
     newWindow.print();
-    selData.length=0;       
+    selData.length = 0;
   };
 
-  const deleteHandle =  (event) => {
-
+  const deleteHandle = (event) => {
     event.preventDefault();
     if (window.confirm("Delete this item?")) {
-    let api = table.current.dt();
-    let rows = api.rows({ selected: true }).data().toArray();
-    let dataArr = [];
-    rows.map(value => (
-      dataArr.push(value)
-    ));    
+      let api = table.current.dt();
+      let rows = api.rows({ selected: true }).data().toArray();
+      let dataArr = [];
+      rows.map((value) => dataArr.push(value));
 
-    if(dataArr.length === 0) {
-      alert('Select entry for delete');
-    } else {
-      axios.post(`${API_URL}/deletePlan`, dataArr)
-      .then(function (response) {      
-        console.log(response);
-      })
-    .catch(function (error) {
-      console.log(error);
-    });
-      console.log(dataArr);
-      api.rows({ selected: true }).remove().draw();
+      if (dataArr.length === 0) {
+        alert("Select entry for delete");
+      } else {
+        axios
+          .post(`${API_URL}/deletePlan`, dataArr)
+          .then(function (response) {
+            console.log(response);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+        console.log(dataArr);
+        api.rows({ selected: true }).remove().draw();
+      }
     }
-  }
   };
- 
-  const handleClose = () =>{ setShow(false);setFormData([]); }
-  const handleShow = (e) => { 
-    setShow(true);    
-  }
-  
+
+  const handleClose = () => {
+    setShow(false);
+    setFormData([]);
+  };
+  const handleShow = (e) => {
+    setShow(true);
+  };
+
   const handleColumnChange = (e) => {
     setSearchState(e.target.value);
    
   };
-  
-  const addRow = (dataArr) => {  
-      
-       const newRow = { planid: dataArr[0], customer:dataArr[5], width:dataArr[9],construction:dataArr[8],inwardno:dataArr[1],
-    planned_weight: dataArr[10],planned_gmeter: dataArr[11],actual_weight: '',actual_gmeter: '',
-    dyeing_weight: '', dyeing_gmeter: '', noofpcs:'',sono:'',invoiceParameter: ''};
-        setFormData(formData=>[...formData, newRow]);    
-      
-  }
 
-  const batchHandle =  (event) => {
-    event.preventDefault();    
+  const addRow = (dataArr) => {
+    const newRow = {
+      planid: dataArr[0],
+      customer: dataArr[5],
+      width: dataArr[9],
+      construction: dataArr[8],
+      inwardno: dataArr[1],
+      planned_weight: dataArr[10],
+      planned_gmeter: dataArr[11],
+      actual_weight: "",
+      actual_gmeter: "",
+      dyeing_weight: "",
+      dyeing_gmeter: "",
+      noofpcs: "",
+      sono: "",
+      invoiceParameter: "",
+    };
+    setFormData((formData) => [...formData, newRow]);
+  };
+
+  const batchHandle = (event) => {
+    event.preventDefault();
     setFormData([]);
     let api = table.current.dt();
-    let rows = api.rows({ selected: true }).data().toArray(); 
+    let rows = api.rows({ selected: true }).data().toArray();
     handleShow();
-    rows.map(value => (
-     addRow(value)     
-    ));    
-          
+    rows.map((value) => addRow(value));
   };
 
 
 
-   const handleSubmit = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const hasMissingInvoiceParameter = formData.some(
-      (row) => !(row.invoiceParameter || '').toString().trim()
+      (row) => !(row.invoiceParameter || "").toString().trim(),
     );
     if (hasMissingInvoiceParameter) {
-      alert('Invoice Parameter is required for all selected plans.');
+      alert("Invoice Parameter is required for all selected plans.");
       return;
     }
-    
+
     // Prevent multiple submissions
     if (isSubmitting) {
       return;
@@ -218,10 +282,10 @@ function Planning() {
 
     try {
       setIsSubmitting(true);
-      console.log('Form Submitted with Data:', formData);
-      
+      console.log("Form Submitted with Data:", formData);
+
       const response = await axios.post(`${API_URL}/addBatch1`, formData);
-      console.log(response);   
+      console.log(response);
       setShow(false);
       setFormData([]);
       alert("Batch Created!!");
@@ -243,11 +307,11 @@ function Planning() {
     let stock = 0;
 
     // If value is empty, don't validate
-    if (!value || value.trim() === '') {
+    if (!value || value.trim() === "") {
       return;
     }
 
-    const row = formData.find(r => r.planid === planid);
+    const row = formData.find((r) => r.planid === planid);
     if (!row) return;
 
     if (name === "actual_weight") {
@@ -264,10 +328,10 @@ function Planning() {
     const numValue = parseFloat(value);
     if (isNaN(numValue)) {
       alert("Please enter a valid number");
-      setFormData(prevRows =>
-        prevRows.map(row1 =>
-          row1.planid === planid ? { ...row1, [name]: "" } : row1
-        )
+      setFormData((prevRows) =>
+        prevRows.map((row1) =>
+          row1.planid === planid ? { ...row1, [name]: "" } : row1,
+        ),
       );
       event.target.value = "";
       return;
@@ -278,18 +342,18 @@ function Planning() {
     const hstock = stock + cstock;
 
     if (numValue < lstock || numValue > hstock) {
-      alert(`Value must be between ${lstock.toFixed(2)} and ${hstock.toFixed(2)}`);
-      setFormData(prevRows =>
-        prevRows.map(row1 =>
-          row1.planid === planid ? { ...row1, [name]: "" } : row1
-        )
+      alert(
+        `Value must be between ${lstock.toFixed(2)} and ${hstock.toFixed(2)}`,
+      );
+      setFormData((prevRows) =>
+        prevRows.map((row1) =>
+          row1.planid === planid ? { ...row1, [name]: "" } : row1,
+        ),
       );
       event.target.value = "";
       return;
     }
   };
-  
-
 
   const rowClick = (e) => {
     e.preventDefault();
@@ -297,16 +361,16 @@ function Planning() {
     let rows = api.rows({ selected: true }).data().toArray();
     let newSelData = [...selData];
 
-    rows.forEach(value => {
-      if (!newSelData.some(existing => existing[0] === value[0])) {
+    rows.forEach((value) => {
+      if (!newSelData.some((existing) => existing[0] === value[0])) {
         newSelData.push(value);
       }
     });
 
     setSelData(newSelData); // Now this matches the state setter name
-  }
+  };
 
-    const ExportHandle = (event) => {
+  const ExportHandle = (event) => {
     event.preventDefault();
     let api = table.current.dt();
     let selectedRows = api.rows({ selected: true }).data();
@@ -318,39 +382,58 @@ function Planning() {
     bdata = [];
     bdata.push("Plan No");
     bdata.push("Inward No");
-    bdata.push("Cust Dc"); bdata.push("Date");bdata.push("Machine");
-    bdata.push("Customer"); bdata.push("Fabric");
-    bdata.push("Shade"); bdata.push("Construction");
-    bdata.push("Grey Width"); bdata.push("Grey Weight");
-    bdata.push("Grey Meter"); bdata.push("GLM"); bdata.push("AGLM");
-    bdata.push("Process"); bdata.push("Finishing");
+    bdata.push("Cust Dc");
+    bdata.push("Date");
+    bdata.push("Machine");
+    bdata.push("Customer");
+    bdata.push("Fabric");
+    bdata.push("Shade");
+    bdata.push("Construction");
+    bdata.push("Grey Width");
+    bdata.push("Grey Weight");
+    bdata.push("Grey Meter");
+    bdata.push("GLM");
+    bdata.push("AGLM");
+    bdata.push("Process");
+    bdata.push("Finishing");
     csv.push(bdata.join(","));
 
     const rt = selectedRows.map((row) => {
       let rowData = [];
-        const match = row[5].match(/>(.*?)</);
+      const match = row[5].match(/>(.*?)</);
       const customer = match ? match[1] : null;
-      rowData.push(row[0]); rowData.push(row[1]); rowData.push(row[2]);rowData.push(row[3]);
-      rowData.push(row[4]); rowData.push(customer); rowData.push(row[6]);
-      rowData.push(row[7]); rowData.push(row[8]); rowData.push(row[9]);
-      rowData.push(row[10]); rowData.push(row[11]); rowData.push(row[12]);
-      rowData.push(row[13]); rowData.push(row[14]); rowData.push(row[15]); 
+      rowData.push(row[0]);
+      rowData.push(row[1]);
+      rowData.push(row[2]);
+      rowData.push(row[3]);
+      rowData.push(row[4]);
+      rowData.push(customer);
+      rowData.push(row[6]);
+      rowData.push(row[7]);
+      rowData.push(row[8]);
+      rowData.push(row[9]);
+      rowData.push(row[10]);
+      rowData.push(row[11]);
+      rowData.push(row[12]);
+      rowData.push(row[13]);
+      rowData.push(row[14]);
+      rowData.push(row[15]);
       csv.push(rowData.join(","));
       return true;
-    })
+    });
 
     console.log(rt);
 
     let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
     let link = document.createElement("a");
     link.href = URL.createObjectURL(csvFile);
-    link.download = `planning_data.csv`;;
+    link.download = `planning_data.csv`;
     link.click();
 
   };
-  
+
   return (
-    <div className="main-content" >
+    <div className="main-content">
       <Container fluid className="relative">
         <Row className="mb-6">
           <div className="col-10 col-sm-10">
@@ -361,23 +444,50 @@ function Planning() {
         </Row>
 
         <div className="flex justify-end mb-4">
-           <div className="col-2 col-sm-2">
+          <div className="col-2 col-sm-2">
             <Dropdown className="">
-              <Dropdown.Toggle variant="primary" id="dropdown-basic" 
-                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+              <Dropdown.Toggle
+                variant="primary"
+                id="dropdown-basic"
+                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+              >
                 Actions
               </Dropdown.Toggle>
 
               <Dropdown.Menu className="mt-2">
-                {user && user.role !=="SP2" && user.role !=="grey" && user.role !=="batch" && user.role !=="PM"  &&<Dropdown.Item href="/profile">Add</Dropdown.Item>}
-                 {user && <Dropdown.Item href="#" onClick={PrintHandle}>Print</Dropdown.Item>   }
-                 {user && <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item> }
-                 {user && user.role !=="SP2" && user.role !=="batch" && user.role !=="PM"  &&<Dropdown.Item href="#" onClick={batchHandle}>Create batch</Dropdown.Item>}
-                {user && user.role ==="admin" &&<Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item> }
+                {canAddPlanning && (
+                  <Dropdown.Item href="/profile">Add</Dropdown.Item>
+                )}
+
+                {canPrintPlanning && (
+                  <Dropdown.Item href="#" onClick={PrintHandle}>
+                    Print
+                  </Dropdown.Item>
+                )}
+
+                {canExportPlanning && (
+                  <Dropdown.Item href="#" onClick={ExportHandle}>
+                    Export
+                  </Dropdown.Item>
+                )}
+
+                {canCreateBatch && (
+                  <Dropdown.Item href="#" onClick={batchHandle}>
+                    Create batch
+                  </Dropdown.Item>
+                )}
+
+                {canDeletePlanning && (
+                  <Dropdown.Item href="#" onClick={deleteHandle}>
+                    Delete
+                  </Dropdown.Item>
+                )}
               </Dropdown.Menu>
             </Dropdown>
           </div>
-          <div className="ml-auto w-1/5"> {/* This creates 20% width and right alignment */}
+          <div className="ml-auto w-1/5">
+            {" "}
+            {/* This creates 20% width and right alignment */}
             <Form.Select
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 tsearch"
               value={searchState}
@@ -391,40 +501,39 @@ function Planning() {
         </div>
 
         <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
-          <DataTable 
-            onSelect={rowClick} 
+          <DataTable
+            onSelect={rowClick}
             ref={table}
             options={{
               scrollX: true,
-              scrollY: '60vh',
+              scrollY: "60vh",
               scrollCollapse: true,
               fixedColumns: {
-                left: 2
+                left: 2,
               },
-              order: [[0, 'desc']],
+              order: [[0, "desc"]],
               paging: true,
               processing: true,
               serverSide: true,
-              select: { style: 'multi' },
+              select: { style: "multi" },
               ajax: {
-        url: `${API_URL}/plans1`,
-        type: 'POST',
-        data: function (d) {
-             d.searchcol = $(".tsearch").val();
-             d.user = user.user; // send email
-            if (d.length === -1) {
-                d.length = 25; // Set default page length
-              }
-              return d;
-           
-        },
-      },
-       pageLength: 25,
+                url: `${API_URL}/plans1`,
+                type: "POST",
+                data: function (d) {
+                  d.searchcol = $(".tsearch").val();
+                  d.user = user.user; // send email
+                  if (d.length === -1) {
+                    d.length = 25; // Set default page length
+                  }
+                  return d;
+                },
+              },
+              pageLength: 25,
               columns: [
                 {
-                    className: "", // Add a class for the toggle button                    
-                    data: "0",
-                    defaultContent: ""
+                  className: "", // Add a class for the toggle button
+                  data: "0",
+                  defaultContent: "",
                 },
                 { data: "1" },
                 { data: "2" },
@@ -441,8 +550,7 @@ function Planning() {
                 { data: "13" },
                 { data: "14" },
                 { data: "15" },
-                
-            ],
+              ],
               // Add custom styling
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
               language: {
@@ -453,13 +561,13 @@ function Planning() {
                   first: "First",
                   last: "Last",
                   next: "Next",
-                  previous: "Previous"
-                }
+                  previous: "Previous",
+                },
               },
               // Add custom classes
               className: "w-full text-sm text-left text-gray-500",
               // Add container class
-              containerClassName: "relative z-10"
+              containerClassName: "relative z-10",
             }}
           >
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
@@ -475,7 +583,7 @@ function Planning() {
                 <th className="px-6 py-3">Construction</th>
                 <th className="px-6 py-3">Width</th>
                 <th className="px-6 py-3">Weight</th>
-                <th className="px-6 py-3">GMeter</th>                   
+                <th className="px-6 py-3">GMeter</th>
                 <th className="px-6 py-3">GLM</th>
                 <th className="px-6 py-3">AGLM</th>
                 <th className="px-6 py-3">Process</th>
@@ -486,8 +594,16 @@ function Planning() {
         </div>
 
         {/* Modal with updated styling */}
-        <Modal size="xl" show={show} onHide={handleClose} className="rounded-lg">
-          <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
+        <Modal
+          size="xl"
+          show={show}
+          onHide={handleClose}
+          className="rounded-lg"
+        >
+          <Modal.Header
+            closeButton
+            className="bg-gray-50 border-b border-gray-200"
+          >
             <Modal.Title className="text-xl font-semibold text-gray-800">
               Create Batch
             </Modal.Title>
@@ -572,8 +688,10 @@ function Planning() {
                           onChange={(e) => {
                             setFormData((prevRows) =>
                               prevRows.map((row1) =>
-                                row1.planid === row.planid ? { ...row1, actual_weight: e.target.value } : row1
-                              )
+                                row1.planid === row.planid
+                                  ? { ...row1, actual_weight: e.target.value }
+                                  : row1,
+                              ),
                             );
                           }}
                           onBlur={(e) => checkStock(e)}
@@ -609,8 +727,10 @@ function Planning() {
                           onChange={(e) => {
                             setFormData((prevRows) =>
                               prevRows.map((row1) =>
-                                row1.planid === row.planid ? { ...row1, actual_gmeter: e.target.value } : row1
-                              )
+                                row1.planid === row.planid
+                                  ? { ...row1, actual_gmeter: e.target.value }
+                                  : row1,
+                              ),
                             );
                           }}
                           onBlur={(e) => checkStock(e)}
@@ -636,8 +756,10 @@ function Planning() {
                           onChange={(e) =>
                             setFormData((prevRows) =>
                               prevRows.map((row1) =>
-                                row1.planid === row.planid ? { ...row1, noofpcs: e.target.value } : row1
-                              )
+                                row1.planid === row.planid
+                                  ? { ...row1, noofpcs: e.target.value }
+                                  : row1,
+                              ),
                             )
                           }
                           required
@@ -657,8 +779,10 @@ function Planning() {
                           onChange={(e) =>
                             setFormData((prevRows) =>
                               prevRows.map((row1) =>
-                                row1.planid === row.planid ? { ...row1, sono: e.target.value } : row1
-                              )
+                                row1.planid === row.planid
+                                  ? { ...row1, sono: e.target.value }
+                                  : row1,
+                              ),
                             )
                           }
                           required
@@ -668,18 +792,23 @@ function Planning() {
                     <Col md={3}>
                       <Form.Group>
                         <Form.Label className="block text-sm font-medium text-gray-700 mb-2">
-                         Invoice Parameter
+                          Invoice Parameter
                         </Form.Label>
                         <Form.Control
                           as="select"
                           placeholder="Invoice Parameter"
                           name="invoiceParameter"
-                          value={row.invoiceParameter || ''}
+                          value={row.invoiceParameter || ""}
                           onChange={(e) =>
                             setFormData((prevRows) =>
                               prevRows.map((row1) =>
-                                row1.planid === row.planid ? { ...row1, invoiceParameter: e.target.value } : row1
-                              )
+                                row1.planid === row.planid
+                                  ? {
+                                      ...row1,
+                                      invoiceParameter: e.target.value,
+                                    }
+                                  : row1,
+                              ),
                             )
                           }
                           required
@@ -688,7 +817,7 @@ function Planning() {
                           <option value="gw">Grey Weight</option>
                           <option value="gm">Grey Meter</option>
                           <option value="fw">Final Weight</option>
-                           <option value="fm">Final Meter</option>
+                          <option value="fm">Final Meter</option>
                         </Form.Control>
                       </Form.Group>
                     </Col>
@@ -708,8 +837,10 @@ function Planning() {
                           onChange={(e) =>
                             setFormData((prevRows) =>
                               prevRows.map((row1) =>
-                                row1.planid === row.planid ? { ...row1, dyeing_weight: e.target.value } : row1
-                              )
+                                row1.planid === row.planid
+                                  ? { ...row1, dyeing_weight: e.target.value }
+                                  : row1,
+                              ),
                             )
                           }
                         />
@@ -728,8 +859,10 @@ function Planning() {
                           onChange={(e) =>
                             setFormData((prevRows) =>
                               prevRows.map((row1) =>
-                                row1.planid === row.planid ? { ...row1, dyeing_gmeter: e.target.value } : row1
-                              )
+                                row1.planid === row.planid
+                                  ? { ...row1, dyeing_gmeter: e.target.value }
+                                  : row1,
+                              ),
                             )
                           }
                         />
@@ -738,37 +871,37 @@ function Planning() {
                   </Row>
 
                   {/* Row 4: Grey Weight, Grey Meter, Final Weight, Final Meter */}
-                 
+
                   <hr className="my-4" />
                 </div>
               ))}
             </Form>
           </Modal.Body>
-        <Modal.Footer className="bg-gray-50 border-t border-gray-200">
-          <Button 
-            variant="secondary" 
-            onClick={handleClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Close
-          </Button>
-          <Button 
-            variant="primary" 
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
-              isSubmitting 
-                ? 'bg-blue-400 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {isSubmitting ? 'Saving...' : 'Save'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
-  </div>
-);
+          <Modal.Footer className="bg-gray-50 border-t border-gray-200">
+            <Button
+              variant="secondary"
+              onClick={handleClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Close
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+                isSubmitting
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {isSubmitting ? "Saving..." : "Save"}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </Container>
+    </div>
+  );
 }
 
 export default Planning;

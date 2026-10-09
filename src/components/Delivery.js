@@ -14,6 +14,7 @@ import logo from '../img/slogo.png'
 import $ from 'jquery';
 //import PrintDataTable from '../components/PrintDataTable';
 
+
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
 DataTable.use(Responsive); DataTable.use(Select);

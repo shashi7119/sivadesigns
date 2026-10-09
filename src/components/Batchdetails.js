@@ -1,6 +1,7 @@
 import React, { useState,useEffect} from 'react';
 import { Container, Row,Dropdown,Card } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
+import { PERMISSIONS } from '../constants/permissions';
 import { useParams } from 'react-router-dom';
 import '../css/Profile.css';
 import '../css/Styles.css';
@@ -16,7 +17,7 @@ function Batchdetails() {
       shade: '', construction: '', width: '',
       weight: '0',  gmeter: 0, glm: '0',aglm: '0',process: '',finishing: '',
     });
-    const { user , isAuthenticated } = useAuth();
+    const { user , isAuthenticated, canAccess } = useAuth();
 
  useEffect(() => {       
     const fetchData = async () => {
@@ -63,7 +64,7 @@ function Batchdetails() {
 
       <Dropdown.Menu>       
         <Dropdown.Item href="#" onClick={PrintHandle} >Print</Dropdown.Item> 
-        { user && (user.role==="admin" ||  user.role==="SP2"|| (user.role==="batch" ) || (user.role==="PM" )) && <Dropdown.Item href={`../mrs/${batchid}`}  >MRS</Dropdown.Item>  }   
+        { user && canAccess(PERMISSIONS.MRS_VIEW, ["admin", "SP2", "batch", "PM"]) && <Dropdown.Item href={`../mrs/${batchid}`}  >MRS</Dropdown.Item>  }   
       </Dropdown.Menu>
     </Dropdown>
           

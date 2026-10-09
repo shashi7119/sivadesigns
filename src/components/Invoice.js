@@ -422,6 +422,7 @@ function Invoice() {
   }, [existingChecked, stateInvoiceNo, invoiceDetails.invoiceNo]);
 
   const STORAGE_KEY = 'invoices_v1';
+  
   const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
   async function readInvoices(customerName = '') {

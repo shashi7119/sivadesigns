@@ -8,6 +8,9 @@ import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
 const API_URL = 'https://www.wynstarcreations.com/seyal/api/getMasters?type=machine';
 const API_URL1 = 'https://www.wynstarcreations.com/seyal/api/addMaster';
+// https://www.wynstarcreations.com/seyal/api
+
+
 
 DataTable.use(DT);
 function Machine() {

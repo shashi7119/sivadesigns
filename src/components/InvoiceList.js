@@ -11,6 +11,7 @@ import Responsive from 'datatables.net-responsive-dt';
 import DT from 'datatables.net-dt';
 import $ from 'jquery';
 
+
 const API_URL = 'https://www.wynstarcreations.com/seyal/api';
 
 DataTable.use(Responsive);
