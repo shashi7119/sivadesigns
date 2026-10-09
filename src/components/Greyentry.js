@@ -172,7 +172,7 @@ function Greyentry() {
     "105",
   ]);
   const [isSaving, setIsSaving] = useState(false);
-  const { user, isAuthenticated, permissions, canAccess } = useAuth();
+  const { user, isAuthenticated, canAccess } = useAuth();
 
   const regexPatterns = {
     weight: /^[0-9."]*$/,

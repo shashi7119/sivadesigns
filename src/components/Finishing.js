@@ -28,7 +28,7 @@ function Finishing() {
   const [tableData, setTableData] = useState([]);
   const [show, setShow] = useState(false);
   const [fetch, setFetch] = useState(false);
-  const { user, isAuthenticated, permissions, canAccess } = useAuth();
+  const { user, isAuthenticated, canAccess } = useAuth();
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);

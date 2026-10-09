@@ -37,12 +37,6 @@ function Batch() {
   const table = useRef();
   const { user, isAuthenticated, permissions, canAccess } = useAuth();
 
-  console.log("CURRENT USER PERMISSIONS:", permissions);
-  console.log(
-    "FINISHING CREATE:",
-    permissions.includes(PERMISSIONS.FINISHING_CREATE),
-  );
-
   const canEditBatch = canAccess(PERMISSIONS.BATCH_EDIT_VIEW, [
     "admin",
     "PA",
@@ -203,6 +197,10 @@ function Batch() {
 
   const completeHandle = (event) => {
     event.preventDefault();
+    if (!canCompleteBatch) {
+      alert("You do not have permission to complete batches");
+      return;
+    }
     if (window.confirm("Complete this batch?")) {
       let api = table.current.dt();
       let rows = api.rows({ selected: true }).data().toArray();
@@ -535,7 +533,7 @@ function Batch() {
                   </Dropdown.Item>
                 )}
 
-                {canAccess(PERMISSIONS.FINISHING_CREATE) && (
+                {canCompleteBatch && (
                   <Dropdown.Item href="#" onClick={completeHandle}>
                     Complete
                   </Dropdown.Item>

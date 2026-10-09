@@ -13,8 +13,6 @@ const Role = ({
     isLoading,
     hasAnyRole,
     canAccess,
-    permissions,
-    roles,
   } = useAuth();
 
   if (isLoading) {

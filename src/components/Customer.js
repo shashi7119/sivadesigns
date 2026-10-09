@@ -160,7 +160,7 @@ function Customer() {
     setShipAddresses([{ ...createEmptyShipAddress(), is_default: true }]);
     setShow(true);
   };
-  const { user, isAuthenticated, permissions, canAccess } = useAuth();
+  const { user, isAuthenticated, canAccess } = useAuth();
 
   // Fetch data from backend API
   useEffect(() => {
