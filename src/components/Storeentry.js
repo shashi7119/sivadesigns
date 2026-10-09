@@ -79,6 +79,7 @@ function Storeentry() {
     user && fetchData();
   }, [fetch, user]);
 
+  
   if (!isAuthenticated) {
     return null;
     // navigate('/login');  // Avoid rendering profile if the user is not authenticated
