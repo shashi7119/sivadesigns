@@ -54,7 +54,7 @@ const PERMISSION_ALIASES = {
     "delivery.print",
     "delivery.view",
   ],
-  "delivery.export": ["delivery.export", "delivery.view"],
+  "delivery.export": ["delivery.export"],
   "delivery.delete": ["delivery.delete", "delivery.view"],
   "invoice.create.view": ["invoice.create.view", "invoice.create", "delivery.view"],
   "invoice.create": ["invoice.create", "invoice.create.view"],
@@ -304,8 +304,43 @@ export const AuthProvider = ({ children }) => {
     setAxiosAuthHeader("");
   }, []);
 
+  // Permissions are saved at login; reload them for the user's role so changes made
+  // in User Management apply on the next page load instead of the next login.
+  const refreshPermissions = useCallback(
+    async (storedAuth) => {
+      const role = storedAuth?.user?.role || storedAuth?.roles?.[0];
+      if (!storedAuth?.token || !role) {
+        return;
+      }
+
+      try {
+        const response = await axios.post(`${API_URL}/get_role_permissions`, { role });
+        const latestPermissions = response?.data?.data?.permissions;
+        if (!Array.isArray(latestPermissions)) {
+          return;
+        }
+
+        const nextPermissions = normalizePermissions(latestPermissions);
+        const currentPermissions = Array.isArray(storedAuth.permissions) ? storedAuth.permissions : [];
+        if (
+          nextPermissions.length === currentPermissions.length &&
+          nextPermissions.every((permission) => currentPermissions.includes(permission))
+        ) {
+          return;
+        }
+
+        const nextAuth = { ...storedAuth, permissions: nextPermissions };
+        applyAuthState(nextAuth);
+        persistAuth(nextAuth);
+      } catch (error) {
+        console.warn("Unable to refresh permissions, using the ones from login.", error);
+      }
+    },
+    [applyAuthState],
+  );
+
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = async ({ refresh = false } = {}) => {
       try {
         const storedAuth = JSON.parse(
           localStorage.getItem(AUTH_STORAGE_KEY) || "null",
@@ -322,6 +357,9 @@ export const AuthProvider = ({ children }) => {
             clearAuthState();
           } else {
             applyAuthState(storedAuth);
+            if (refresh) {
+              refreshPermissions(storedAuth);
+            }
           }
         } else if (legacyUser) {
           if (isUserDisabled(legacyUser)) {
@@ -345,7 +383,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    checkAuth();
+    checkAuth({ refresh: true });
 
     // Keep other open tabs in sync when this browser logs in or out.
     const handleStorageChange = (event) => {
@@ -388,7 +426,7 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener("storage", handleStorageChange);
       axios.interceptors.response.eject(interceptorId);
     };
-  }, [applyAuthState, clearAuthState]);
+  }, [applyAuthState, clearAuthState, refreshPermissions]);
 
   const login = async (email, password) => {
     const payload = { email, password };

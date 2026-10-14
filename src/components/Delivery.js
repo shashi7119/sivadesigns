@@ -1512,7 +1512,7 @@ const handleDeleteConfirm = async () => {
                 <Dropdown.Item href="#" onClick={PrintIndvHandle}>Print</Dropdown.Item>    
                 {user && (user.role === "admin") && 
                   <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
-                {user && ((user.role === "admin") || (user.role === "SP1") || (user.role === "delivery") || (user.role==="PA" )) && 
+                {user && canAccess(PERMISSIONS.DELIVERY_EXPORT, ["admin", "SP1", "delivery", "PA"]) && 
                   <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
                 {user && canAccess(PERMISSIONS.INVOICE_CREATE, ["admin"]) && 
                   <Dropdown.Item href="#" onClick={handleCreateInvoice}>Create Invoice</Dropdown.Item>}
