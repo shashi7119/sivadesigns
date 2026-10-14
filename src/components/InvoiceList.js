@@ -31,7 +31,8 @@ const normalizeInvoiceRow = (row) => {
       subtotal: row[4] || '',
       tax: row[5] || '',
       total: row[6] || '',
-      items: row[7] || []
+      items: Array.isArray(row[7]) ? row[7] : [],
+      batchid: row[9] || ''
     };
   }
   return {
@@ -43,7 +44,8 @@ const normalizeInvoiceRow = (row) => {
     subtotal: row.subtotal || row.subTotal || row.amount || '',
     tax: row.tax || row.totalTax || 0,
     total: row.total || row.totalAmount || '',
-    items: Array.isArray(row.items) ? row.items : []
+    items: Array.isArray(row.items) ? row.items : [],
+    batchid: row.batchid || row.batchId || ''
   };
 };
 
@@ -56,11 +58,30 @@ const escapeExcelValue = (value) => String(value ?? '')
 export default function InvoiceList() {
   const tableRef = useRef();
   const navigate = useNavigate();
-  const submittedFiltersRef = useRef({ fromDate: '', toDate: '' });
-  const [filters, setFilters] = useState({ fromDate: '', toDate: '' });
+  const submittedFiltersRef = useRef({ fromDate: '', toDate: '', customerid: '' });
+  const [filters, setFilters] = useState({ fromDate: '', toDate: '', customerid: '' });
+  const [customers, setCustomers] = useState([]);
 
 
   const { user , isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    const loadCustomers = async () => {
+      try {
+        const response = await fetch(`${API_URL}/getMasters?type=customer`);
+        const rows = await response.json();
+        setCustomers(
+          (Array.isArray(rows) ? rows : [])
+            .map((row) => ({ id: row[0], name: row[1] }))
+            .filter((customer) => customer.id && customer.name)
+            .sort((a, b) => a.name.localeCompare(b.name))
+        );
+      } catch (error) {
+        console.warn('Unable to load customers for the invoice filter', error);
+      }
+    };
+    loadCustomers();
+  }, []);
 
   useEffect(() => {
     const currentTable = tableRef.current;
@@ -118,7 +139,7 @@ export default function InvoiceList() {
   };
 
   const handleResetFilters = () => {
-    const clearedFilters = { fromDate: '', toDate: '' };
+    const clearedFilters = { fromDate: '', toDate: '', customerid: '' };
     setFilters(clearedFilters);
     submittedFiltersRef.current = clearedFilters;
     if (tableRef.current && tableRef.current.dt) {
@@ -131,9 +152,9 @@ export default function InvoiceList() {
 
     const api = tableRef.current.dt();
     const rows = api.rows({ search: 'applied' }).data().toArray().map(normalizeInvoiceRow);
-    const headers = ['Invoice No', 'DC No', 'Invoice Date', 'Customer', 'Subtotal', 'Tax', 'Total'];
+    const headers = ['Invoice No', 'DC No', 'Batch No', 'Invoice Date', 'Customer', 'Subtotal', 'Tax', 'Total'];
     const tableRows = rows.map((row) => [
-      row.invoiceNo, row.dcno, row.invoiceDate, row.customer, row.subtotal, row.tax, row.total
+      row.invoiceNo, row.dcno, row.batchid, row.invoiceDate, row.customer, row.subtotal, row.tax, row.total
     ]);
     const html = `<table><thead><tr>${headers.map((header) => `<th>${escapeExcelValue(header)}</th>`).join('')}</tr></thead><tbody>${
       tableRows.map((row) => `<tr>${row.map((value) => `<td>${escapeExcelValue(value)}</td>`).join('')}</tr>`).join('')
@@ -172,6 +193,19 @@ export default function InvoiceList() {
               <Form.Group>
                 <Form.Label>To Date</Form.Label>
                 <Form.Control type="date" value={filters.toDate} onChange={(event) => handleFilterChange('toDate', event.target.value)} />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Customer</Form.Label>
+                <Form.Select
+                  value={filters.customerid}
+                  onChange={(event) => handleFilterChange('customerid', event.target.value)}
+                  style={{ minWidth: '200px' }}
+                >
+                  <option value="">All</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>{customer.name}</option>
+                  ))}
+                </Form.Select>
               </Form.Group>
               <Button variant="primary" onClick={reloadInvoices}>Apply</Button>
               <Button variant="outline-secondary" onClick={handleResetFilters}>Reset</Button>
@@ -213,6 +247,7 @@ export default function InvoiceList() {
                   d.user = user?.user || '';
                   d.fromDate = submittedFiltersRef.current.fromDate || '';
                   d.toDate = submittedFiltersRef.current.toDate || '';
+                  d.customerid = submittedFiltersRef.current.customerid || '';
                   if (d.length === -1) {
                     d.length = 25;
                   }
@@ -225,9 +260,10 @@ export default function InvoiceList() {
               },
               columns: [
                 { title: 'Invoice No', data: 'invoiceNo' },
-                { title: 'DC NO', data: 'dcno' },
+                { title: 'DC NO', data: 'dcno', orderable: false },
+                { title: 'Batch No', data: 'batchid', orderable: false },
                 { title: 'Date', data: 'invoiceDate' },
-                { title: 'Customer', data: 'customer' },
+                { title: 'Customer', data: 'customer', orderable: false },
                 {
                   title: 'Subtotal',
                   data: 'subtotal'
