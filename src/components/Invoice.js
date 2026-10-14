@@ -317,7 +317,7 @@ function Invoice() {
       }
 
       try {
-        const resp = await axios.post(`${API_URL}/getCustomerDetails`, { customerId });
+        const resp = await axios.post(`${API_URL}/getCustomerDetails`, { customerId, customerName });
         if (resp && resp.data) {
           const details = resp.data;
           if (isActive) {
@@ -739,7 +739,7 @@ function Invoice() {
     };
     let currentShipToDetails = { ...fallbackShipToDetails };
     const customerId = invoiceDetails.customerid || stateCustomerId;
-    const searchParam = customerId ? { customerId } : (customerName ? { customerName } : {});
+    const searchParam = { customerId: customerId || '', customerName: customerName || '' };
     console.log('Customer ID:', customerId);
     console.log('Customer Name:', customerName);
     console.log('Search Param:', searchParam);
@@ -757,15 +757,17 @@ function Invoice() {
           setBuyerDetails(currentBuyerDetails);
 
           const apiShipTo = normalizeShipToAddress(details);
+          // The ship-to selected on this page (or carried from the DC) wins;
+          // the customer master only fills in fields it leaves blank.
           currentShipToDetails = {
-            name: apiShipTo.ship_name || fallbackShipToDetails.name,
-            address1: apiShipTo.ship_address1 || fallbackShipToDetails.address1,
-            address2: apiShipTo.ship_address2 || fallbackShipToDetails.address2,
-            city: apiShipTo.ship_city || fallbackShipToDetails.city,
-            pincode: apiShipTo.ship_pincode || fallbackShipToDetails.pincode,
-            state: apiShipTo.ship_state || fallbackShipToDetails.state,
-            gstin: apiShipTo.ship_gstin || fallbackShipToDetails.gstin,
-            contact: apiShipTo.ship_contact_number || fallbackShipToDetails.contact
+            name: fallbackShipToDetails.name || apiShipTo.ship_name,
+            address1: fallbackShipToDetails.address1 || apiShipTo.ship_address1,
+            address2: fallbackShipToDetails.address2 || apiShipTo.ship_address2,
+            city: fallbackShipToDetails.city || apiShipTo.ship_city,
+            pincode: fallbackShipToDetails.pincode || apiShipTo.ship_pincode,
+            state: fallbackShipToDetails.state || apiShipTo.ship_state,
+            gstin: fallbackShipToDetails.gstin || apiShipTo.ship_gstin,
+            contact: fallbackShipToDetails.contact || apiShipTo.ship_contact_number
           };
           console.log('Updated buyer details:', currentBuyerDetails);
           console.log('Updated ship-to details from API:', currentShipToDetails);
