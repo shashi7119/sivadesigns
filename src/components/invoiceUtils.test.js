@@ -3,6 +3,8 @@ import {
   getTaxBreakdown,
   getTaxStatusFromStateCode,
   hasShipToOverride,
+  allocateInvoiceQuantity,
+  getAvailableQuantity,
 } from "./invoiceUtils";
 
 describe("getTaxStatusFromStateCode", () => {
@@ -82,5 +84,37 @@ describe("getTaxStatusFromStateCode", () => {
         contact: "",
       }),
     ).toBe(false);
+  });
+});
+
+describe("getAvailableQuantity", () => {
+  it("subtracts the already invoiced quantity", () => {
+    expect(getAvailableQuantity(100, 40)).toBe(60);
+  });
+
+  it("never goes below zero", () => {
+    expect(getAvailableQuantity(10, 12)).toBe(0);
+  });
+});
+
+describe("allocateInvoiceQuantity", () => {
+  const sources = [
+    { dcNo: "DC1", availableQty: 50 },
+    { dcNo: "DC2", availableQty: 30 },
+  ];
+
+  it("fills the source DCs in order for a partial quantity", () => {
+    expect(allocateInvoiceQuantity(sources, 60)).toEqual([
+      { dcNo: "DC1", availableQty: 50, invoicedQty: 50, balanceQty: 0 },
+      { dcNo: "DC2", availableQty: 30, invoicedQty: 10, balanceQty: 20 },
+    ]);
+  });
+
+  it("invoices everything when the full quantity is used", () => {
+    expect(allocateInvoiceQuantity(sources, 80).map((s) => s.balanceQty)).toEqual([0, 0]);
+  });
+
+  it("handles decimal quantities without float drift", () => {
+    expect(allocateInvoiceQuantity([{ dcNo: "DC1", availableQty: 10.3 }], 10.1)[0].balanceQty).toBe(0.2);
   });
 });

@@ -70,6 +70,7 @@ export const PERMISSIONS = {
   BSTOCK_DELETE: "bstock.delete",
 
   INVOICE_CREATE_VIEW: "invoice.create.view",
+  INVOICE_CREATE: "invoice.create",
   INVOICE_LIST_VIEW: "invoice.list.view",
   INVOICE_PRINT: "invoice.print.view",
   INVOICE_EXPORT: "invoice.export",

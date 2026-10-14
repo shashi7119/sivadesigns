@@ -4,7 +4,7 @@ import { Container, Row, Col, Table, Form, Button, Spinner, Modal } from 'react-
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import '../css/Styles.css';
-import { getTaxBreakdown, getTaxStatusFromStateCode, hasShipToOverride as hasShipToOverrideValue } from './invoiceUtils';
+import { allocateInvoiceQuantity, getTaxBreakdown, getTaxStatusFromStateCode, hasShipToOverride as hasShipToOverrideValue } from './invoiceUtils';
 import logo from '../img/slogo.png'
 
 const getDisplayValue = (value, fallback = '-') => {
@@ -1232,8 +1232,15 @@ function Invoice() {
   };
 
   const saveInvoice = () => {
-    const normalizedItems = lineItems.map((item) => ({
+    const normalizedItems = lineItems.map(({ sources, ...item }) => ({
       ...item,
+      // Per-DC split of the invoiced quantity so the remaining balance stays invoiceable.
+      ...(Array.isArray(sources) && sources.length
+        ? {
+            dcAllocations: allocateInvoiceQuantity(sources, toNumber(item.quantity)),
+            isPartialInvoice: toNumber(item.quantity) < toNumber(item.availableQuantity)
+          }
+        : {}),
       date:
         item.date ||
         item.deliveryDate ||
@@ -1266,6 +1273,8 @@ function Invoice() {
       igst: invoiceTotals.igst,
       taxStatus: taxStatus.label,
       taxType: taxStatus.type,
+      // Tells updateInvoice to replace this invoice's DC allocations with the ones sent here.
+      trackDcAllocations: true,
       shipToAddress: shipToDetails,
       ship_name: shipToDetails.ship_name || '',
       ship_contact_number: shipToDetails.ship_contact_number || '',
@@ -1281,6 +1290,12 @@ function Invoice() {
   };
 
   const hasInvalidRate = lineItems.some((item) => toNumber(item.rate) <= 0);
+  const hasSourceQuantity = (item) => Array.isArray(item.sources) && item.sources.length > 0;
+  const exceedsAvailableQuantity = (item) =>
+    hasSourceQuantity(item) && toNumber(item.quantity) > toNumber(item.availableQuantity);
+  const hasInvalidQuantity = lineItems.some(
+    (item) => hasSourceQuantity(item) && (toNumber(item.quantity) <= 0 || exceedsAvailableQuantity(item))
+  );
   const hasInvalidUnit = lineItems.some((item) => {
     const unit = (item.unit || '').toString().trim().toUpperCase();
     return unit === 'KG';
@@ -1296,11 +1311,19 @@ function Invoice() {
       alert('Please check the invoice parameters. Unit KG is not allowed.');
       return;
     }
+    if (hasInvalidQuantity) {
+      alert('Quantity must be greater than 0 and cannot exceed the quantity available from the delivery challan.');
+      return;
+    }
     const invoice = saveInvoice();
     const apiPath = isEditMode ? 'updateInvoice' : 'addInvoice';
     setIsSaving(true);
     try {
       const response = await axios.post(`${API_URL}/${apiPath}`, invoice);
+      if (response?.data?.status === 'error') {
+        alert(response.data.message || 'Invoice could not be saved.');
+        return;
+      }
       if (response && response.data) {
         alert(isEditMode ? 'Invoice updated successfully.' : 'Invoice created successfully.');
         setHasSavedInvoice(true);
@@ -1552,8 +1575,14 @@ function Invoice() {
                           <Form.Control
                             size="sm"
                             value={item.quantity}
+                            isInvalid={exceedsAvailableQuantity(item)}
                             onChange={(e) => updateLineItemField(index, 'quantity', e.target.value)}
                           />
+                          {hasSourceQuantity(item) && (
+                            <Form.Text muted style={{ whiteSpace: 'nowrap' }}>
+                              Available: {toNumber(item.availableQuantity)}
+                            </Form.Text>
+                          )}
                         </td>
                         <td>
                           {item.isManual ? (

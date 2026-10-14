@@ -12,6 +12,8 @@ import Responsive from 'datatables.net-responsive-dt';
 import DT from 'datatables.net-dt';
 import logo from '../img/slogo.png'
 import $ from 'jquery';
+import { getAvailableQuantity } from './invoiceUtils';
+import { PERMISSIONS } from '../constants/permissions';
 //import PrintDataTable from '../components/PrintDataTable';
 
 
@@ -23,7 +25,7 @@ DataTable.use(FixedHeader); DataTable.use(DT);
 function Delivery() {
   const table = useRef();
   const submittedFiltersRef = useRef({});
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, canAccess } = useAuth();
   const navigate = useNavigate();
 
   // Filter state
@@ -371,6 +373,26 @@ const [selectedDC, setSelectedDC] = useState(null);
       : normalizeStatus(row && (row['data-inv-status'] || row.inv_status || row.invStatus || row.invoiceStatus));
 
     return nodeStatus === 'y' || nodeChildStatus === 'y' || rowStatus === 'y' || hasStatusYInHtml(JSON.stringify(row || {}));
+  };
+
+  // Quantity already billed on earlier (partial) invoices, sent by the API as data-inv-qty.
+  const getRowInvoicedQty = (row, node) => {
+    const fromRow = !Array.isArray(row) && row ? (row['data-inv-qty'] ?? row.inv_qty ?? row.invQty) : null;
+    let fromNode = null;
+    if (node) {
+      fromNode = node.getAttribute ? node.getAttribute('data-inv-qty') : null;
+      if (fromNode === null && node.querySelector) {
+        const child = node.querySelector('[data-inv-qty]');
+        fromNode = child ? child.getAttribute('data-inv-qty') : null;
+      }
+    }
+    let fromHtml = null;
+    if (Array.isArray(row)) {
+      const match = row.join(' ').match(/data-inv-qty\s*=\s*["']?([\d.]+)/i);
+      fromHtml = match ? match[1] : null;
+    }
+    const value = Number(fromRow ?? fromNode ?? fromHtml ?? 0);
+    return Number.isFinite(value) ? value : 0;
   };
   const handleClose = () => {
     setShow(false);
@@ -1003,6 +1025,23 @@ const handleCreateInvoice = async (event) => {
     }
   };
 
+  const fullyInvoicedDcNos = Array.from(
+    new Set(
+      selectedRows
+        .filter((row, index) => {
+          const node = selectedNodes[index] || null;
+          const { quantity } = getQuantityAndUnit(row, getInvoiceParam(row, node));
+          return getAvailableQuantity(quantity, getRowInvoicedQty(row, node)) <= 0;
+        })
+        .map((row) => stripHtml(row[1]))
+        .filter(Boolean)
+    )
+  );
+  if (fullyInvoicedDcNos.length) {
+    alert(`DC No ${fullyInvoicedDcNos.join(', ')} has no remaining quantity to invoice.`);
+    return;
+  }
+
   const getWidthByInvoiceParam = (row, invParam) => {
     switch (invParam) {
       case 'gw':
@@ -1049,15 +1088,26 @@ const handleCreateInvoice = async (event) => {
     const fabric = (row[8] || '').toString().trim();
     const node = selectedNodes[index] || null;
     const invParam = getInvoiceParam(row, node);
-    const { quantity, unit } = getQuantityAndUnit(row, invParam);
+    const { quantity: deliveredQty, unit } = getQuantityAndUnit(row, invParam);
+    const alreadyInvoicedQty = getRowInvoicedQty(row, node);
+    const quantity = getAvailableQuantity(deliveredQty, alreadyInvoicedQty);
     const width = getWidthByInvoiceParam(row, invParam);
     const dcNo = (row[1] || '').toString().trim();
     const vchno = extractVehicleNo(row);
+    const source = {
+      dcNo,
+      batchNo: stripHtml(row[3]),
+      deliveredQty,
+      alreadyInvoicedQty,
+      availableQty: quantity
+    };
     const key = `${process.toString().trim().toLowerCase()}||${color.toLowerCase()}||${unit}||${construction.toLowerCase()}||${width.toLowerCase()}||${fabric.toLowerCase()}`;
     
     const existing = acc.find((item) => item.key === key);
     if (existing) {
       existing.quantity = Number(existing.quantity || 0) + quantity;
+      existing.availableQuantity = existing.quantity;
+      existing.sources.push(source);
       if (dcNo && !existing.dcNo.split(',').map((v) => v.trim()).includes(dcNo)) {
         existing.dcNo = existing.dcNo ? `${existing.dcNo}, ${dcNo}` : dcNo;
       }
@@ -1088,6 +1138,8 @@ const handleCreateInvoice = async (event) => {
       description: buildInvoiceDescription(process, quantity, unit, construction, width, fabric),
       color,
       quantity,
+      availableQuantity: quantity,
+      sources: [source],
       unit,
       rate: '',
       tax: 5,
@@ -1462,7 +1514,7 @@ const handleDeleteConfirm = async () => {
                   <Dropdown.Item href="#" onClick={deleteHandle}>Delete</Dropdown.Item>}
                 {user && ((user.role === "admin") || (user.role === "SP1") || (user.role === "delivery") || (user.role==="PA" )) && 
                   <Dropdown.Item href="#" onClick={ExportHandle}>Export</Dropdown.Item>}
-                {user && ((user.role === "admin")) && 
+                {user && canAccess(PERMISSIONS.INVOICE_CREATE, ["admin"]) && 
                   <Dropdown.Item href="#" onClick={handleCreateInvoice}>Create Invoice</Dropdown.Item>}
                 {user && ((user.role === "admin") || (user.role === "delivery") || (user.role==="PA" )) && 
                   <Dropdown.Item href="#" onClick={InvExport}>Invoice Export</Dropdown.Item>}
@@ -1675,9 +1727,17 @@ const handleDeleteConfirm = async () => {
                   ? data.some((value) => hasStatusYInHtml(value))
                   : hasStatusYInHtml(JSON.stringify(data || {}));
 
+                const hasStatusPInHtml = (value) => /data-inv-status\s*=\s*["']?p["']?/i.test((value || '').toString());
+                const dataHasStatusP = Array.isArray(data)
+                  ? data.some((value) => hasStatusPInHtml(value))
+                  : hasStatusPInHtml(JSON.stringify(data || {}));
+
                 if (rowStatus === 'y' || cellStatus === 'y' || dataHasStatusY) {
                   row.style.backgroundColor = '#d1fae5';
                   
+                } else if (rowStatus === 'p' || cellStatus === 'p' || dataHasStatusP) {
+                  // Partially invoiced: remaining quantity can still be invoiced.
+                  row.style.backgroundColor = '#fef3c7';
                 }
               },
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',

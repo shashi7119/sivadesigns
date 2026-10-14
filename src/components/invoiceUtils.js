@@ -89,3 +89,28 @@ export function hasShipToOverride(shipTo = {}) {
 
   return values.some((value) => (value ?? "").toString().trim() !== "");
 }
+
+const roundQuantity = (value) => Math.round((Number(value) || 0) * 1000) / 1000;
+
+// Remaining quantity of a delivery row that can still be invoiced.
+export function getAvailableQuantity(deliveredQty, alreadyInvoicedQty) {
+  return Math.max(roundQuantity(Number(deliveredQty || 0) - Number(alreadyInvoicedQty || 0)), 0);
+}
+
+// Spread an invoice line's quantity across its source DC rows in order, so a
+// partial invoice records how much of each DC was billed and what is left.
+export function allocateInvoiceQuantity(sources = [], quantity = 0) {
+  let remaining = Math.max(Number(quantity) || 0, 0);
+
+  return sources.map((source) => {
+    const availableQty = Math.max(Number(source?.availableQty) || 0, 0);
+    const invoicedQty = roundQuantity(Math.min(availableQty, remaining));
+    remaining = roundQuantity(remaining - invoicedQty);
+
+    return {
+      ...source,
+      invoicedQty,
+      balanceQty: roundQuantity(availableQty - invoicedQty),
+    };
+  });
+}
