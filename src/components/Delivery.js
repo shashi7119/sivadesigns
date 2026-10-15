@@ -413,6 +413,11 @@ const [selectedDC, setSelectedDC] = useState(null);
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (!(formData.vchno || '').toString().trim()) {
+      alert('Enter the vehicle number');
+      return;
+    }
+
     const selectedPrintShipTo =
       printShipToChoices[selectedPrintShipToIndex] ||
       printShipToChoices.find((item) => item.is_default) ||
@@ -430,7 +435,7 @@ const [selectedDC, setSelectedDC] = useState(null);
       .then(function (response) {
 
         setShow(false);
-        setFormData('');
+        setFormData({ dcno: '', vchno: '' });
         let api = table.current.dt();
         let selectedRows = api.rows({ selected: true }).data();
         DCPrint(selectedRows);
@@ -460,7 +465,11 @@ const [selectedDC, setSelectedDC] = useState(null);
     } else {
 
       const selectedRowsArray = selectedRows.toArray ? selectedRows.toArray() : Array.from(selectedRows);
-      const customerName = (selectedRowsArray[0]?.customer || selectedRowsArray[0]?.name || selectedRowsArray[0]?.[7] || '').toString().trim();
+      const rawCustomer = (selectedRowsArray[0]?.customer || selectedRowsArray[0]?.name || selectedRowsArray[0]?.[7] || '').toString();
+      // The Customer cell is a link (<a href="/batchedit/..">NAME</a>), so read its text.
+      const customerCell = document.createElement('div');
+      customerCell.innerHTML = rawCustomer;
+      const customerName = (customerCell.textContent || '').trim();
       const matchedCustomer = options.customers.find(
         (customer) => (customer.name || '').toString().trim() === customerName
       );
@@ -1827,7 +1836,18 @@ const handleDeleteConfirm = async () => {
                   />
                 </Form.Group>
 
-                {printShipToChoices.length > 1 && (
+                {printShipToChoices.length === 0 && (
+                  <Form.Group className="col-12 mb-3">
+                    <Form.Label className="block text-sm font-medium text-gray-700">
+                      Ship-To Address
+                    </Form.Label>
+                    <Form.Text muted className="d-block">
+                      No ship-to address is saved for this customer in the customer list. The customer's own address will be printed.
+                    </Form.Text>
+                  </Form.Group>
+                )}
+
+                {printShipToChoices.length > 0 && (
                   <Form.Group className="col-12 mb-3">
                     <Form.Label className="block text-sm font-medium text-gray-700">
                       Ship-To Address
@@ -1846,6 +1866,23 @@ const handleDeleteConfirm = async () => {
                         </option>
                       ))}
                     </Form.Select>
+                    {printShipToChoices[selectedPrintShipToIndex] && (
+                      <div className="mt-2 p-2 border rounded bg-light small">
+                        <div><strong>{printShipToChoices[selectedPrintShipToIndex].ship_name}</strong></div>
+                        <div>
+                          {[printShipToChoices[selectedPrintShipToIndex].ship_address1, printShipToChoices[selectedPrintShipToIndex].ship_address2].filter(Boolean).join(', ')}
+                        </div>
+                        <div>
+                          {[printShipToChoices[selectedPrintShipToIndex].ship_city, printShipToChoices[selectedPrintShipToIndex].ship_state, printShipToChoices[selectedPrintShipToIndex].ship_pincode].filter(Boolean).join(', ')}
+                        </div>
+                        {printShipToChoices[selectedPrintShipToIndex].ship_gstin && (
+                          <div>GSTIN: {printShipToChoices[selectedPrintShipToIndex].ship_gstin}</div>
+                        )}
+                        {printShipToChoices[selectedPrintShipToIndex].ship_contact_number && (
+                          <div>Contact: {printShipToChoices[selectedPrintShipToIndex].ship_contact_number}</div>
+                        )}
+                      </div>
+                    )}
                   </Form.Group>
                 )}
 
