@@ -8,7 +8,7 @@ import "../css/Styles.css";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-const API_URL = "http://localhost/siva/api";
+const API_URL = "https://www.wynstarcreations.com/seyal/api";
 
 function Edit() {
   let { planid } = useParams();
