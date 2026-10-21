@@ -59,6 +59,12 @@ export const SCREEN_CATALOG = [
     permission: PERMISSIONS.INVOICE_LIST_VIEW,
   },
   {
+    key: "return",
+    label: "Return",
+    path: "/return",
+    permission: PERMISSIONS.RETURN_VIEW,
+  },
+  {
     key: "purchase-order",
     label: "Purchase Order",
     path: "/polist",
@@ -267,7 +273,11 @@ export const buildDefaultAccessMatrix = () => {
 
 const ROLE_ACCESS_PRESETS = {
   admin: "*",
-  delivery: { delivery: ["view", "print", "export"], invoice: ["view"] },
+  delivery: {
+    delivery: ["view", "print", "export"],
+    invoice: ["view"],
+    return: ["view"],
+  },
   finishing: { finishing: ["view"], sfinishing: ["view"], batch: ["view"] },
   batch: { planning: ["view"], batch: ["view"] },
   store: { storeentry: ["view"] },
@@ -281,6 +291,7 @@ const ROLE_ACCESS_PRESETS = {
     storeentry: ["view"],
     delivery: ["view"],
     invoice: ["view"],
+    return: ["view"],
     "purchase-order": ["view"],
     reports: ["view"],
     machine: ["view"],
@@ -309,6 +320,7 @@ const ROLE_ACCESS_PRESETS = {
     batch: ["view"],
     finishing: ["view"],
     delivery: ["view"],
+    return: ["view"],
     greyentry: ["view"],
   },
   SP2: {
@@ -317,7 +329,12 @@ const ROLE_ACCESS_PRESETS = {
     labentry: ["view"],
     pstock: ["view"],
   },
-  SP3: { batch: ["view"], delivery: ["view"], greyentry: ["view"] },
+  SP3: {
+    batch: ["view"],
+    delivery: ["view"],
+    return: ["view"],
+    greyentry: ["view"],
+  },
 };
 
 const buildRoleAccessMatrix = (role) => {
