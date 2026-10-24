@@ -171,7 +171,8 @@ function Invoice() {
     totalDiscount: invoiceState.totalDiscount || 0,
     financialYear: invoiceState.financialYear || '',
     customer: invoiceState.customer || '',
-    customerid: stateCustomerId || ''
+    customerid: stateCustomerId || '',
+    createdAt: invoiceState.createdAt || ''
   });
 
   // Buyer Details, QR Code, IRN, ACK State
@@ -224,7 +225,8 @@ function Invoice() {
               totalDiscount: invoiceData.totalDiscount || invoiceState.totalDiscount || prev.totalDiscount,
               financialYear: invoiceData.financialYear || prev.financialYear,
               customer: invoiceData.customer || invoiceState.customer || prev.customer,
-              customerid: fetchedCustomerId || stateCustomerId || prev.customerid
+              customerid: fetchedCustomerId || stateCustomerId || prev.customerid,
+              createdAt: invoiceData.created_at || invoiceData.createdAt || prev.createdAt
             }));
             setLineItems(
               (Array.isArray(invoiceData.items) ? invoiceData.items : []).map((item) => ({
@@ -1344,15 +1346,9 @@ function Invoice() {
   const handleCancelInvoice = async () => {
     if (!isEditMode) return;
 
-    const invoiceDateValue = (invoiceDetails.invoiceDate || '').toString().trim();
-    const parsedInvoiceDate = invoiceDateValue ? new Date(invoiceDateValue) : null;
-    if (parsedInvoiceDate && !Number.isNaN(parsedInvoiceDate.getTime())) {
-      const cancelWindowMs = 24 * 60 * 60 * 1000;
-      const elapsedMs = Date.now() - parsedInvoiceDate.getTime();
-      if (elapsedMs > cancelWindowMs) {
-        alert('Invoice cancellation is allowed only within 24 hours from the invoice date.');
-        return;
-      }
+    if (!canCancelInvoice) {
+      alert('Invoice cancellation is allowed only within 24 hours from invoice creation.');
+      return;
     }
 
     const invoiceNo = (invoiceDetails.invoiceNo || '').toString().trim();
@@ -1391,16 +1387,19 @@ function Invoice() {
     navigate('/invoices');
   };
 
+  // Cancellation window is 24 hours from invoice creation (created_at); falls back to invoice date if not provided
   const canCancelInvoice = (() => {
     if (!isEditMode) return false;
-    const invoiceDateValue = (invoiceDetails.invoiceDate || '').toString().trim();
-    if (!invoiceDateValue) return false;
+    const createdValue = (invoiceDetails.createdAt || invoiceDetails.invoiceDate || '').toString().trim();
+    if (!createdValue) return false;
 
-    const parsedInvoiceDate = new Date(invoiceDateValue);
-    if (Number.isNaN(parsedInvoiceDate.getTime())) return false;
+    // "YYYY-MM-DD HH:mm:ss" -> "YYYY-MM-DDTHH:mm:ss" so it parses as local time in all browsers
+    const normalizedCreatedAt = /^\d{4}-\d{2}-\d{2}$/.test(createdValue) ? `${createdValue}T00:00:00` : createdValue.replace(' ', 'T');
+    const parsedCreatedAt = new Date(normalizedCreatedAt);
+    if (Number.isNaN(parsedCreatedAt.getTime())) return false;
 
     const cancelWindowMs = 24 * 60 * 60 * 1000;
-    return Date.now() - parsedInvoiceDate.getTime() <= cancelWindowMs;
+    return Date.now() - parsedCreatedAt.getTime() <= cancelWindowMs;
   })();
 
   const pageTitle = isEditMode ? 'Edit Invoice' : 'Create Invoice';
@@ -1722,7 +1721,7 @@ function Invoice() {
                         className="me-2"
                         onClick={handleCancelInvoice}
                         disabled={isCancelling || isSaving || !canCancelInvoice}
-                        title={canCancelInvoice ? 'Cancel Invoice' : 'Cancellation allowed only within 24 hours from invoice date'}
+                        title={canCancelInvoice ? 'Cancel Invoice' : 'Cancellation allowed only within 24 hours from invoice creation'}
                       >
                         {isCancelling ? 'Cancelling...' : 'Cancel Invoice'}
                       </Button>
