@@ -27,8 +27,27 @@ DataTable.use(Responsive);
 DataTable.use(Select);
 DataTable.use(FixedHeader);
 DataTable.use(DT);
+const emptyFilters = {
+  fromDate: "",
+  toDate: "",
+  customer: "",
+  machine: "",
+  fabric: "",
+  shade: "",
+  construction: "",
+};
+
 function Planning() {
   const table = useRef();
+  const submittedFiltersRef = useRef(emptyFilters);
+  const [filters, setFilters] = useState(emptyFilters);
+  const [options, setOptions] = useState({
+    customers: [],
+    machines: [],
+    fabrics: [],
+    shades: [],
+    constructions: [],
+  });
   const [show, setShow] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState([
@@ -82,6 +101,90 @@ function Planning() {
   const canDeletePlanning = canPlanningAction(PERMISSIONS.PLANNING_DELETE, [
     "admin",
   ]);
+
+  const toOptions = (rows) =>
+    (rows || []).map((row) => ({ id: row[0], name: row[1] }));
+
+  // Fetch customer, machine, fabric and construction masters
+  const fetchMastersData = async () => {
+    try {
+      const [customers, machines, fabrics, constructions] = await Promise.all([
+        fetch(`${API_URL}/getMasters?type=customer`).then((r) => r.json()),
+        fetch(`${API_URL}/getMasters?type=machine`).then((r) => r.json()),
+        fetch(`${API_URL}/getMasters?type=fabric`).then((r) => r.json()),
+        fetch(`${API_URL}/getMasters?type=construction`).then((r) => r.json()),
+      ]);
+
+      setOptions((o) => ({
+        ...o,
+        customers: toOptions(customers),
+        machines: toOptions(machines),
+        fabrics: toOptions(fabrics),
+        constructions: toOptions(constructions),
+      }));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchMastersData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch fabric, shade, construction when customer changes
+  useEffect(() => {
+    if (!filters.customer) {
+      setOptions((o) => ({ ...o, shades: [] }));
+      return;
+    }
+    const fetchDependent = async () => {
+      try {
+        const params = `customer=${encodeURIComponent(filters.customer)}&fromDate=${encodeURIComponent(filters.fromDate)}&toDate=${encodeURIComponent(filters.toDate)}`;
+        const [fabrics, shades, constructions] = await Promise.all([
+          fetch(`${API_URL}/getFilterMasters?type=fabric&${params}`).then((r) => r.json()),
+          fetch(`${API_URL}/getFilterMasters?type=shade&${params}`).then((r) => r.json()),
+          fetch(`${API_URL}/getFilterMasters?type=construction&${params}`).then((r) => r.json()),
+        ]);
+        setOptions((o) => ({
+          ...o,
+          fabrics: toOptions(fabrics),
+          shades: toOptions(shades),
+          constructions: toOptions(constructions),
+        }));
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchDependent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.customer]);
+
+  // Handle filter change (do not reload table)
+  const handleFilterChange = (name, value) => {
+    if (name === "customer") {
+      setFilters((f) => ({ ...f, fabric: "", shade: "", construction: "", customer: value }));
+      if (!value) fetchMastersData();
+    } else {
+      setFilters((f) => ({ ...f, [name]: value }));
+    }
+  };
+
+  const handleSubmitFilters = () => {
+    submittedFiltersRef.current = filters;
+    if (table.current && table.current.dt) {
+      table.current.dt().ajax.reload();
+    }
+  };
+
+  const handleResetFilters = () => {
+    setFilters(emptyFilters);
+    submittedFiltersRef.current = emptyFilters;
+    fetchMastersData();
+    if (table.current && table.current.dt) {
+      table.current.dt().ajax.reload();
+    }
+  };
 
   // Reload DataTable when tab becomes active (user returns after idle)
   useEffect(() => {
@@ -440,8 +543,66 @@ function Planning() {
             <h1 className="text-2xl font-bold text-gray-800">Planning</h1>
             <p className="text-gray-600">Welcome, {user.user}!</p>
           </div>
-         
+
         </Row>
+
+        {/* Filter Row */}
+        <div className="row mb-3">
+          <div className="col-md-2">
+            <Form.Group>
+              <Form.Label>From Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={filters.fromDate}
+                onChange={(e) => handleFilterChange("fromDate", e.target.value)}
+              />
+            </Form.Group>
+          </div>
+          <div className="col-md-2">
+            <Form.Group>
+              <Form.Label>To Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={filters.toDate}
+                onChange={(e) => handleFilterChange("toDate", e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        </div>
+        <div className="row mb-3">
+          {[
+            ["customer", "Customer", options.customers],
+            ["machine", "Machine", options.machines],
+            ["fabric", "Fabric", options.fabrics],
+            ["shade", "Shade", options.shades],
+            ["construction", "Construction", options.constructions],
+          ].map(([name, label, opts]) => (
+            <div className="col-md-2" key={name}>
+              <Form.Group>
+                <Form.Label>{label}</Form.Label>
+                <Form.Select
+                  value={filters[name]}
+                  onChange={(e) => handleFilterChange(name, e.target.value)}
+                >
+                  <option value="">All</option>
+                  {opts.map((opt) => (
+                    <option key={opt.id || opt.name} value={opt.name}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </div>
+          ))}
+        </div>
+        <div className="col-md-2 mb-5">
+          <button className="btn btn-primary mr-3" onClick={handleSubmitFilters}>
+            Submit
+          </button>
+          <button className="btn btn-secondary mr-3" onClick={handleResetFilters}>
+            Reset
+          </button>
+        </div>
 
         <div className="flex justify-end mb-4">
           <div className="col-2 col-sm-2">
@@ -522,6 +683,15 @@ function Planning() {
                 data: function (d) {
                   d.searchcol = $(".tsearch").val();
                   d.user = user.user; // send email
+                  // Use submitted filters from ref
+                  const f = submittedFiltersRef.current;
+                  d.fromDate = f.fromDate || "";
+                  d.toDate = f.toDate || "";
+                  d.customer = f.customer || "";
+                  d.machine = f.machine || "";
+                  d.fabric = f.fabric || "";
+                  d.shade = f.shade || "";
+                  d.construction = f.construction || "";
                   if (d.length === -1) {
                     d.length = 25; // Set default page length
                   }
