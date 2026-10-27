@@ -93,11 +93,12 @@ function Batch() {
   // Fetch customer, machine, fabric and construction masters
   const fetchMastersData = async () => {
     try {
-      const [customers, machines, fabrics, constructions] = await Promise.all([
+      const [customers, machines, fabrics, constructions, shades] = await Promise.all([
         fetch(`${API_URL}/getMasters?type=customer`).then((r) => r.json()),
         fetch(`${API_URL}/getMasters?type=machine`).then((r) => r.json()),
         fetch(`${API_URL}/getMasters?type=fabric`).then((r) => r.json()),
         fetch(`${API_URL}/getMasters?type=construction`).then((r) => r.json()),
+        fetch(`${API_URL}/getFilterMasters?type=shade`).then((r) => r.json()),
       ]);
 
       setOptions((o) => ({
@@ -105,6 +106,7 @@ function Batch() {
         customers: toOptions(customers),
         machines: toOptions(machines),
         fabrics: toOptions(fabrics),
+        shades: toOptions(shades),
         constructions: toOptions(constructions),
       }));
     } catch (e) {
@@ -120,7 +122,6 @@ function Batch() {
   // Fetch fabric, shade, construction when customer changes
   useEffect(() => {
     if (!filters.customer) {
-      setOptions((o) => ({ ...o, shades: [] }));
       return;
     }
     const fetchDependent = async () => {

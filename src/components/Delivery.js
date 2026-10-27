@@ -215,38 +215,15 @@ function Delivery() {
 
 
   
-    // Fetch customer and machine on mount
-    React.useEffect(() => {
-      const fetchMasters = async () => {
-        try {
-          const [customers, machines, fabrics, constructions] = await Promise.all([
-            fetch(`${API_URL}/getMasters?type=customer`).then(r => r.json()),
-            fetch(`${API_URL}/getMasters?type=machine`).then(r => r.json()),
-            fetch(`${API_URL}/getMasters?type=fabric`).then(r => r.json()),
-            fetch(`${API_URL}/getMasters?type=construction`).then(r => r.json())
-          ]);
-
-          setOptions(o => ({
-            ...o,
-            customers: customers.map(mapCustomerMasterRow),
-            machines: machines.map(row => ({ id: row[0], name: row[1] })),
-            fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),
-            constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
-          }));
-       
-        } catch (e) { console.error(e); }
-      };
-      fetchMasters();
-    }, []);
-  
-    // Function to fetch masters (reusable)
+    // Function to fetch masters (reusable) - all shades are listed by default
     const fetchMastersData = async () => {
       try {
-        const [customers, machines,fabrics,constructions] = await Promise.all([
+        const [customers, machines, fabrics, constructions, shades] = await Promise.all([
           fetch(`${API_URL}/getMasters?type=customer`).then(r => r.json()),
           fetch(`${API_URL}/getMasters?type=machine`).then(r => r.json()),
           fetch(`${API_URL}/getMasters?type=fabric`).then(r => r.json()),
-          fetch(`${API_URL}/getMasters?type=construction`).then(r => r.json())
+          fetch(`${API_URL}/getMasters?type=construction`).then(r => r.json()),
+          fetch(`${API_URL}/getFilterMasters?type=shade`).then(r => r.json())
         ]);
   
          setOptions(o => ({
@@ -254,16 +231,22 @@ function Delivery() {
     customers: customers.map(mapCustomerMasterRow),
     machines: machines.map(row => ({ id: row[0], name: row[1] })),
     fabrics: fabrics.map(row => ({ id: row[0], name: row[1] })),          
+    shades: (shades || []).map(row => ({ id: row[0], name: row[1] })),
     constructions: constructions.map(row => ({ id: row[0], name: row[1] }))
   }));
        
       } catch (e) { console.error(e); }
     };
+
+    // Fetch customer, machine, fabric, shade and construction on mount
+    React.useEffect(() => {
+      fetchMastersData();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
   
     // Fetch fabric, shade, construction when customer or date changes
     React.useEffect(() => {
       if (!filters.customer) {
-        setOptions(o => ({ ...o, fabrics: [], shades: [], constructions: [] }));
         setFilters(f => ({ ...f, fabric: '', shade: '', construction: '' }));
         return;
       }
@@ -292,6 +275,8 @@ function Delivery() {
       setFilters(f => ({ ...f, [name]: value }));
       if (name === 'customer') {
         setFilters(f => ({ ...f, fabric: '', shade: '', construction: '', customer: value }));
+        // Customer cleared - show all fabrics, shades and constructions again
+        if (!value) fetchMastersData();
       }
   
       
