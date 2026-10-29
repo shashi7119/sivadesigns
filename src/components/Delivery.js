@@ -1566,6 +1566,7 @@ const handleDeleteConfirm = async () => {
                 }
               },
               pageLength: 25,
+              lengthMenu: [10, 25, 50, 100, 200],
               columns: [
                 { data: "0" }, // Date
                 { data: "1" ,

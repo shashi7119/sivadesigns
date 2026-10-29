@@ -260,6 +260,7 @@ function Reports() {
                 <th >Batch</th>
                 <th >Finishing</th>
                 <th >Delivery</th>
+                <th >Invoice</th>
             </tr>
           </thead>
           <tbody>
@@ -282,7 +283,8 @@ function Reports() {
                     <td>${row[12]}</td>
                     <td>${row[13]}</td>
                     <td>${row[14]}</td>
-                    <td>${row[15]}</td>                    
+                    <td>${row[15]}</td>
+                    <td>${row[16]}</td>
                   </tr>
                 `,
               )
@@ -558,6 +560,7 @@ function Reports() {
                 { data: "13" },
                 { data: "14" },
                 { data: "15" },
+                { data: "16", orderable: false }, // Invoice numbers per DC
               ],
               // Add custom styling
               dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
@@ -596,6 +599,7 @@ function Reports() {
                 <th className="px-6 py-3">Batch</th>
                 <th className="px-6 py-3">Finishing</th>
                 <th className="px-6 py-3">Delivery</th>
+                <th className="px-6 py-3">Invoice</th>
               </tr>
             </thead>
           </DataTable>
