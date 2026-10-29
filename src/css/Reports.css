@@ -1,0 +1,226 @@
+/* Reports page - planning to invoice tracker */
+
+.rp-search-card,
+.rp-filter-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.rp-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.rp-search-row .rp-search-by {
+  max-width: 170px;
+}
+
+.rp-search-row .rp-search-input {
+  flex: 1 1 260px;
+  font-size: 1.05rem;
+  padding: 10px 14px;
+}
+
+.rp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.rp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.rp-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rp-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rp-dot.done { background: #16a34a; }
+.rp-dot.partial { background: #f59e0b; }
+.rp-dot.pending { background: #d1d5db; }
+
+/* Table cells */
+.rp-table td {
+  vertical-align: top;
+}
+
+.rp-table tbody td:not(:first-child) {
+  cursor: pointer;
+}
+
+.rp-inward {
+  font-weight: 700;
+  color: #1d4ed8;
+  font-size: 0.95rem;
+}
+
+.rp-main {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.rp-sub {
+  font-size: 0.78rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* Progress tracker in the table row */
+.rp-steps {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 300px;
+}
+
+.rp-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  font-size: 0.68rem;
+  color: #6b7280;
+  position: relative;
+}
+
+.rp-step .rp-step-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: #d1d5db;
+  z-index: 1;
+}
+
+.rp-step.done .rp-step-icon { background: #16a34a; }
+.rp-step.partial .rp-step-icon { background: #f59e0b; }
+.rp-step.done { color: #166534; }
+.rp-step.partial { color: #92400e; }
+
+/* connector line between steps */
+.rp-step:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: #e5e7eb;
+}
+
+.rp-step.done:not(:first-child)::before,
+.rp-step.partial:not(:first-child)::before {
+  background: #86efac;
+}
+
+.rp-now {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #374151;
+}
+
+.rp-toggle {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+tr.dt-hasChild .rp-toggle {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+/* Expanded detail panel */
+.rp-detail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  padding: 12px 6px;
+  background: #f9fafb;
+}
+
+.rp-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-top: 4px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+}
+
+.rp-card.done { border-top-color: #16a34a; }
+.rp-card.partial { border-top-color: #f59e0b; }
+
+.rp-card h6 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.rp-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.rp-badge.done { background: #dcfce7; color: #166534; }
+.rp-badge.partial { background: #fef3c7; color: #92400e; }
+
+.rp-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.rp-kv span:first-child { color: #6b7280; }
+.rp-kv span:last-child { font-weight: 600; color: #1f2937; text-align: right; }
+
+.rp-item {
+  border-top: 1px dashed #e5e7eb;
+  padding: 6px 0;
+}
+
+.rp-item:first-of-type { border-top: none; padding-top: 0; }
+
+.rp-empty {
+  color: #9ca3af;
+  font-style: italic;
+}

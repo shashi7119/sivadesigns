@@ -1,52 +1,222 @@
 import React, { useState, useRef } from "react";
-import { Container, Row, Form, Dropdown } from "react-bootstrap";
+import { Container, Row, Form, Button } from "react-bootstrap";
 import { useAuth } from "../context/AuthContext";
 import "../css/Styles.css";
 import "../css/DataTable.css";
+import "../css/Reports.css";
 import DataTable from "datatables.net-react";
 import Select from "datatables.net-select-dt";
 import FixedHeader from "datatables.net-fixedcolumns-dt";
 import Responsive from "datatables.net-responsive-dt";
 import DT from "datatables.net-dt";
-import $ from "jquery";
 
 const API_URL = "https://www.wynstarcreations.com/seyal/api";
-
 
 DataTable.use(Responsive);
 DataTable.use(Select);
 DataTable.use(FixedHeader);
 DataTable.use(DT);
+
+const emptyFilters = {
+  fromDate: "",
+  toDate: "",
+  customer: "",
+  machine: "",
+  fabric: "",
+  shade: "",
+  construction: "",
+};
+
+const searchPlaceholders = {
+  greyid: "Enter Inward No (e.g. IW1234 or 1234)",
+  customerdc: "Enter Customer DC No",
+  customer: "Enter Customer name",
+};
+
+// ---------- helpers for the table / detail HTML ----------
+
+const esc = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+// "2026-10-29 10:15:00" -> "29-10-2026"
+const formatDate = (value) => {
+  if (!value) return "-";
+  const m = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : String(value);
+};
+
+const STATUS_LABEL = { done: "Done", partial: "Partly", pending: "Pending" };
+const BATCH_STATUS = { a: "In process", f: "In finishing", dc: "Delivered" };
+
+// Work out the status of every stage for one planning row
+const getStages = (track) => {
+  const t = track || {};
+  const batches = t.batches || [];
+  const deliveries = t.deliveries || [];
+  const finished = batches.filter((b) => b.status === "f" || b.status === "dc");
+  const invoiced = deliveries.filter((d) => (d.invoices || []).length > 0);
+  const allBatchesDelivered =
+    batches.length > 0 && batches.every((b) => b.status === "dc");
+
+  return [
+    { key: "inward", label: "Inward", status: "done" },
+    { key: "plan", label: "Plan", status: "done" },
+    { key: "batch", label: "Batch", status: batches.length ? "done" : "pending" },
+    {
+      key: "finishing",
+      label: "Finishing",
+      status: !finished.length
+        ? "pending"
+        : finished.length === batches.length
+          ? "done"
+          : "partial",
+    },
+    {
+      key: "delivery",
+      label: "Delivery",
+      status: !deliveries.length
+        ? "pending"
+        : allBatchesDelivered
+          ? "done"
+          : "partial",
+    },
+    {
+      key: "invoice",
+      label: "Invoice",
+      status: !invoiced.length
+        ? "pending"
+        : invoiced.length === deliveries.length
+          ? "done"
+          : "partial",
+    },
+  ];
+};
+
+const renderSteps = (track) => {
+  const stages = getStages(track);
+  const next = stages.find((s) => s.status !== "done");
+  const nowText = !next
+    ? "Completed"
+    : next.status === "partial"
+      ? `${next.label} in progress`
+      : `Waiting for ${next.label}`;
+
+  return `
+    <div class="rp-steps">
+      ${stages
+        .map(
+          (s, i) => `
+        <div class="rp-step ${s.status}" title="${s.label}: ${STATUS_LABEL[s.status]}">
+          <div class="rp-step-icon">${s.status === "done" ? "&#10003;" : i + 1}</div>
+          <div>${s.label}</div>
+        </div>`,
+        )
+        .join("")}
+    </div>
+    <div class="rp-now"><b>${esc(nowText)}</b></div>`;
+};
+
+const kv = (label, value) =>
+  `<div class="rp-kv"><span>${esc(label)}</span><span>${esc(value === "" || value === null || value === undefined ? "-" : value)}</span></div>`;
+
+const card = (stage, body) => `
+  <div class="rp-card ${stage.status}">
+    <h6>${esc(stage.label)} <span class="rp-badge ${stage.status}">${STATUS_LABEL[stage.status]}</span></h6>
+    ${body}
+  </div>`;
+
+const emptyText = (text) => `<div class="rp-empty">${esc(text)}</div>`;
+
+// Detail panel shown when a row is expanded: one card per stage
+const renderDetail = (row) => {
+  const track = row[17] || {};
+  const batches = track.batches || [];
+  const deliveries = track.deliveries || [];
+  const finished = batches.filter((b) => b.status === "f" || b.status === "dc");
+  const [inward, plan, batch, finishing, delivery, invoice] = getStages(track);
+
+  const batchList = (list) =>
+    list.length
+      ? list
+          .map(
+            (b) => `<div class="rp-item">
+              ${kv("Batch No", b.id)}
+              ${kv("Weight", b.weight)}
+              ${kv("Meter", b.gmeter)}
+              ${kv("Status", BATCH_STATUS[b.status] || b.status)}
+            </div>`,
+          )
+          .join("")
+      : emptyText("Pending");
+
+  return `
+    <div class="rp-detail">
+      ${card(
+        inward,
+        kv("Inward No", row[1]) +
+          kv("Inward Date", formatDate(track.inward_date)) +
+          kv("Customer DC", row[2]),
+      )}
+      ${card(
+        plan,
+        kv("Plan No", row[0]) +
+          kv("Plan Date", row[3]) +
+          kv("Machine", row[4]) +
+          kv("Width", row[9]) +
+          kv("Weight", row[10]) +
+          kv("Meter", row[11]),
+      )}
+      ${card(batch, batchList(batches))}
+      ${card(finishing, batchList(finished))}
+      ${card(
+        delivery,
+        deliveries.length
+          ? deliveries
+              .map(
+                (d) => `<div class="rp-item">
+                  ${kv("DC No", d.dcno)}
+                  ${kv("DC Date", formatDate(d.date))}
+                  ${kv("Weight", d.weight)}
+                  ${kv("Meter", d.gmeter)}
+                </div>`,
+              )
+              .join("")
+          : emptyText("Pending"),
+      )}
+      ${card(
+        invoice,
+        deliveries.length
+          ? deliveries
+              .map(
+                (d) => `<div class="rp-item">
+                  ${kv("DC No", d.dcno)}
+                  ${kv("Invoice", (d.invoices || []).length ? d.invoices.join(", ") : "Pending")}
+                </div>`,
+              )
+              .join("")
+          : emptyText("Pending - no DC yet"),
+      )}
+    </div>`;
+};
+
 function Reports() {
   const table = useRef();
-  const submittedFiltersRef = useRef({});
+  const submittedFiltersRef = useRef(emptyFilters);
+  const searchColRef = useRef("greyid");
 
-  const [searchState, setSearchState] = useState("");
+  const [searchCol, setSearchCol] = useState("greyid");
+  const [searchText, setSearchText] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeFilterCount, setActiveFilterCount] = useState(0);
   const [selData, setSelData] = useState([]);
   const { user, isAuthenticated } = useAuth();
 
-  // Helper to get last 7 days
-  /*function getDefaultDates() {
-    const today = new Date();
-    const prior = new Date();
-    prior.setDate(today.getDate() - 6);
-    const toDate = today.toISOString().slice(0, 10);
-    const fromDate = prior.toISOString().slice(0, 10);
-    return { fromDate, toDate };
-  }*/
+  const [filters, setFilters] = useState(emptyFilters);
 
-  // Filter state
-  const [filters, setFilters] = useState({
-    fromDate: "",
-    toDate: "",
-    customer: "",
-    machine: "",
-    fabric: "",
-    shade: "",
-    construction: "",
-  });
-
-  // Options state
   const [options, setOptions] = useState({
     customers: [],
     machines: [],
@@ -55,68 +225,44 @@ function Reports() {
     constructions: [],
   });
 
-  // Fetch customer and machine on mount
-  React.useEffect(() => {
-    const fetchMasters = async () => {
-      try {
-        const [customers, machines, fabrics, constructions] = await Promise.all(
-          [
-            fetch(`${API_URL}/getMasters?type=customer`).then((r) => r.json()),
-            fetch(`${API_URL}/getMasters?type=machine`).then((r) => r.json()),
-            fetch(`${API_URL}/getMasters?type=fabric`).then((r) => r.json()),
-            fetch(`${API_URL}/getMasters?type=construction`).then((r) =>
-              r.json(),
-            ),
-          ],
-        );
+  const toOptions = (rows) =>
+    (rows || []).map((row) => ({ id: row[0], name: row[1] }));
 
-        setOptions((o) => ({
-          ...o,
-          customers: customers.map((row) => ({ id: row[0], name: row[1] })),
-          machines: machines.map((row) => ({ id: row[0], name: row[1] })),
-          fabrics: fabrics.map((row) => ({ id: row[0], name: row[1] })),
-          constructions: constructions.map((row) => ({
-            id: row[0],
-            name: row[1],
-          })),
-        }));
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    fetchMasters();
-  }, []);
-
-  // Function to fetch masters (reusable)
+  // Fetch masters (all shades are listed by default)
   const fetchMastersData = async () => {
     try {
-      const [customers, machines, fabrics, constructions] = await Promise.all([
-        fetch(`${API_URL}/getMasters?type=customer`).then((r) => r.json()),
-        fetch(`${API_URL}/getMasters?type=machine`).then((r) => r.json()),
-        fetch(`${API_URL}/getMasters?type=fabric`).then((r) => r.json()),
-        fetch(`${API_URL}/getMasters?type=construction`).then((r) => r.json()),
-      ]);
+      const [customers, machines, fabrics, constructions, shades] =
+        await Promise.all([
+          fetch(`${API_URL}/getMasters?type=customer`).then((r) => r.json()),
+          fetch(`${API_URL}/getMasters?type=machine`).then((r) => r.json()),
+          fetch(`${API_URL}/getMasters?type=fabric`).then((r) => r.json()),
+          fetch(`${API_URL}/getMasters?type=construction`).then((r) =>
+            r.json(),
+          ),
+          fetch(`${API_URL}/getFilterMasters?type=shade`).then((r) => r.json()),
+        ]);
 
       setOptions((o) => ({
         ...o,
-        customers: customers.map((row) => ({ id: row[0], name: row[1] })),
-        machines: machines.map((row) => ({ id: row[0], name: row[1] })),
-        fabrics: fabrics.map((row) => ({ id: row[0], name: row[1] })),
-        constructions: constructions.map((row) => ({
-          id: row[0],
-          name: row[1],
-        })),
+        customers: toOptions(customers),
+        machines: toOptions(machines),
+        fabrics: toOptions(fabrics),
+        shades: toOptions(shades),
+        constructions: toOptions(constructions),
       }));
     } catch (e) {
       console.error(e);
     }
   };
 
-  // Fetch fabric, shade, construction when customer or date changes
+  React.useEffect(() => {
+    fetchMastersData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch fabric, shade, construction when customer changes
   React.useEffect(() => {
     if (!filters.customer) {
-      setOptions((o) => ({ ...o, fabrics: [], shades: [], constructions: [] }));
-      setFilters((f) => ({ ...f, fabric: "", shade: "", construction: "" }));
       return;
     }
     const fetchDependent = async () => {
@@ -135,12 +281,9 @@ function Reports() {
         ]);
         setOptions((o) => ({
           ...o,
-          fabrics: fabrics.map((row) => ({ id: row[0], name: row[1] })),
-          shades: shades.map((row) => ({ id: row[0], name: row[1] })),
-          constructions: constructions.map((row) => ({
-            id: row[0],
-            name: row[1],
-          })),
+          fabrics: toOptions(fabrics),
+          shades: toOptions(shades),
+          constructions: toOptions(constructions),
         }));
       } catch (e) {
         console.error(e);
@@ -150,9 +293,11 @@ function Reports() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.customer]);
 
+  const dtApi = () =>
+    table.current && table.current.dt ? table.current.dt() : null;
+
   // Handle filter change (do not reload table)
   const handleFilterChange = (name, value) => {
-    setFilters((f) => ({ ...f, [name]: value }));
     if (name === "customer") {
       setFilters((f) => ({
         ...f,
@@ -161,45 +306,47 @@ function Reports() {
         construction: "",
         customer: value,
       }));
+      if (!value) fetchMastersData();
+    } else {
+      setFilters((f) => ({ ...f, [name]: value }));
     }
-
-    // Do NOT reload table here
   };
 
-  // Handle submit button click
   const handleSubmitFilters = () => {
     submittedFiltersRef.current = filters;
-    if (table.current && table.current.dt) {
-      table.current.dt().ajax.reload();
-    }
+    setActiveFilterCount(Object.values(filters).filter(Boolean).length);
+    const api = dtApi();
+    if (api) api.ajax.reload();
   };
 
-  // Handle reset button click
   const handleResetFilters = () => {
-    //const defaultDates = getDefaultDates();
-    setFilters({
-      fromDate: "",
-      toDate: "",
-      customer: "",
-      machine: "",
-      fabric: "",
-      shade: "",
-      construction: "",
-    });
-    submittedFiltersRef.current = {
-      fromDate: "",
-      toDate: "",
-      customer: "",
-      machine: "",
-      fabric: "",
-      shade: "",
-      construction: "",
-    };
-    // Call fetchMasters to reload all options
+    setFilters(emptyFilters);
+    submittedFiltersRef.current = emptyFilters;
+    setActiveFilterCount(0);
     fetchMastersData();
-    if (table.current && table.current.dt) {
-      table.current.dt().ajax.reload();
-    }
+    const api = dtApi();
+    if (api) api.ajax.reload();
+  };
+
+  // Search box (server side search on the chosen field)
+  const runSearch = (text) => {
+    const api = dtApi();
+    if (api) api.search(text.trim()).draw();
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    runSearch(searchText);
+  };
+
+  const handleClearSearch = () => {
+    setSearchText("");
+    runSearch("");
+  };
+
+  const handleSearchColChange = (e) => {
+    searchColRef.current = e.target.value;
+    setSearchCol(e.target.value);
   };
 
   if (!isAuthenticated) {
@@ -209,6 +356,10 @@ function Reports() {
 
   const PrintHandle = (event) => {
     event.preventDefault();
+    if (selData.length === 0) {
+      alert("Tick the rows you want to print");
+      return;
+    }
     let api = table.current.dt();
     api.rows().deselect();
     const printableContent = `
@@ -255,8 +406,8 @@ function Reports() {
                     <th>Construction</th>
                     <th>Width</th>
                     <th>Weight</th>
-                    <th>GMeter</th>                   
-                    <th >Inward Date</th>               
+                    <th>GMeter</th>
+                    <th >Inward Date</th>
                 <th >Batch</th>
                 <th >Finishing</th>
                 <th >Delivery</th>
@@ -298,15 +449,10 @@ function Reports() {
     const newWindow = window.open("", "_blank");
     newWindow.document.write(`<pre>${printableContent}</pre>`);
     newWindow.print();
-    selData.length = 0;
-  };
-
-  const handleColumnChange = (e) => {
-    setSearchState(e.target.value);
+    setSelData([]);
   };
 
   const rowClick = (e) => {
-    e.preventDefault();
     let api = table.current.dt();
     let rows = api.rows({ selected: true }).data().toArray();
     let newSelData = [...selData];
@@ -317,221 +463,265 @@ function Reports() {
       }
     });
 
-    setSelData(newSelData); // Now this matches the state setter name
+    setSelData(newSelData);
+  };
+
+  // Open / close the stage details under a row
+  const toggleDetail = (api, tr) => {
+    const row = api.row(tr);
+    if (!row.data()) return;
+    if (row.child.isShown()) {
+      row.child.hide();
+    } else {
+      row.child(renderDetail(row.data()), "rp-child").show();
+    }
   };
 
   return (
     <div className="main-content">
       <Container fluid className="relative">
-        <Row className="mb-6">
-          <div className="col-10 col-sm-10">
+        <Row className="mb-4">
+          <div className="col-12">
             <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
-            <p className="text-gray-600">Welcome, {user.user}!</p>
+            <p className="text-gray-600">
+              Track every inward from planning to invoice. Click a row to see
+              all its details.
+            </p>
           </div>
         </Row>
 
-        {/* Filter Row */}
-        <div className="row mb-3">
-          <div className="col-md-2">
-            <Form.Group>
-              <Form.Label>From Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={filters.fromDate}
-                onChange={(e) => handleFilterChange("fromDate", e.target.value)}
-              />
-            </Form.Group>
-          </div>
-          <div className="col-md-2">
-            <Form.Group>
-              <Form.Label>To Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={filters.toDate}
-                onChange={(e) => handleFilterChange("toDate", e.target.value)}
-              />
-            </Form.Group>
-          </div>
-        </div>
-        <div className="row mb-3">
-          <div className="col-md-2">
-            <Form.Group>
-              <Form.Label>Customer</Form.Label>
-              <Form.Control
-                list="customer-list"
-                value={filters.customer}
-                onChange={(e) => handleFilterChange("customer", e.target.value)}
-                placeholder="Type to search..."
-                autoComplete="off"
-              />
-              <datalist id="customer-list">
-                <option value="">All</option>
-                {options.customers.map((opt) => (
-                  <option key={opt.id || opt.name} value={opt.name}>
-                    {opt.name}
-                  </option>
-                ))}
-              </datalist>
-            </Form.Group>
-          </div>
-          <div className="col-md-2">
-            <Form.Group>
-              <Form.Label>Machine</Form.Label>
+        {/* Search */}
+        <div className="rp-search-card">
+          <Form onSubmit={handleSearchSubmit}>
+            <div className="rp-search-row">
               <Form.Select
-                value={filters.machine}
-                onChange={(e) => handleFilterChange("machine", e.target.value)}
+                className="rp-search-by"
+                value={searchCol}
+                onChange={handleSearchColChange}
+                aria-label="Search by"
               >
-                <option value="">All</option>
-                {options.machines.map((opt) => (
-                  <option key={opt.id || opt.name} value={opt.name}>
-                    {opt.name}
-                  </option>
-                ))}
+                <option value="greyid">Inward No</option>
+                <option value="customerdc">Customer DC</option>
+                <option value="customer">Customer</option>
               </Form.Select>
-            </Form.Group>
-          </div>
-          <div className="col-md-2">
-            <Form.Group>
-              <Form.Label>Fabric</Form.Label>
               <Form.Control
-                list="fabric-list"
-                value={filters.fabric}
-                onChange={(e) => handleFilterChange("fabric", e.target.value)}
-                placeholder="Type to search..."
-                autoComplete="off"
+                className="rp-search-input"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder={searchPlaceholders[searchCol]}
+                autoFocus
               />
-              <datalist id="fabric-list">
-                <option value="">All</option>
-                {options.fabrics.map((opt) => (
-                  <option key={opt.id || opt.name} value={opt.name}>
-                    {opt.name}
-                  </option>
-                ))}
-              </datalist>
-            </Form.Group>
-          </div>
-          <div className="col-md-2">
-            <Form.Group>
-              <Form.Label>Shade</Form.Label>
-              <Form.Select
-                value={filters.shade}
-                onChange={(e) => handleFilterChange("shade", e.target.value)}
-              >
-                <option value="">All</option>
-                {options.shades.map((opt) => (
-                  <option key={opt.id || opt.name} value={opt.name}>
-                    {opt.name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </div>
-          <div className="col-md-2">
-            <Form.Group>
-              <Form.Label>Construction</Form.Label>
-              <Form.Control
-                list="construction-list"
-                value={filters.construction}
-                onChange={(e) =>
-                  handleFilterChange("construction", e.target.value)
-                }
-                placeholder="Type to search..."
-                autoComplete="off"
-              />
-              <datalist id="construction-list">
-                <option value="">All</option>
-                {options.constructions.map((opt) => (
-                  <option key={opt.id || opt.name} value={opt.name}>
-                    {opt.name}
-                  </option>
-                ))}
-              </datalist>
-            </Form.Group>
-          </div>
-        </div>
-        {/* Submit button and ...existing code for actions/search... */}
-        <div className="flex justify-end mb-4">
-          <button
-            className="btn btn-primary mr-3"
-            onClick={handleSubmitFilters}
-          >
-            Submit
-          </button>
-          <button
-            className="btn btn-secondary mr-3"
-            onClick={handleResetFilters}
-          >
-            Reset
-          </button>
-          <div className="col-2 col-sm-2">
-            <Dropdown className="">
-              <Dropdown.Toggle
-                variant="primary"
-                id="dropdown-basic"
-                className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
-              >
-                Actions
-              </Dropdown.Toggle>
+              <Button type="submit" variant="primary" className="px-4">
+                Search
+              </Button>
+              {searchText && (
+                <Button variant="outline-secondary" onClick={handleClearSearch}>
+                  Clear
+                </Button>
+              )}
+            </div>
+          </Form>
 
-              <Dropdown.Menu className="mt-2">
-                {user && (
-                  <Dropdown.Item href="#" onClick={PrintHandle}>
-                    Print
-                  </Dropdown.Item>
-                )}
-              </Dropdown.Menu>
-            </Dropdown>
-          </div>
-          <div className="ml-auto w-1/5">
-            {" "}
-            {/* This creates 20% width and right alignment */}
-            <Form.Select
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 tsearch"
-              value={searchState}
-              onChange={handleColumnChange}
+          <div className="rp-toolbar">
+            <Button
+              variant={showFilters ? "secondary" : "outline-secondary"}
+              size="sm"
+              onClick={() => setShowFilters((s) => !s)}
+              aria-expanded={showFilters}
             >
-              <option value="greyid">Grey Entry No</option>
-              <option value="customer">Customer</option>
-              <option value="machine">Machine</option>
-            </Form.Select>
+              {showFilters ? "Hide filters" : "More filters"}
+              {activeFilterCount > 0 && ` (${activeFilterCount} active)`}
+            </Button>
+            <Button variant="outline-primary" size="sm" onClick={PrintHandle}>
+              Print selected{selData.length > 0 && ` (${selData.length})`}
+            </Button>
+            <div className="rp-legend">
+              <span>
+                <i className="rp-dot done" /> Done
+              </span>
+              <span>
+                <i className="rp-dot partial" /> Partly done
+              </span>
+              <span>
+                <i className="rp-dot pending" /> Pending
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white">
+        {/* Filters */}
+        {/* Rendered conditionally - react-bootstrap <Collapse> clashes with Tailwind's "collapse" class */}
+        {showFilters && (
+          <div>
+            <div className="rp-filter-card">
+              <div className="row g-3">
+                <div className="col-6 col-md-2">
+                  <Form.Group>
+                    <Form.Label>From Date</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={filters.fromDate}
+                      onChange={(e) =>
+                        handleFilterChange("fromDate", e.target.value)
+                      }
+                    />
+                  </Form.Group>
+                </div>
+                <div className="col-6 col-md-2">
+                  <Form.Group>
+                    <Form.Label>To Date</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={filters.toDate}
+                      onChange={(e) =>
+                        handleFilterChange("toDate", e.target.value)
+                      }
+                    />
+                  </Form.Group>
+                </div>
+                <div className="col-6 col-md-2">
+                  <Form.Group>
+                    <Form.Label>Customer</Form.Label>
+                    <Form.Control
+                      list="customer-list"
+                      value={filters.customer}
+                      onChange={(e) =>
+                        handleFilterChange("customer", e.target.value)
+                      }
+                      placeholder="Type to search..."
+                      autoComplete="off"
+                    />
+                    <datalist id="customer-list">
+                      {options.customers.map((opt) => (
+                        <option key={opt.id || opt.name} value={opt.name}>
+                          {opt.name}
+                        </option>
+                      ))}
+                    </datalist>
+                  </Form.Group>
+                </div>
+                <div className="col-6 col-md-2">
+                  <Form.Group>
+                    <Form.Label>Machine</Form.Label>
+                    <Form.Select
+                      value={filters.machine}
+                      onChange={(e) =>
+                        handleFilterChange("machine", e.target.value)
+                      }
+                    >
+                      <option value="">All</option>
+                      {options.machines.map((opt) => (
+                        <option key={opt.id || opt.name} value={opt.name}>
+                          {opt.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </div>
+                <div className="col-6 col-md-2">
+                  <Form.Group>
+                    <Form.Label>Fabric</Form.Label>
+                    <Form.Control
+                      list="fabric-list"
+                      value={filters.fabric}
+                      onChange={(e) =>
+                        handleFilterChange("fabric", e.target.value)
+                      }
+                      placeholder="Type to search..."
+                      autoComplete="off"
+                    />
+                    <datalist id="fabric-list">
+                      {options.fabrics.map((opt) => (
+                        <option key={opt.id || opt.name} value={opt.name}>
+                          {opt.name}
+                        </option>
+                      ))}
+                    </datalist>
+                  </Form.Group>
+                </div>
+                <div className="col-6 col-md-2">
+                  <Form.Group>
+                    <Form.Label>Shade</Form.Label>
+                    <Form.Select
+                      value={filters.shade}
+                      onChange={(e) =>
+                        handleFilterChange("shade", e.target.value)
+                      }
+                    >
+                      <option value="">All</option>
+                      {options.shades.map((opt) => (
+                        <option key={opt.id || opt.name} value={opt.name}>
+                          {opt.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </div>
+                <div className="col-6 col-md-2">
+                  <Form.Group>
+                    <Form.Label>Construction</Form.Label>
+                    <Form.Control
+                      list="construction-list"
+                      value={filters.construction}
+                      onChange={(e) =>
+                        handleFilterChange("construction", e.target.value)
+                      }
+                      placeholder="Type to search..."
+                      autoComplete="off"
+                    />
+                    <datalist id="construction-list">
+                      {options.constructions.map((opt) => (
+                        <option key={opt.id || opt.name} value={opt.name}>
+                          {opt.name}
+                        </option>
+                      ))}
+                    </datalist>
+                  </Form.Group>
+                </div>
+              </div>
+              <div className="mt-3">
+                <Button
+                  variant="primary"
+                  className="mr-3"
+                  onClick={handleSubmitFilters}
+                >
+                  Apply filters
+                </Button>
+                <Button variant="secondary" onClick={handleResetFilters}>
+                  Reset
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white p-2">
           <DataTable
             onSelect={rowClick}
             ref={table}
+            className="display rp-table"
             options={{
-              scrollX: true,
-              scrollY: "60vh",
-              scrollCollapse: true,
-              fixedColumns: {
-                left: 2,
-              },
+              autoWidth: false,
               order: [[0, "desc"]],
               paging: true,
               processing: true,
               serverSide: true,
-              select: { style: "multi" },
+              select: { style: "multi", selector: "td:first-child" },
               ajax: {
                 url: `${API_URL}/reports`,
                 type: "POST",
                 data: function (d) {
-                  d.searchcol = $(".tsearch").val();
+                  d.searchcol = searchColRef.current;
                   d.user = user.user; // send email
-                  console.log(
-                    "Data sent to server:",
-                    submittedFiltersRef.current,
-                  );
                   // Use submitted filters from ref
-                  d.fromDate = submittedFiltersRef.current.fromDate || "";
-                  d.toDate = submittedFiltersRef.current.toDate || "";
-                  d.customer = submittedFiltersRef.current.customer || "";
-                  d.machine = submittedFiltersRef.current.machine || "";
-                  d.fabric = submittedFiltersRef.current.fabric || "";
-                  d.shade = submittedFiltersRef.current.shade || "";
-                  d.construction =
-                    submittedFiltersRef.current.construction || "";
+                  const f = submittedFiltersRef.current;
+                  d.fromDate = f.fromDate || "";
+                  d.toDate = f.toDate || "";
+                  d.customer = f.customer || "";
+                  d.machine = f.machine || "";
+                  d.fabric = f.fabric || "";
+                  d.shade = f.shade || "";
+                  d.construction = f.construction || "";
                   if (d.length === -1) {
                     d.length = 25; // Set default page length
                   }
@@ -539,35 +729,80 @@ function Reports() {
                 },
               },
               pageLength: 25,
+              lengthMenu: [10, 25, 50, 100, 200],
               columns: [
                 {
-                  className: "", // Add a class for the toggle button
-                  data: "0",
-                  defaultContent: "",
+                  // Tick to select rows for print
+                  data: null,
+                  orderable: false,
+                  render: DT.render.select(),
+                  width: "24px",
                 },
-                { data: "1" },
-                { data: "2" },
-                { data: "3" },
-                { data: "4" },
-                { data: "5" },
-                { data: "6" },
-                { data: "7" },
-                { data: "8" },
-                { data: "9" },
-                { data: "10" },
-                { data: "11" },
-                { data: "12" },
-                { data: "13" },
-                { data: "14" },
-                { data: "15" },
-                { data: "16", orderable: false }, // Invoice numbers per DC
+                {
+                  data: null,
+                  render: (d, type, row) =>
+                    `<div class="rp-inward">${esc(row[1])}</div>
+                     <div class="rp-sub">Plan No ${esc(row[0])}</div>
+                     <div class="rp-sub">Cust DC ${esc(row[2] || "-")}</div>`,
+                },
+                {
+                  data: null,
+                  render: (d, type, row) =>
+                    `<div class="rp-main">${esc(row[3])}</div>
+                     <div class="rp-sub">Inward ${esc(formatDate(row[17] && row[17].inward_date))}</div>`,
+                },
+                {
+                  data: null,
+                  render: (d, type, row) =>
+                    `<div class="rp-main">${esc(row[5])}</div>
+                     <div class="rp-sub">Machine ${esc(row[4] || "-")}</div>`,
+                },
+                {
+                  data: null,
+                  render: (d, type, row) =>
+                    `<div class="rp-main">${esc(row[6])}</div>
+                     <div class="rp-sub">Shade ${esc(row[7] || "-")}</div>
+                     <div class="rp-sub">${esc(row[8] || "")}</div>`,
+                },
+                {
+                  data: null,
+                  render: (d, type, row) =>
+                    `<div class="rp-main">${esc(row[10])} kg</div>
+                     <div class="rp-sub">${esc(row[11])} m</div>
+                     <div class="rp-sub">Width ${esc(row[9] || "-")}</div>`,
+                },
+                {
+                  data: null,
+                  orderable: false,
+                  render: (d, type, row) => renderSteps(row[17]),
+                },
+                {
+                  data: null,
+                  orderable: false,
+                  render: () =>
+                    `<button type="button" class="rp-toggle">Details</button>`,
+                },
               ],
-              // Add custom styling
-              dom: '<"flex items-center justify-between mb-4"l<"ml-2"f>>rtip',
+              initComplete: function () {
+                const api = this.api();
+                // Click anywhere on a row (except the tick box) to open its details
+                api.on("click", "tbody td:not(:first-child)", function () {
+                  toggleDetail(api, this.closest("tr"));
+                });
+              },
+              drawCallback: function () {
+                // Searching one inward usually gives one row - open it straight away
+                const api = this.api();
+                if (api.rows().count() === 1 && api.search()) {
+                  const tr = api.row(0).node();
+                  if (tr && !api.row(0).child.isShown()) toggleDetail(api, tr);
+                }
+              },
+              dom: '<"flex items-center justify-between mb-2"l>rtip',
               language: {
-                search: "Search:",
                 lengthMenu: "Show _MENU_ entries",
                 info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                zeroRecords: "No matching records found",
                 paginate: {
                   first: "First",
                   last: "Last",
@@ -575,31 +810,18 @@ function Reports() {
                   previous: "Previous",
                 },
               },
-              // Add custom classes
-              className: "w-full text-sm text-left text-gray-500",
-              // Add container class
-              containerClassName: "relative z-10",
             }}
           >
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-6 py-3">Plan.No</th>
-                <th className="px-6 py-3">Inward.No</th>
-                <th className="px-6 py-3">Cust Dc</th>
-                <th className="px-6 py-3">Date</th>
-                <th className="px-6 py-3">Machine</th>
-                <th className="px-6 py-3">Customer</th>
-                <th className="px-6 py-3">Fabric</th>
-                <th className="px-6 py-3">Shade</th>
-                <th className="px-6 py-3">Construction</th>
-                <th className="px-6 py-3">Width</th>
-                <th className="px-6 py-3">Weight</th>
-                <th className="px-6 py-3">GMeter</th>
-                <th className="px-6 py-3">Inward Date</th>
-                <th className="px-6 py-3">Batch</th>
-                <th className="px-6 py-3">Finishing</th>
-                <th className="px-6 py-3">Delivery</th>
-                <th className="px-6 py-3">Invoice</th>
+                <th></th>
+                <th>Inward / Plan</th>
+                <th>Plan Date</th>
+                <th>Customer</th>
+                <th>Fabric</th>
+                <th>Quantity</th>
+                <th>Progress</th>
+                <th></th>
               </tr>
             </thead>
           </DataTable>
