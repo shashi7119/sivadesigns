@@ -36,7 +36,8 @@ const normalizeInvoiceRow = (row) => {
       tax: row[5] || '',
       total: row[6] || '',
       items: Array.isArray(row[7]) ? row[7] : [],
-      batchid: row[9] || ''
+      batchid: row[9] || '',
+      shade: row[10] || ''
     };
   }
   return {
@@ -49,7 +50,8 @@ const normalizeInvoiceRow = (row) => {
     tax: row.tax || row.totalTax || 0,
     total: row.total || row.totalAmount || '',
     items: Array.isArray(row.items) ? row.items : [],
-    batchid: row.batchid || row.batchId || ''
+    batchid: row.batchid || row.batchId || '',
+    shade: row.shade || ''
   };
 };
 
@@ -156,9 +158,9 @@ export default function InvoiceList() {
 
     const api = tableRef.current.dt();
     const rows = api.rows({ search: 'applied' }).data().toArray().map(normalizeInvoiceRow);
-    const headers = ['Invoice No', 'DC No', 'Batch No', 'Invoice Date', 'Customer', 'Subtotal', 'Tax', 'Total'];
+    const headers = ['Invoice No', 'DC No', 'Batch No', 'Shade', 'Invoice Date', 'Customer', 'Subtotal', 'Tax', 'Total'];
     const tableRows = rows.map((row) => [
-      row.invoiceNo, row.dcno, row.batchid, row.invoiceDate, row.customer, row.subtotal, row.tax, row.total
+      row.invoiceNo, row.dcno, row.batchid, row.shade, row.invoiceDate, row.customer, row.subtotal, row.tax, row.total
     ]);
     const html = `<table><thead><tr>${headers.map((header) => `<th>${escapeExcelValue(header)}</th>`).join('')}</tr></thead><tbody>${
       tableRows.map((row) => `<tr>${row.map((value) => `<td>${escapeExcelValue(value)}</td>`).join('')}</tr>`).join('')
@@ -266,6 +268,7 @@ export default function InvoiceList() {
                 { title: 'Invoice No', data: 'invoiceNo' },
                 { title: 'DC NO', data: 'dcno', orderable: false, width: '100px', className: 'inv-wrap-col', render: wrapList },
                 { title: 'Batch No', data: 'batchid', orderable: false, width: '100px', className: 'inv-wrap-col', render: wrapList },
+                { title: 'Shade', data: 'shade', orderable: false, className: 'inv-shade-col', render: wrapList },
                 { title: 'Date', data: 'invoiceDate' },
                 { title: 'Customer', data: 'customer', orderable: false },
                 {

@@ -9,6 +9,7 @@ import Select from "datatables.net-select-dt";
 import FixedHeader from "datatables.net-fixedcolumns-dt";
 import Responsive from "datatables.net-responsive-dt";
 import DT from "datatables.net-dt";
+import MultiSelectFilter from "./MultiSelectFilter";
 
 const API_URL = "https://www.wynstarcreations.com/seyal/api";
 
@@ -23,7 +24,7 @@ const emptyFilters = {
   customer: "",
   machine: "",
   fabric: "",
-  shade: "",
+  shade: [], // multi select
   construction: "",
 };
 
@@ -65,7 +66,11 @@ const getStages = (track) => {
   return [
     { key: "inward", label: "Inward", status: "done" },
     { key: "plan", label: "Plan", status: "done" },
-    { key: "batch", label: "Batch", status: batches.length ? "done" : "pending" },
+    {
+      key: "batch",
+      label: "Batch",
+      status: batches.length ? "done" : "pending",
+    },
     {
       key: "finishing",
       label: "Finishing",
@@ -204,15 +209,44 @@ const renderDetail = (row) => {
 };
 
 // Consolidated totals of one inward, process stage wise (from the backend "summary")
+// total = everything that passed through the stage, pending = the part still waiting at that stage
 const SUMMARY_STAGES = [
-  { key: "inward", label: "Inward", unit: "" },
-  { key: "toplan", label: "Yet to plan", unit: "" },
-  { key: "planned", label: "Planned", unit: "plan" },
-  { key: "batch", label: "In batch", unit: "batch" },
-  { key: "finishing", label: "In finishing", unit: "batch" },
+  {
+    key: "inward",
+    label: "Inward",
+    unit: "",
+    pending: "toplan",
+    pendingLabel: "Yet to plan",
+  },
+  {
+    key: "planned_total",
+    label: "Planned",
+    unit: "plan",
+    pending: "planned",
+    pendingLabel: "Waiting for batch",
+  },
+  {
+    key: "batch_total",
+    label: "Batch",
+    unit: "batch",
+    pending: "batch",
+    pendingLabel: "In process",
+  },
+  {
+    key: "finishing_total",
+    label: "Finishing",
+    unit: "batch",
+    pending: "finishing",
+    pendingLabel: "Not yet delivered",
+  },
   { key: "delivered", label: "Delivered", unit: "DC" },
-  { key: "invoiced", label: "Invoiced", unit: "DC" },
-  { key: "invpending", label: "Invoice pending", unit: "DC" },
+  {
+    key: "invoiced",
+    label: "Invoiced",
+    unit: "DC",
+    pending: "invpending",
+    pendingLabel: "Invoice pending",
+  },
 ];
 
 const fmtNum = (value) =>
@@ -222,19 +256,33 @@ function InwardSummary({ summary }) {
   return (
     <div className="rp-summary-card">
       <div className="rp-summary-head">
-        <b>{summary.greyid}</b> - total quantity in each process
+        {summary.greyid ? (
+          <b>{summary.greyid}</b>
+        ) : (
+          <>
+            <b>Search / filter result</b> ({summary.plans} plan
+            {summary.plans === 1 ? "" : "s"} from {summary.inwards} inward
+            {summary.inwards === 1 ? "" : "s"})
+          </>
+        )}{" "}
+        - total quantity in each process
         {summary.invoices && summary.invoices.length > 0 && (
-          <span className="rp-sub"> (Invoices: {summary.invoices.join(", ")})</span>
+          <span className="rp-sub">
+            {" "}
+            (Invoices: {summary.invoices.join(", ")})
+          </span>
         )}
       </div>
       <div className="rp-summary-row">
         {SUMMARY_STAGES.map((s) => {
           const v = summary[s.key] || {};
-          const empty = !Number(v.weight) && !Number(v.gmeter) && !Number(v.count);
+          const p = s.pending ? summary[s.pending] || {} : null;
+          const empty =
+            !Number(v.weight) && !Number(v.gmeter) && !Number(v.count);
           return (
             <div
               key={s.key}
-              className={`rp-summary-cell rp-sum-${s.key}${empty ? " is-empty" : ""}`}
+              className={`rp-summary-cell${empty ? " is-empty" : ""}`}
             >
               <div className="rp-summary-label">{s.label}</div>
               <div className="rp-summary-weight">{fmtNum(v.weight)} kg</div>
@@ -246,6 +294,14 @@ function InwardSummary({ summary }) {
                 <div className="rp-sub">
                   {v.count || 0} {s.unit}
                   {v.count === 1 ? "" : "s"}
+                </div>
+              )}
+              {p && (
+                <div
+                  className={`rp-summary-pending${Number(p.weight) > 0 ? " has-pending" : ""}`}
+                >
+                  {s.pendingLabel}: <b>{fmtNum(p.weight)} kg</b>
+                  <span> / {fmtNum(p.gmeter)} m</span>
                 </div>
               )}
             </div>
@@ -356,7 +412,7 @@ function Reports() {
       setFilters((f) => ({
         ...f,
         fabric: "",
-        shade: "",
+        shade: [],
         construction: "",
         customer: value,
       }));
@@ -368,7 +424,11 @@ function Reports() {
 
   const handleSubmitFilters = () => {
     submittedFiltersRef.current = filters;
-    setActiveFilterCount(Object.values(filters).filter(Boolean).length);
+    setActiveFilterCount(
+      Object.values(filters).filter((v) =>
+        Array.isArray(v) ? v.length > 0 : Boolean(v),
+      ).length,
+    );
     const api = dtApi();
     if (api) api.ajax.reload();
   };
@@ -698,19 +758,11 @@ function Reports() {
                 <div className="col-6 col-md-2">
                   <Form.Group>
                     <Form.Label>Shade</Form.Label>
-                    <Form.Select
+                    <MultiSelectFilter
+                      options={options.shades}
                       value={filters.shade}
-                      onChange={(e) =>
-                        handleFilterChange("shade", e.target.value)
-                      }
-                    >
-                      <option value="">All</option>
-                      {options.shades.map((opt) => (
-                        <option key={opt.id || opt.name} value={opt.name}>
-                          {opt.name}
-                        </option>
-                      ))}
-                    </Form.Select>
+                      onChange={(list) => handleFilterChange("shade", list)}
+                    />
                   </Form.Group>
                 </div>
                 <div className="col-6 col-md-2">
@@ -778,14 +830,14 @@ function Reports() {
                   d.customer = f.customer || "";
                   d.machine = f.machine || "";
                   d.fabric = f.fabric || "";
-                  d.shade = f.shade || "";
+                  d.shade = f.shade || []; // sent as shade[] - one or more shades
                   d.construction = f.construction || "";
                   if (d.length === -1) {
                     d.length = 25; // Set default page length
                   }
                   return d;
                 },
-                // backend sends "summary" only when an inward no is searched
+                // backend sends "summary" when something is searched or filtered
                 dataSrc: function (json) {
                   setSummary(json.summary || null);
                   return json.data;
