@@ -19,6 +19,10 @@ DataTable.use(Select);
 DataTable.use(FixedHeader);
 DataTable.use(DT);
 
+// DC No / Batch No come as "12,13,14" - add a space after each comma so the 100px column can wrap
+const wrapList = (value, type) =>
+  type === 'display' ? String(value ?? '').replace(/\s*,\s*/g, ', ') : value;
+
 const normalizeInvoiceRow = (row) => {
   if (!row) return {};
   if (Array.isArray(row)) {
@@ -260,8 +264,8 @@ export default function InvoiceList() {
               },
               columns: [
                 { title: 'Invoice No', data: 'invoiceNo' },
-                { title: 'DC NO', data: 'dcno', orderable: false },
-                { title: 'Batch No', data: 'batchid', orderable: false },
+                { title: 'DC NO', data: 'dcno', orderable: false, width: '100px', className: 'inv-wrap-col', render: wrapList },
+                { title: 'Batch No', data: 'batchid', orderable: false, width: '100px', className: 'inv-wrap-col', render: wrapList },
                 { title: 'Date', data: 'invoiceDate' },
                 { title: 'Customer', data: 'customer', orderable: false },
                 {

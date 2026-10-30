@@ -905,7 +905,8 @@ function Invoice() {
         <style>
           * { margin: 0; padding: 0; }
           body { font-family: 'Arial', sans-serif; font-size: 12px; line-height: 1.3; color: #000; }
-          .page { width: 210mm; height: 297mm; padding: 10mm; background: white; }
+          /* Height grows with the line items so copies never overlap; each copy starts on a new page */
+          .page { width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; background: white; }
           .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
           .company-block { display: flex; align-items: flex-start; gap: 12px; flex: 1; }
           .company-logo { width: 190px; height: 190px; border: 1px solid #ccc; object-fit: contain; }
@@ -954,10 +955,19 @@ function Invoice() {
           .signature-line { border-top: 1px solid #000; margin-top: 30px; padding-top: 5px; }
           .invoice-copy { page-break-after: always; break-after: page; }
           .invoice-copy:last-of-type { page-break-after: auto; break-after: auto; }
-          
+
+          /* Keep blocks whole when a long invoice flows onto a second page */
+          .items-table thead { display: table-header-group; }
+          .items-table tr, .parties, .totals-section, .amount-words, .tax-breakdown,
+          .footer-section, .signature-section { page-break-inside: avoid; break-inside: avoid; }
+
+          /* Margin on the paper so every printed page (including overflow pages) gets it */
+          @page { size: A4; margin: 10mm; }
+
           @media print {
             body { margin: 0; padding: 0; }
-            .page { margin: 0; padding: 10mm; }
+            /* Page height comes from the paper; content flows to the next page if needed */
+            .page { margin: 0; padding: 0; width: 100%; min-height: 0; height: auto; }
           }
         </style>
       </head>
