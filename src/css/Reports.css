@@ -225,6 +225,73 @@ tr.dt-hasChild .rp-toggle {
   font-style: italic;
 }
 
+/* Consolidated totals of one inward, stage wise */
+.rp-summary-card {
+  background: #fff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.rp-summary-head {
+  font-size: 0.9rem;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+.rp-summary-head b {
+  color: #1d4ed8;
+}
+
+.rp-summary-row {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rp-summary-cell {
+  border: 1px solid #e5e7eb;
+  border-top: 4px solid #93c5fd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #f9fafb;
+}
+
+.rp-summary-cell.rp-sum-toplan,
+.rp-summary-cell.rp-sum-planned,
+.rp-summary-cell.rp-sum-batch,
+.rp-summary-cell.rp-sum-finishing,
+.rp-summary-cell.rp-sum-invpending { border-top-color: #f59e0b; }
+
+.rp-summary-cell.rp-sum-delivered,
+.rp-summary-cell.rp-sum-invoiced { border-top-color: #16a34a; }
+
+.rp-summary-cell.is-empty {
+  border-top-color: #e5e7eb;
+  opacity: 0.6;
+}
+
+.rp-summary-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.rp-summary-weight {
+  font-weight: 700;
+  color: #111827;
+}
+
+@media (max-width: 1200px) {
+  .rp-summary-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 /* ---------- Mobile (phones and small tablets) ---------- */
 @media (max-width: 768px) {
   /* keep the title clear of the fixed menu (hamburger) button */
@@ -237,8 +304,13 @@ tr.dt-hasChild .rp-toggle {
   }
 
   .rp-search-card,
-  .rp-filter-card {
+  .rp-filter-card,
+  .rp-summary-card {
     padding: 12px;
+  }
+
+  .rp-summary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .rp-search-row .rp-search-by,

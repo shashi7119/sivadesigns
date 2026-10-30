@@ -203,6 +203,59 @@ const renderDetail = (row) => {
     </div>`;
 };
 
+// Consolidated totals of one inward, process stage wise (from the backend "summary")
+const SUMMARY_STAGES = [
+  { key: "inward", label: "Inward", unit: "" },
+  { key: "toplan", label: "Yet to plan", unit: "" },
+  { key: "planned", label: "Planned", unit: "plan" },
+  { key: "batch", label: "In batch", unit: "batch" },
+  { key: "finishing", label: "In finishing", unit: "batch" },
+  { key: "delivered", label: "Delivered", unit: "DC" },
+  { key: "invoiced", label: "Invoiced", unit: "DC" },
+  { key: "invpending", label: "Invoice pending", unit: "DC" },
+];
+
+const fmtNum = (value) =>
+  Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+function InwardSummary({ summary }) {
+  return (
+    <div className="rp-summary-card">
+      <div className="rp-summary-head">
+        <b>{summary.greyid}</b> - total quantity in each process
+        {summary.invoices && summary.invoices.length > 0 && (
+          <span className="rp-sub"> (Invoices: {summary.invoices.join(", ")})</span>
+        )}
+      </div>
+      <div className="rp-summary-row">
+        {SUMMARY_STAGES.map((s) => {
+          const v = summary[s.key] || {};
+          const empty = !Number(v.weight) && !Number(v.gmeter) && !Number(v.count);
+          return (
+            <div
+              key={s.key}
+              className={`rp-summary-cell rp-sum-${s.key}${empty ? " is-empty" : ""}`}
+            >
+              <div className="rp-summary-label">{s.label}</div>
+              <div className="rp-summary-weight">{fmtNum(v.weight)} kg</div>
+              <div className="rp-sub">{fmtNum(v.gmeter)} m</div>
+              {Number(v.pcs) > 0 && (
+                <div className="rp-sub">{fmtNum(v.pcs)} pcs</div>
+              )}
+              {s.unit && (
+                <div className="rp-sub">
+                  {v.count || 0} {s.unit}
+                  {v.count === 1 ? "" : "s"}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Reports() {
   const table = useRef();
   const submittedFiltersRef = useRef(emptyFilters);
@@ -213,6 +266,7 @@ function Reports() {
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilterCount, setActiveFilterCount] = useState(0);
   const [selData, setSelData] = useState([]);
+  const [summary, setSummary] = useState(null);
   const { user, isAuthenticated } = useAuth();
 
   const [filters, setFilters] = useState(emptyFilters);
@@ -697,6 +751,8 @@ function Reports() {
           </div>
         )}
 
+        {summary && <InwardSummary summary={summary} />}
+
         <div className="rp-table-wrap overflow-hidden rounded-lg border border-gray-200 relative bg-white p-2">
           <DataTable
             onSelect={rowClick}
@@ -728,6 +784,11 @@ function Reports() {
                     d.length = 25; // Set default page length
                   }
                   return d;
+                },
+                // backend sends "summary" only when an inward no is searched
+                dataSrc: function (json) {
+                  setSummary(json.summary || null);
+                  return json.data;
                 },
               },
               pageLength: 25,
