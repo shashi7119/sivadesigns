@@ -224,3 +224,146 @@ tr.dt-hasChild .rp-toggle {
   color: #9ca3af;
   font-style: italic;
 }
+
+/* ---------- Mobile (phones and small tablets) ---------- */
+@media (max-width: 768px) {
+  /* keep the title clear of the fixed menu (hamburger) button */
+  .rp-page .rp-title {
+    padding-top: 48px;
+  }
+
+  .rp-page h1 {
+    font-size: 1.3rem;
+  }
+
+  .rp-search-card,
+  .rp-filter-card {
+    padding: 12px;
+  }
+
+  .rp-search-row .rp-search-by,
+  .rp-search-row .rp-search-input {
+    max-width: none;
+    flex: 1 1 100%;
+  }
+
+  .rp-search-row .btn {
+    flex: 1 1 0;
+  }
+
+  .rp-toolbar .btn {
+    flex: 1 1 auto;
+  }
+
+  .rp-legend {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .rp-table-wrap {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  /* table -> one card per row */
+  .rp-table,
+  .rp-table tbody {
+    display: block;
+    width: 100% !important;
+  }
+
+  .rp-table thead {
+    display: none;
+  }
+
+  .rp-table tbody tr:not(.rp-child-row) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    position: relative;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 12px;
+  }
+
+  .rp-table tbody tr.dt-hasChild {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .rp-table tbody td {
+    display: block;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    min-width: 0;
+  }
+
+  .rp-table tbody td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.66rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #9ca3af;
+    margin-bottom: 2px;
+  }
+
+  /* tick box in the card's top-right corner */
+  .rp-table tbody td.rp-col-select {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+
+  .rp-table tbody td.rp-col-inward {
+    grid-column: 1 / -1;
+    padding-right: 32px !important;
+  }
+
+  .rp-table tbody td.rp-col-progress,
+  .rp-table tbody td.rp-col-toggle,
+  .rp-table tbody td.dt-empty {
+    grid-column: 1 / -1;
+  }
+
+  .rp-table tbody td.rp-col-progress::before {
+    margin-bottom: 6px;
+  }
+
+  .rp-steps {
+    min-width: 0;
+  }
+
+  .rp-step {
+    font-size: 0.6rem;
+  }
+
+  .rp-toggle {
+    width: 100%;
+    padding: 8px;
+  }
+
+  /* expanded details attach to the bottom of their card */
+  .rp-table tbody tr.rp-child-row,
+  .rp-table tbody tr.rp-child-row > td {
+    display: block;
+  }
+
+  .rp-table tbody tr.rp-child-row > td {
+    border: 1px solid #e5e7eb !important;
+    border-top: none !important;
+    border-radius: 0 0 10px 10px;
+    background: #f9fafb;
+  }
+
+  .rp-detail {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+}

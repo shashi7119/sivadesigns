@@ -474,14 +474,16 @@ function Reports() {
       row.child.hide();
     } else {
       row.child(renderDetail(row.data()), "rp-child").show();
+      // lets the mobile card layout style the details row
+      row.child().addClass("rp-child-row");
     }
   };
 
   return (
-    <div className="main-content">
+    <div className="main-content rp-page">
       <Container fluid className="relative">
         <Row className="mb-4">
-          <div className="col-12">
+          <div className="col-12 rp-title">
             <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
             <p className="text-gray-600">
               Track every inward from planning to invoice. Click a row to see
@@ -695,7 +697,7 @@ function Reports() {
           </div>
         )}
 
-        <div className="overflow-hidden rounded-lg border border-gray-200 relative bg-white p-2">
+        <div className="rp-table-wrap overflow-hidden rounded-lg border border-gray-200 relative bg-white p-2">
           <DataTable
             onSelect={rowClick}
             ref={table}
@@ -737,9 +739,11 @@ function Reports() {
                   orderable: false,
                   render: DT.render.select(),
                   width: "24px",
+                  className: "rp-col-select",
                 },
                 {
                   data: null,
+                  className: "rp-col-inward",
                   render: (d, type, row) =>
                     `<div class="rp-inward">${esc(row[1])}</div>
                      <div class="rp-sub">Plan No ${esc(row[0])}</div>
@@ -774,15 +778,34 @@ function Reports() {
                 {
                   data: null,
                   orderable: false,
+                  className: "rp-col-progress",
                   render: (d, type, row) => renderSteps(row[17]),
                 },
                 {
                   data: null,
                   orderable: false,
+                  className: "rp-col-toggle",
                   render: () =>
                     `<button type="button" class="rp-toggle">Details</button>`,
                 },
               ],
+              // Labels shown above each value in the mobile card layout
+              createdRow: function (tr) {
+                const labels = [
+                  "",
+                  "",
+                  "Plan Date",
+                  "Customer",
+                  "Fabric",
+                  "Quantity",
+                  "Progress",
+                  "",
+                ];
+                tr.querySelectorAll("td").forEach((td, i) => {
+                  if (labels[i]) td.setAttribute("data-label", labels[i]);
+                });
+              },
+              pagingType: "simple_numbers",
               initComplete: function () {
                 const api = this.api();
                 // Click anywhere on a row (except the tick box) to open its details
