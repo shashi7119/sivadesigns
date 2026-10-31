@@ -150,8 +150,17 @@ const renderDetail = (row) => {
           .map(
             (b) => `<div class="rp-item">
               ${kv("Batch No", b.id)}
-              ${kv("Weight", b.weight)}
-              ${kv("Meter", b.gmeter)}
+              ${kv(b.batch_plans > 1 ? "Weight (this plan)" : "Weight", b.weight)}
+              ${kv(b.batch_plans > 1 ? "Meter (this plan)" : "Meter", b.gmeter)}
+              ${
+                // several plans joined into one batch - also show the whole batch
+                b.batch_plans > 1
+                  ? kv(
+                      `Batch total (${b.batch_plans} plans)`,
+                      `${b.batch_weight} kg / ${b.batch_gmeter} m`,
+                    )
+                  : ""
+              }
               ${kv("Status", BATCH_STATUS[b.status] || b.status)}
             </div>`,
           )
