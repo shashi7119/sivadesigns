@@ -36,7 +36,8 @@ function Delivery() {
       machine: '',
       fabric: '',
       shade: '',
-      construction: ''
+      construction: '',
+      notInvoiced: false // only DCs with no invoice created
     });
   
     // Options state
@@ -283,6 +284,15 @@ function Delivery() {
       // Do NOT reload table here
     };
   
+    // "Invoice not created" checkbox - applies straight away, together with the submitted filters
+    const handleNotInvoicedChange = (checked) => {
+      setFilters(f => ({ ...f, notInvoiced: checked }));
+      submittedFiltersRef.current = { ...submittedFiltersRef.current, notInvoiced: checked };
+      if (table.current && table.current.dt) {
+        table.current.dt().ajax.reload();
+      }
+    };
+
     // Handle submit button click
     const handleSubmitFilters = () => {    
       submittedFiltersRef.current = filters;
@@ -301,7 +311,8 @@ function Delivery() {
         machine: '',
         fabric: '',
         shade: '',
-        construction: ''
+        construction: '',
+        notInvoiced: false
       });
       submittedFiltersRef.current = {
         fromDate: '',
@@ -310,7 +321,8 @@ function Delivery() {
         machine: '',
         fabric: '',
         shade: '',
-        construction: ''
+        construction: '',
+        notInvoiced: false
       };
       // Call fetchMasters to reload all options
       fetchMastersData();
@@ -1483,6 +1495,15 @@ const handleDeleteConfirm = async () => {
                     </Form.Group>
                   </div>
                 </div>
+                <div className="mb-3">
+                  <Form.Check
+                    type="checkbox"
+                    id="dc-not-invoiced"
+                    label="Show only DCs with no invoice created"
+                    checked={filters.notInvoiced}
+                    onChange={e => handleNotInvoicedChange(e.target.checked)}
+                  />
+                </div>
                 <div className="col-md-2 mb-5">
                  <button className="btn btn-primary mr-3" onClick={handleSubmitFilters}>
             Submit
@@ -1559,6 +1580,7 @@ const handleDeleteConfirm = async () => {
              d.fabric = submittedFiltersRef.current.fabric || '';
              d.shade = submittedFiltersRef.current.shade || '';
              d.construction = submittedFiltersRef.current.construction || '';
+             d.notInvoiced = submittedFiltersRef.current.notInvoiced ? '1' : '';
             if (d.length === -1) {
                 d.length = 25; // Set default page length
               }
