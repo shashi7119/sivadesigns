@@ -106,6 +106,17 @@ export const PERMISSIONS = {
   BATCH_EXPORT: "batch.export",
   BATCH_COMPLETE: "batch.complete",
 
+  // Supplier master, batch outward (job work) and supplier DC
+  SUPPLIER_VIEW: "supplier.view",
+  SUPPLIER_CREATE: "supplier.create",
+  SUPPLIER_EDIT: "supplier.edit",
+  OUTWARD_VIEW: "outward.view",
+  OUTWARD_CREATE: "outward.create",
+  // Inward from supplier - assigned as the "Complete" action of the Outward screen
+  OUTWARD_INWARD: "outward.complete",
+  SUPPLIER_DC_CREATE: "supplier-dc.create",
+  SUPPLIER_DC_PRINT: "supplier-dc.print",
+
   SETTINGS_MENU_LISTS: {
     MACHINE: "machine.view",
     USERS: "user-management.view",
@@ -114,6 +125,7 @@ export const PERMISSIONS = {
     FABRIC: "fabric.view",
     CONSTRUCTION: "construction.view",
     VENDOR: "vendor.view",
+    SUPPLIER: "supplier.view",
     PROCESS: "process.view",
     WIDTH: "width.view",
     FINISHING: "sfinishing.view",

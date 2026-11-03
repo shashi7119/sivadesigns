@@ -14,7 +14,8 @@ import {
   ReceiptRefundIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
-  ChartBarIcon
+  ChartBarIcon,
+  ArrowUpTrayIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { PERMISSIONS } from '../constants/permissions';
@@ -57,6 +58,8 @@ function Navigation() {
   const canViewMachine = hasAccess(PERMISSIONS.MACHINE_LIST_VIEW, ['admin', 'PA', 'SP1']);
   const canViewUsers = hasAccess(PERMISSIONS.USER_MANAGEMENT_VIEW, ['admin']);
   const canViewCustomer = hasAccess(PERMISSIONS.CUSTOMER_LIST_VIEW, ['admin', 'PA', 'SP1']);
+  const canViewSupplier = hasAccess(PERMISSIONS.SUPPLIER_VIEW, ['admin', 'PA', 'SP1']);
+  const canViewOutward = hasAccess(PERMISSIONS.OUTWARD_VIEW, ['admin', 'PA', 'PM']);
   const canViewFabric = hasAccess(PERMISSIONS.FABRIC_LIST_VIEW, ['admin', 'PA', 'SP1']);
   const canViewConstruction = hasAccess(PERMISSIONS.CONSTRUCTION_LIST_VIEW, ['admin', 'PA', 'SP1']);
   const canViewVendor = hasAccess(PERMISSIONS.VENDOR_LIST_VIEW, ['admin', 'purchase', 'PA']);
@@ -86,6 +89,7 @@ function Navigation() {
     canViewMachine,
     canViewUsers,
     canViewCustomer,
+    canViewSupplier,
     canViewFabric,
     canViewConstruction,
     canViewVendor,
@@ -149,7 +153,7 @@ function Navigation() {
                 >
                   <Menu.Items className='absolute z-10 mt-2 w-48 rounded-md bg-white shadow-lg'>
                     <div className="py-1">
-                      {(canViewMachine || canViewUsers || canViewCustomer || canViewFabric || canViewConstruction) && (
+                      {(canViewMachine || canViewUsers || canViewCustomer || canViewSupplier || canViewFabric || canViewConstruction) && (
                         <>
                           {canViewMachine && <Menu.Item>
                             {({ active }) => (
@@ -192,6 +196,16 @@ function Navigation() {
                                 'block px-4 py-2 text-sm text-gray-700'
                               )}>
                                 Customer
+                              </Link>
+                            )}
+                          </Menu.Item>}
+                          {canViewSupplier && <Menu.Item>
+                            {({ active }) => (
+                              <Link to="/supplier" className={classNames(
+                                active ? 'bg-gray-100' : '',
+                                'block px-4 py-2 text-sm text-gray-700'
+                              )}>
+                                Supplier
                               </Link>
                             )}
                           </Menu.Item>}                         
@@ -370,6 +384,13 @@ function Navigation() {
               <Link to="/finishing" className="nav-item">
                 <DocumentCheckIcon className="h-6 w-6" />
                 {isExpanded && <span className="ml-3">Finishing</span>}
+              </Link>
+            )}
+
+            {canViewOutward && (
+              <Link to="/outward" className="nav-item">
+                <ArrowUpTrayIcon className="h-6 w-6" />
+                {isExpanded && <span className="ml-3">Outward</span>}
               </Link>
             )}
 

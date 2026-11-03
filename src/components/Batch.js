@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Container, Row, Dropdown, Form } from "react-bootstrap";
+import { Container, Row, Dropdown, Form, Modal, Button } from "react-bootstrap";
 import { useAuth } from "../context/AuthContext";
 import { PERMISSIONS } from "../constants/permissions";
 import axios from "axios";
@@ -64,6 +64,14 @@ function Batch() {
   ]);
   const canPrintBatch = permissions.includes(PERMISSIONS.BATCH_PRINT_VIEW);
   const canCompleteBatch = canAccess(PERMISSIONS.FINISHING_CREATE);
+  const canOutward = canAccess(PERMISSIONS.OUTWARD_CREATE, ["admin", "PA", "PM"]);
+
+  // Outward popup: send the selected batches to a supplier for Dyeing / Washing
+  const emptyOutward = { pides: [], batchNos: [], supplier_id: "", type: "" };
+  const [outward, setOutward] = useState(emptyOutward);
+  const [showOutward, setShowOutward] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
+  const [savingOutward, setSavingOutward] = useState(false);
 
   // Reload DataTable when tab becomes active (user returns after idle)
   useEffect(() => {
@@ -337,6 +345,65 @@ function Batch() {
 
   const handleColumnChange = (e) => {
     setSearchState(e.target.value);
+  };
+
+  const outwardHandle = async (event) => {
+    event.preventDefault();
+    const rows = table.current.dt().rows({ selected: true }).data().toArray();
+    if (rows.length === 0) {
+      alert("Select batch for outward");
+      return;
+    }
+    const pides = [];
+    const batchNos = [];
+    rows.forEach((row) => {
+      const match = String(row[4]).match(/data-pide="([^"]*)"/);
+      if (match) pides.push(match[1]);
+      // batch no column is a link - read its text
+      const cell = document.createElement("div");
+      cell.innerHTML = row[0];
+      const no = (cell.textContent || "").trim();
+      if (no && !batchNos.includes(no)) batchNos.push(no);
+    });
+    setOutward({ ...emptyOutward, pides, batchNos });
+    setShowOutward(true);
+    try {
+      const response = await axios.get(`${API_URL}/getSuppliers`);
+      setSuppliers(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.log(error);
+      alert("Could not load the suppliers");
+    }
+  };
+
+  const saveOutward = async () => {
+    if (!outward.supplier_id) {
+      alert("Select the supplier");
+      return;
+    }
+    if (!outward.type) {
+      alert("Select the type of job");
+      return;
+    }
+    if (savingOutward) return;
+    try {
+      setSavingOutward(true);
+      await axios.post(`${API_URL}/markOutward`, {
+        pides: outward.pides,
+        supplier_id: outward.supplier_id,
+        type: outward.type,
+        user: user.user,
+      });
+      setShowOutward(false);
+      alert("Outward saved");
+      // outward batches leave this list (they are listed on the Outward page)
+      table.current.dt().ajax.reload(null, false);
+    } catch (error) {
+      console.log(error);
+      alert(error?.response?.data?.message || "Outward could not be saved");
+    } finally {
+      setSavingOutward(false);
+    }
   };
 
   const handleCellEdit = (cell) => {
@@ -701,6 +768,12 @@ function Batch() {
                     Complete
                   </Dropdown.Item>
                 )}
+
+                {canOutward && (
+                  <Dropdown.Item href="#" onClick={outwardHandle}>
+                    Outward
+                  </Dropdown.Item>
+                )}
               </Dropdown.Menu>
             </Dropdown>
           </div>
@@ -909,6 +982,57 @@ function Batch() {
             </thead>
           </DataTable>
         </div>
+
+        {/* Outward - batch goes to a supplier for job work */}
+        <Modal show={showOutward} onHide={() => setShowOutward(false)}>
+          <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
+            <Modal.Title className="text-xl font-semibold text-gray-800">
+              Outward
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4">
+            <p className="text-gray-600 mb-3">
+              Batch No: <b>{outward.batchNos.join(", ")}</b>
+            </p>
+            <Form.Group className="mb-3">
+              <Form.Label>Supplier</Form.Label>
+              <Form.Select
+                value={outward.supplier_id}
+                onChange={(e) =>
+                  setOutward((o) => ({ ...o, supplier_id: e.target.value }))
+                }
+              >
+                <option value="">Select supplier</option>
+                {suppliers.map((s) => (
+                  <option key={s.ide} value={s.ide}>
+                    {s.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Type of Job</Form.Label>
+              <Form.Select
+                value={outward.type}
+                onChange={(e) =>
+                  setOutward((o) => ({ ...o, type: e.target.value }))
+                }
+              >
+                <option value="">Select type</option>
+                <option value="Dyeing">Dyeing</option>
+                <option value="Washing">Washing</option>
+              </Form.Select>
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer className="bg-gray-50 border-t border-gray-200">
+            <Button variant="secondary" onClick={() => setShowOutward(false)}>
+              Close
+            </Button>
+            <Button variant="primary" onClick={saveOutward} disabled={savingOutward}>
+              {savingOutward ? "Saving..." : "Save"}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Container>
     </div>
   );

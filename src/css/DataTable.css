@@ -981,3 +981,8 @@ table.dataTable td.inv-shade-col {
   white-space: normal !important;
   overflow-wrap: anywhere;
 }
+
+/* Outward page - batch rows already inwarded from the supplier */
+table.dataTable tbody tr.outward-inward-done > td {
+  background-color: #dcfce7;
+}

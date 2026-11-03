@@ -38,6 +38,8 @@ import PrintPO from './components/PrintPurchaseOrder';
 import POList from './components/PurchaseOrderList';
 import Return from './components/Return';
 import Reports from './components/Reports';
+import Supplier from './components/Supplier';
+import Outward from './components/Outward';
 import BatchEdit from './components/BatchEdit';
 import UsersList from './components/UsersList';
 import UserAccessManagement from './components/UserAccessManagement';
@@ -120,6 +122,22 @@ function App() {
                 element={
                   <Role requiredPermission={PERMISSIONS.CUSTOMER_VIEW} allowedRoles={["admin", "PA", "SP1"]}>
                     <Customer />
+                  </Role>
+                }
+              />
+              <Route
+                path="/supplier"
+                element={
+                  <Role requiredPermission={PERMISSIONS.SUPPLIER_VIEW} allowedRoles={["admin", "PA", "SP1"]}>
+                    <Supplier />
+                  </Role>
+                }
+              />
+              <Route
+                path="/outward"
+                element={
+                  <Role requiredPermission={PERMISSIONS.OUTWARD_VIEW} allowedRoles={["admin", "PA", "PM"]}>
+                    <Outward />
                   </Role>
                 }
               />

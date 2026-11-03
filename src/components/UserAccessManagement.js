@@ -137,6 +137,24 @@ export const SCREEN_CATALOG = [
     permission: PERMISSIONS.CONSTRUCTION_LIST_VIEW,
   },
   {
+    key: "supplier",
+    label: "Supplier List",
+    path: "/supplier",
+    permission: PERMISSIONS.SUPPLIER_VIEW,
+  },
+  {
+    key: "outward",
+    label: "Outward (Batch to Supplier)",
+    path: "/outward",
+    permission: PERMISSIONS.OUTWARD_VIEW,
+  },
+  {
+    key: "supplier-dc",
+    label: "Supplier DC",
+    path: "/outward",
+    permission: PERMISSIONS.SUPPLIER_DC_CREATE,
+  },
+  {
     key: "vendor",
     label: "Vendor List",
     path: "/vendor",

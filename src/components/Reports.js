@@ -51,7 +51,12 @@ const formatDate = (value) => {
 };
 
 const STATUS_LABEL = { done: "Done", partial: "Partly", pending: "Pending" };
-const BATCH_STATUS = { a: "In process", f: "In finishing", dc: "Delivered" };
+const BATCH_STATUS = {
+  a: "In process",
+  f: "In finishing",
+  dc: "Delivered",
+  ow: "Outward (job work)",
+};
 
 // Work out the status of every stage for one planning row
 const getStages = (track) => {
