@@ -32,6 +32,16 @@ const num = (value) => Number(value || 0);
 const fmt = (value) => num(value).toFixed(2);
 const dcLabel = (dcid) => (dcid ? `SDC-${dcid}` : "");
 
+// done = fully received, partial = some inward done but still at the supplier
+const inwardStatus = (r) => {
+  if (r.inward_at) return "done";
+  return num(r.inward_count) > 0 ? "partial" : "pending";
+};
+const INWARD_STATUS = { done: "Inward done", partial: "Partly received", pending: "At supplier" };
+
+// pining options - same as batch finishing complete
+const PINING_OPTIONS = ["95", "96", "97", "98", "99", "100", "101", "102", "103", "104", "105"];
+
 // Top filters - same as the Batch page, with Supplier in place of Machine
 const emptyFilters = {
   fromDate: "",
@@ -125,7 +135,7 @@ const buildSupplierDCHtml = (dc) => {
   <table class="dc-table">
     <thead>
       <tr>
-        <th>S.No</th><th>Batch No</th><th>Inward No</th><th>Party DC</th><th>Fabric</th><th>Shade</th>
+        <th>S.No</th><th>Batch No</th><th>Inward No</th><th>Fabric</th>
         <th>Construction</th><th>Width</th><th>Weight</th><th>Meter</th><th>No Of Pcs</th>
       </tr>
     </thead>
@@ -142,9 +152,7 @@ const buildSupplierDCHtml = (dc) => {
             .map((g) => `IW${g}`)
             .join(", "),
         )}</td>
-        <td>${esc(it.customerdc)}</td>
         <td>${esc(it.fabric)}</td>
-        <td>${esc(it.shade)}</td>
         <td>${esc(it.construction)}</td>
         <td>${esc(it.width)}</td>
         <td class="num">${fmt(it.weight)}</td>
@@ -154,7 +162,7 @@ const buildSupplierDCHtml = (dc) => {
         )
         .join("")}
       <tr class="total">
-        <td colspan="8" style="text-align:right">Total</td>
+        <td colspan="6" style="text-align:right">Total</td>
         <td class="num">${fmt(total.weight)}</td>
         <td class="num">${fmt(total.gmeter)}</td>
         <td class="num">${total.noofpcs}</td>
@@ -207,10 +215,21 @@ function Outward() {
   // the list only changes on Submit / Reset, like the Batch page
   const [submittedFilters, setSubmittedFilters] = useState(emptyFilters);
 
+  // inward status checkboxes - applied straight away; none ticked = all rows
+  const [statusFilter, setStatusFilter] = useState([]);
+
   const filteredRows = useMemo(
-    () => rows.filter((r) => matchesFilters(r, submittedFilters)),
-    [rows, submittedFilters],
+    () =>
+      rows.filter(
+        (r) =>
+          matchesFilters(r, submittedFilters) &&
+          (statusFilter.length === 0 || statusFilter.includes(inwardStatus(r))),
+      ),
+    [rows, submittedFilters, statusFilter],
   );
+
+  const toggleStatus = (status, checked) =>
+    setStatusFilter((s) => (checked ? [...s, status] : s.filter((x) => x !== status)));
 
   // Filter dropdowns from the masters, same as the Batch page (supplier master in place of machine)
   const [filterOptions, setFilterOptions] = useState({
@@ -294,6 +313,7 @@ function Outward() {
   const handleResetFilters = () => {
     setFilters(emptyFilters);
     setSubmittedFilters(emptyFilters);
+    setStatusFilter([]);
     fetchMastersData();
   };
 
@@ -408,36 +428,70 @@ function Outward() {
       supplier: r.supplier,
       type: r.type,
       dcid: r.dcid,
-      outWeight: r.weight,
-      outGmeter: r.gmeter,
-      weight: "",
-      gmeter: "",
+      // sent to the supplier and already received on earlier (partial) inwards
+      batchWeight: r.weight,
+      batchGmeter: r.gmeter,
+      batchNoofpcs: r.noofpcs,
+      recvWeight: num(r.recv_weight),
+      recvGmeter: num(r.recv_gmeter),
+      recvNoofpcs: num(r.recv_noofpcs),
+      final_weight: "",
+      final_gmeter: "",
+      final_width: r.width || "",
+      noofpcs: "",
+      pining: "",
+      partial: false,
+      loss: "",
+      shrinkage: "",
     });
     setShowInward(true);
   };
 
+  // Loss / Shrinkage as in batch finishing complete: (batch - (this + earlier received)) / batch
+  const lossPercent = (total, received, value) => {
+    const diff = num(total) - (num(value) + num(received));
+    return diff > 0 && num(total) > 0 ? ((diff / num(total)) * 100).toFixed(2) : "0";
+  };
+
+  const handleInwardChange = (name, value) => {
+    if (["final_weight", "final_gmeter"].includes(name) && !/^[0-9.]*$/.test(value)) return;
+    setInwardForm((f) => {
+      const next = { ...f, [name]: value };
+      if (name === "final_weight") next.loss = lossPercent(f.batchWeight, f.recvWeight, value);
+      if (name === "final_gmeter") next.shrinkage = lossPercent(f.batchGmeter, f.recvGmeter, value);
+      return next;
+    });
+  };
+
   const saveInward = async () => {
     if (saving || !inwardForm) return;
-    const isDyeing = inwardForm.type === "Dyeing";
-    if (isDyeing && (num(inwardForm.weight) <= 0 || num(inwardForm.gmeter) <= 0)) {
-      alert("Enter the dyeing weight and dyeing meter");
+    if (num(inwardForm.final_weight) <= 0) {
+      alert("Final weight needed for inward");
+      return;
+    }
+    if (num(inwardForm.final_gmeter) <= 0) {
+      alert("Final meter needed for inward");
       return;
     }
     try {
       setSaving(true);
       const response = await axios.post(`${API_URL}/markInward`, {
         pide: inwardForm.pide,
-        weight: isDyeing ? inwardForm.weight : 0,
-        gmeter: isDyeing ? inwardForm.gmeter : 0,
+        final_weight: inwardForm.final_weight,
+        final_gmeter: inwardForm.final_gmeter,
+        final_width: inwardForm.final_width,
+        noofpcs: inwardForm.noofpcs,
+        pining: inwardForm.pining,
+        partial: inwardForm.partial,
         user: user.user,
       });
       setShowInward(false);
       setReload((r) => !r);
-      alert(
-        response.data.deliveryid
-          ? `Inward saved. Delivery DC ${response.data.deliveryid} created`
-          : "Inward saved. Batch moved to finishing",
-      );
+      const { deliveryid, complete, type } = response.data;
+      let msg = deliveryid ? `Inward saved. Delivery DC ${deliveryid} created` : "Inward saved";
+      if (!complete) msg += ". Batch stays at the supplier until the full inward";
+      else if (type === "RFD") msg += ". Batch is back in the batch list";
+      alert(msg);
     } catch (error) {
       console.log(error);
       alert(error?.response?.data?.message || "Inward could not be saved");
@@ -522,6 +576,24 @@ function Outward() {
             </div>
           ))}
         </div>
+        <div className="row mb-3">
+          <div className="col-12 d-flex flex-wrap align-items-center gap-4">
+            {[
+              ["pending", "Not inward"],
+              ["partial", "Partly inward"],
+              ["done", "Inward full"],
+            ].map(([status, label]) => (
+              <Form.Check
+                key={status}
+                type="checkbox"
+                id={`inward-status-${status}`}
+                label={label}
+                checked={statusFilter.includes(status)}
+                onChange={(e) => toggleStatus(status, e.target.checked)}
+              />
+            ))}
+          </div>
+        </div>
         <div className="col-md-2 mb-5">
           <button className="btn btn-primary mr-3" onClick={handleSubmitFilters}>
             Submit
@@ -572,9 +644,11 @@ function Outward() {
               scrollCollapse: true,
               order: [[0, "desc"]],
               select: { style: "multi" },
-              // completed inward rows are shown in green
+              // fully received rows in green, partly received (inward pending) in amber
               createdRow: (tr, data) => {
-                if (data.inward_at) tr.classList.add("outward-inward-done");
+                const status = inwardStatus(data);
+                if (status === "done") tr.classList.add("outward-inward-done");
+                else if (status === "partial") tr.classList.add("outward-inward-partial");
               },
               paging: true,
               pageLength: 25,
@@ -586,17 +660,24 @@ function Outward() {
                 { data: "type", defaultContent: "" },
                 { data: "dcid", render: (d) => dcLabel(d) || '<span style="color:red">Pending</span>' },
                 {
-                  data: "inward_at",
-                  render: (d, type) => {
-                    const status = d ? "Inward done" : "At supplier";
-                    if (type !== "display" || !d) return status;
-                    return `<span style="color:#15803d;font-weight:600">${status}</span>`;
+                  data: null,
+                  render: (d, type, row) => {
+                    const status = inwardStatus(row);
+                    const label = INWARD_STATUS[status];
+                    if (type !== "display") return label;
+                    const color = { done: "#15803d", partial: "#b45309", pending: "#374151" }[status];
+                    const count = status === "partial" ? ` (${row.inward_count})` : "";
+                    return `<span style="color:${color};font-weight:600">${label}${count}</span>`;
                   },
                 },
-                { data: "inward_at", render: (d, type) => (type === "display" ? formatDate(d) : d || "") },
-                { data: "inward_weight", render: (d) => (d === null || d === undefined ? "" : fmt(d)) },
-                { data: "inward_gmeter", render: (d) => (d === null || d === undefined ? "" : fmt(d)) },
-                { data: "deliveryid", defaultContent: "" },
+                {
+                  data: "last_inward_at",
+                  render: (d, type) => (type === "display" ? formatDate(d) : d || ""),
+                },
+                { data: "recv_weight", render: (d) => (d === null || d === undefined ? "" : fmt(d)) },
+                { data: "recv_gmeter", render: (d) => (d === null || d === undefined ? "" : fmt(d)) },
+                { data: "recv_noofpcs", render: (d) => (d === null || d === undefined ? "" : num(d)) },
+                { data: "deliveryids", defaultContent: "" },
                 {
                   data: "greyid",
                   render: (d) =>
@@ -640,9 +721,10 @@ function Outward() {
                 <th className="px-6 py-3">Type</th>
                 <th className="px-6 py-3">Supplier DC</th>
                 <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3">Inward Date</th>
-                <th className="px-6 py-3">Dyeing Weight</th>
-                <th className="px-6 py-3">Dyeing Meter</th>
+                <th className="px-6 py-3">Last Inward</th>
+                <th className="px-6 py-3">Received Weight</th>
+                <th className="px-6 py-3">Received Meter</th>
+                <th className="px-6 py-3">Received Pcs</th>
                 <th className="px-6 py-3">Delivery DC</th>
                 <th className="px-6 py-3">Inward No</th>
                 <th className="px-6 py-3">Cust DC</th>
@@ -704,7 +786,7 @@ function Outward() {
           </Modal.Footer>
         </Modal>
 
-        <Modal show={showInward} onHide={() => setShowInward(false)}>
+        <Modal size="lg" show={showInward} onHide={() => setShowInward(false)}>
           <Modal.Header closeButton className="bg-gray-50 border-b border-gray-200">
             <Modal.Title className="text-xl font-semibold text-gray-800">
               Inward from Supplier
@@ -712,54 +794,126 @@ function Outward() {
           </Modal.Header>
           {inwardForm && (
             <Modal.Body className="p-4">
-              <p className="mb-1">
-                Batch No: <b>{inwardForm.batchid}</b> ({dcLabel(inwardForm.dcid)})
-              </p>
-              <p className="mb-1">
-                Supplier: <b>{inwardForm.supplier}</b>
-              </p>
-              <p className="mb-3">
-                Sent: <b>{fmt(inwardForm.outWeight)} kg</b> / <b>{fmt(inwardForm.outGmeter)} m</b>
-              </p>
-              <Form.Group className="mb-3">
-                <Form.Label>Type of Job</Form.Label>
-                <Form.Control value={inwardForm.type} readOnly disabled />
-              </Form.Group>
-              {inwardForm.type === "Dyeing" ? (
-                <>
-                  <Form.Group className="mb-3">
-                    <Form.Label>
-                      Dyeing Weight (kg)<span className="text-danger"> *</span>
-                    </Form.Label>
-                    <Form.Control
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={inwardForm.weight}
-                      onChange={(e) => setInwardForm((f) => ({ ...f, weight: e.target.value }))}
-                    />
-                  </Form.Group>
-                  <Form.Group>
-                    <Form.Label>
-                      Dyeing Meter<span className="text-danger"> *</span>
-                    </Form.Label>
-                    <Form.Control
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={inwardForm.gmeter}
-                      onChange={(e) => setInwardForm((f) => ({ ...f, gmeter: e.target.value }))}
-                    />
-                  </Form.Group>
-                  <p className="mt-3 mb-0 text-gray-600">
-                    A delivery entry is created with these values and the batch is marked as delivered.
-                  </p>
-                </>
-              ) : (
-                <p className="mb-0 text-gray-600">
-                  The batch moves to finishing.
+              <div className="row mb-2">
+                <p className="col-6 mb-1">
+                  Batch No: <b>{inwardForm.batchid}</b> ({dcLabel(inwardForm.dcid)})
                 </p>
-              )}
+                <p className="col-6 mb-1">
+                  Supplier: <b>{inwardForm.supplier}</b>
+                </p>
+                <p className="col-4 mb-1">
+                  Batch Weight: <b>{fmt(inwardForm.batchWeight)}</b>
+                </p>
+                <p className="col-4 mb-1">
+                  Batch Meter: <b>{fmt(inwardForm.batchGmeter)}</b>
+                </p>
+                <p className="col-4 mb-1">
+                  Batch No Of Pcs: <b>{num(inwardForm.batchNoofpcs)}</b>
+                </p>
+                {inwardForm.recvWeight > 0 && (
+                  <>
+                    <p className="col-4 mb-1">
+                      Received Weight: <b>{fmt(inwardForm.recvWeight)}</b>
+                    </p>
+                    <p className="col-4 mb-1">
+                      Received Meter: <b>{fmt(inwardForm.recvGmeter)}</b>
+                    </p>
+                    <p className="col-4 mb-1">
+                      Received Pcs: <b>{num(inwardForm.recvNoofpcs)}</b>
+                    </p>
+                  </>
+                )}
+              </div>
+              <Form>
+                <div className="row">
+                  <Form.Group className="col-6 mb-3">
+                    <Form.Label>Type of Job</Form.Label>
+                    <Form.Control value={inwardForm.type} readOnly disabled />
+                  </Form.Group>
+                  <div className="col-6" />
+                  <Form.Group className="col-6 mb-3">
+                    <Form.Label>
+                      Final Weight<span className="text-danger"> *</span>
+                    </Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={inwardForm.final_weight}
+                      onChange={(e) => handleInwardChange("final_weight", e.target.value)}
+                    />
+                  </Form.Group>
+                  <Form.Group className="col-6 mb-3">
+                    <Form.Label>
+                      Final Meter<span className="text-danger"> *</span>
+                    </Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={inwardForm.final_gmeter}
+                      onChange={(e) => handleInwardChange("final_gmeter", e.target.value)}
+                    />
+                  </Form.Group>
+                  <Form.Group className="col-6 mb-3">
+                    <Form.Label>Final Width</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={inwardForm.final_width}
+                      onChange={(e) => handleInwardChange("final_width", e.target.value)}
+                    />
+                  </Form.Group>
+                  <Form.Group className="col-6 mb-3">
+                    <Form.Label>No of pcs</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={inwardForm.noofpcs}
+                      onChange={(e) => handleInwardChange("noofpcs", e.target.value)}
+                    />
+                  </Form.Group>
+                  <Form.Group className="col-6 mb-3">
+                    <Form.Label>Pining</Form.Label>
+                    <Form.Select
+                      value={inwardForm.pining}
+                      onChange={(e) => handleInwardChange("pining", e.target.value)}
+                    >
+                      <option value="">Select</option>
+                      {PINING_OPTIONS.map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                  <Form.Group className="col-6 mb-3">
+                    <Form.Label>Partial Delivery</Form.Label>
+                    <Form.Check
+                      type="switch"
+                      id="inward-partial"
+                      checked={inwardForm.partial}
+                      onChange={(e) => handleInwardChange("partial", e.target.checked)}
+                    />
+                  </Form.Group>
+                  {!inwardForm.partial && (
+                    <>
+                      <Form.Group className="col-6 mb-3">
+                        <Form.Label>Loss (%)</Form.Label>
+                        <Form.Control value={inwardForm.loss} disabled />
+                      </Form.Group>
+                      <Form.Group className="col-6 mb-3">
+                        <Form.Label>Shrinkage (%)</Form.Label>
+                        <Form.Control value={inwardForm.shrinkage} disabled />
+                      </Form.Group>
+                    </>
+                  )}
+                </div>
+              </Form>
+              <p className="mb-0 text-gray-600">
+                {inwardForm.type === "RFD"
+                  ? "RFD: no delivery is created. "
+                  : `A delivery entry is created${inwardForm.partial ? " with partial = Y" : ""}. `}
+                {inwardForm.partial
+                  ? "The batch stays at the supplier until the full inward."
+                  : inwardForm.type === "RFD"
+                    ? "The batch goes back to the batch list."
+                    : "The batch is marked as delivered."}
+              </p>
             </Modal.Body>
           )}
           <Modal.Footer className="bg-gray-50 border-t border-gray-200">

@@ -986,3 +986,13 @@ table.dataTable td.inv-shade-col {
 table.dataTable tbody tr.outward-inward-done > td {
   background-color: #dcfce7;
 }
+
+/* Outward page - partly received (inward pending) */
+table.dataTable tbody tr.outward-inward-partial > td {
+  background-color: #fef3c7;
+}
+
+/* Batch list - rows sent to a supplier (outward) */
+table.dataTable tbody tr.batch-outward-row > td {
+  background-color: #ede9fe;
+}

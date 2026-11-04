@@ -66,7 +66,7 @@ function Batch() {
   const canCompleteBatch = canAccess(PERMISSIONS.FINISHING_CREATE);
   const canOutward = canAccess(PERMISSIONS.OUTWARD_CREATE, ["admin", "PA", "PM"]);
 
-  // Outward popup: send the selected batches to a supplier for Dyeing / Washing
+  // Outward popup: send the selected batches to a supplier for Dyeing / Washing / RFD / Crinkle
   const emptyOutward = { pides: [], batchNos: [], supplier_id: "", type: "" };
   const [outward, setOutward] = useState(emptyOutward);
   const [showOutward, setShowOutward] = useState(false);
@@ -288,8 +288,17 @@ function Batch() {
     //console.log(dataArr);
   };
 
+  // rows sent to a supplier (active = "ow") stay in the list but can't be completed / deleted / sent again
+  const isOutwardRow = (row) => /data-active="ow"/.test(String(row[4]));
+  const selectedOutwardRows = () =>
+    table.current.dt().rows({ selected: true }).data().toArray().filter(isOutwardRow);
+
   const deleteHandle = (event) => {
     event.preventDefault();
+    if (selectedOutwardRows().length) {
+      alert("Batch is at the supplier (outward). Inward it from the Outward page first");
+      return;
+    }
     if (window.confirm("Delete this item?")) {
       let api = table.current.dt();
       let rows = api.rows({ selected: true }).data().toArray();
@@ -312,6 +321,10 @@ function Batch() {
     event.preventDefault();
     if (!canCompleteBatch) {
       alert("You do not have permission to complete batches");
+      return;
+    }
+    if (selectedOutwardRows().length) {
+      alert("Batch is at the supplier (outward). Inward it from the Outward page");
       return;
     }
     if (window.confirm("Complete this batch?")) {
@@ -352,6 +365,10 @@ function Batch() {
     const rows = table.current.dt().rows({ selected: true }).data().toArray();
     if (rows.length === 0) {
       alert("Select batch for outward");
+      return;
+    }
+    if (rows.some(isOutwardRow)) {
+      alert("Selected batch is already at the supplier (outward)");
       return;
     }
     const pides = [];
@@ -863,6 +880,14 @@ function Batch() {
               processing: true,
               serverSide: true,
               select: { style: "multi" },
+              // rows at the supplier (outward) are shown in a different colour
+              createdRow: (tr, data) => {
+                if (isOutwardRow(data)) {
+                  tr.classList.add("batch-outward-row");
+                  const t = String(data[4]).match(/data-type="([^"]*)"/);
+                  tr.title = `At supplier - outward${t && t[1] ? ` (${t[1]})` : ""}`;
+                }
+              },
               keys: true,
               editor: true,
               cellEdit: {
@@ -1021,6 +1046,8 @@ function Batch() {
                 <option value="">Select type</option>
                 <option value="Dyeing">Dyeing</option>
                 <option value="Washing">Washing</option>
+                <option value="RFD">RFD</option>
+                <option value="Crinkle">Crinkle</option>
               </Form.Select>
             </Form.Group>
           </Modal.Body>
