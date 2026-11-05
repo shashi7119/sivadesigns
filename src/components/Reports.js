@@ -871,10 +871,19 @@ function Reports() {
                 {
                   data: null,
                   className: "rp-col-inward",
-                  render: (d, type, row) =>
-                    `<div class="rp-inward">${esc(row[1])}</div>
+                  render: (d, type, row) => {
+                    // batch nos of this plan, once the batch process has started
+                    const batchNos = [
+                      ...new Set(((row[17] && row[17].batches) || []).map((b) => b.id).filter(Boolean)),
+                    ];
+                    return `<div class="rp-inward">${esc(row[1])}</div>
                      <div class="rp-sub">Plan No ${esc(row[0])}</div>
-                     <div class="rp-sub">Cust DC ${esc(row[2] || "-")}</div>`,
+                     <div class="rp-sub">Cust DC ${esc(row[2] || "-")}</div>${
+                       batchNos.length
+                         ? `<div class="rp-sub">Batch No ${esc(batchNos.join(", "))}</div>`
+                         : ""
+                     }`;
+                  },
                 },
                 {
                   data: null,

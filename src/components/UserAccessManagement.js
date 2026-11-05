@@ -149,12 +149,6 @@ export const SCREEN_CATALOG = [
     permission: PERMISSIONS.OUTWARD_VIEW,
   },
   {
-    key: "supplier-dc",
-    label: "Supplier DC",
-    path: "/outward",
-    permission: PERMISSIONS.SUPPLIER_DC_CREATE,
-  },
-  {
     key: "vendor",
     label: "Vendor List",
     path: "/vendor",
@@ -272,6 +266,17 @@ const ACTION_PERMISSION_OVERRIDES = {
   },
   sfinishing: {
     view: PERMISSIONS.SFINISHING_VIEW,
+  },
+  // Outward: Create = Create Supplier DC + Inward, View = list + Print Supplier DC
+  outward: {
+    view: PERMISSIONS.OUTWARD_VIEW,
+    create: PERMISSIONS.OUTWARD_CREATE,
+  },
+  // user create (backend) saves create/edit as "<screen>.<action>.view" - edit must save the same
+  "process-route": {
+    view: PERMISSIONS.PROCESS_ROUTE_VIEW,
+    create: PERMISSIONS.PROCESS_ROUTE_CREATE,
+    edit: PERMISSIONS.PROCESS_ROUTE_EDIT,
   },
 };
 

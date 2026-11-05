@@ -22,6 +22,37 @@ const getUniqueStrings = (values = []) => {
 };
 
 const PERMISSION_ALIASES = {
+  // Outward: older records saved "outward.create", "outward.complete" (inward) or the "supplier-dc" screen
+  "outward.view": ["outward.view", "outward.create", "outward.create.view"],
+  "outward.create.view": [
+    "outward.create.view",
+    "outward.create",
+    "outward.complete",
+    "supplier-dc.create",
+    "supplier-dc.create.view",
+  ],
+  // Process route: older records were saved as "processroute.*" or "process-route.create" / ".edit"
+  "process-route.view": [
+    "process-route.view",
+    "process-route.create",
+    "process-route.create.view",
+    "process-route.edit",
+    "process-route.edit.view",
+    "processroute.view",
+    "processroute.*",
+  ],
+  "process-route.create.view": [
+    "process-route.create.view",
+    "process-route.create",
+    "processroute.create",
+    "processroute.*",
+  ],
+  "process-route.edit.view": [
+    "process-route.edit.view",
+    "process-route.edit",
+    "processroute.edit",
+    "processroute.*",
+  ],
   "planning.view": [
     "planning.view",
     "planning.create",

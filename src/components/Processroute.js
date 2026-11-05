@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Container, Button, Row, Modal, Form, Dropdown } from "react-bootstrap";
 import { useAuth } from "../context/AuthContext";
+import { PERMISSIONS } from "../constants/permissions";
 import { useParams } from "react-router-dom";
 import "../css/Styles.css";
 import "../css/DataTable.css";
@@ -55,7 +56,9 @@ function Processroute() {
       pid: "",
     },
   ]);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, canAccess } = useAuth();
+  const canAddRoute = canAccess(PERMISSIONS.PROCESS_ROUTE_CREATE, ["admin", "production", "PA", "PM"]);
+  const canEditRoute = canAccess(PERMISSIONS.PROCESS_ROUTE_EDIT, ["admin", "production", "PA", "PM"]);
   const handleClose = () => {
     setShow(false);
     // setFormData('');
@@ -340,12 +343,16 @@ function Processroute() {
                 Actions
               </Dropdown.Toggle>
               <Dropdown.Menu>
-                <Dropdown.Item href="#" onClick={handleShow}>
-                  Add
-                </Dropdown.Item>
-                <Dropdown.Item href="#" onClick={handleEdit}>
-                  Edit
-                </Dropdown.Item>
+                {canAddRoute && (
+                  <Dropdown.Item href="#" onClick={handleShow}>
+                    Add
+                  </Dropdown.Item>
+                )}
+                {canEditRoute && (
+                  <Dropdown.Item href="#" onClick={handleEdit}>
+                    Edit
+                  </Dropdown.Item>
+                )}
               </Dropdown.Menu>
             </Dropdown>
           </div>

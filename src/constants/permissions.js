@@ -87,7 +87,10 @@ export const PERMISSIONS = {
   MRS_VIEW: "mrs.view",
   MRS_CREATE: "mrs.create",
 
-  PROCESS_ROUTE_VIEW: "processroute.view",
+  // same codes the User Access screen saves for the "process-route" screen
+  PROCESS_ROUTE_VIEW: "process-route.view",
+  PROCESS_ROUTE_CREATE: "process-route.create.view",
+  PROCESS_ROUTE_EDIT: "process-route.edit.view",
 
   USERS_VIEW: "users.view",
   USERS_EDIT_VIEW: "users.edit.view",
@@ -110,12 +113,13 @@ export const PERMISSIONS = {
   SUPPLIER_VIEW: "supplier.view",
   SUPPLIER_CREATE: "supplier.create",
   SUPPLIER_EDIT: "supplier.edit",
+  // Outward screen in User Access: View -> list + Print Supplier DC,
+  // Create (Add) -> Outward from batch list, Create Supplier DC and Inward
   OUTWARD_VIEW: "outward.view",
-  OUTWARD_CREATE: "outward.create",
-  // Inward from supplier - assigned as the "Complete" action of the Outward screen
-  OUTWARD_INWARD: "outward.complete",
-  SUPPLIER_DC_CREATE: "supplier-dc.create",
-  SUPPLIER_DC_PRINT: "supplier-dc.print",
+  OUTWARD_CREATE: "outward.create.view",
+  OUTWARD_INWARD: "outward.create.view",
+  SUPPLIER_DC_CREATE: "outward.create.view",
+  SUPPLIER_DC_PRINT: "outward.view",
 
   SETTINGS_MENU_LISTS: {
     MACHINE: "machine.view",

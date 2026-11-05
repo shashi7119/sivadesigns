@@ -1499,7 +1499,7 @@ const handleDeleteConfirm = async () => {
                   <Form.Check
                     type="checkbox"
                     id="dc-not-invoiced"
-                    label="Show only DCs with no invoice created"
+                    label="Pending invoice"
                     checked={filters.notInvoiced}
                     onChange={e => handleNotInvoicedChange(e.target.checked)}
                   />
